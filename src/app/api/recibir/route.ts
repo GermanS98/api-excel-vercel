@@ -1,20 +1,23 @@
-// src/app/api/recibir/route.ts
-
 import { NextRequest, NextResponse } from 'next/server'
 
 let ultimoPost: any[][] = []
 
 export async function POST(req: NextRequest) {
-  const body = await req.json()
-  console.log("📥 Recibido:", body)
-
-  if (Array.isArray(body)) {
-    ultimoPost = body
+  try {
+    const body = await req.json()
+    if (Array.isArray(body)) {
+      ultimoPost = body
+      console.log("📥 Recibido:", body)
+      return NextResponse.json({ status: 'ok' })
+    } else {
+      return NextResponse.json({ status: 'error', message: 'Se esperaba un array' }, { status: 400 })
+    }
+  } catch (e) {
+    return NextResponse.json({ status: 'error', message: 'JSON inválido' }, { status: 400 })
   }
-
-  return NextResponse.json({ status: 'ok', recibido: body })
 }
 
 export async function GET() {
-  return NextResponse.json({ ultimoPost })
+  return NextResponse.json({ datos: ultimoPost })
 }
+
