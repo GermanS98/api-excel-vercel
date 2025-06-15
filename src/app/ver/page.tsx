@@ -1,32 +1,96 @@
-'use client'
+import { useEffect, useState } from "react";
 
-import { useEffect, useState } from 'react'
+interface Dato {
+  etiqueta: string;
+  [clave: string]: string | number;
+}
 
-export default function Ver() {
-  const [datos, setDatos] = useState<any[][]>([])
+export default function Page() {
+  const [datos, setDatos] = useState<Dato[]>([]);
+  const [etiquetaSeleccionada, setEtiquetaSeleccionada] = useState<string>("");
 
+  // Obtener los datos desde la API
   useEffect(() => {
-    fetch('/api/recibir')
-      .then(res => res.json())
-      .then(data => {
-        setDatos(data.ultimoPost || [])
-      })
-  }, [])
+    async function fetchDatos() {
+      try {
+        const res = await fetch("/api/recibir", { cache: "no-store" });
+        const json = await res.json();
+        setDatos(json.datos || []);
+      } catch (err) {
+        console.error("Error al obtener datos:", err);
+      }
+    }
+
+    fetchDatos();
+  }, []);
+
+  // Obtener etiquetas únicas de la columna 1
+  const etiquetas = Array.from(new Set(datos.map((d) => d.etiqueta)));
+
+  // Filtrar los datos por la etiqueta seleccionada
+  const datosFiltrados = etiquetaSeleccionada
+    ? datos.filter((d) => d.etiqueta === etiquetaSeleccionada)
+    : datos;
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Últimos datos recibidos</h1>
-      <table className="table-auto border border-collapse">
+    <div style={{ padding: "20px" }}>
+      <h1>📊 Indicadores financieros desde Excel</h1>
+
+      {/* Filtro de etiqueta */}
+      <label>
+        Filtrar por etiqueta:
+        <select
+          onChange={(e) => setEtiquetaSeleccionada(e.target.value)}
+          value={etiquetaSeleccionada}
+          style={{ marginLeft: "10px" }}
+        >
+          <option value="">Todas</option>
+          {etiquetas.map((et) => (
+            <option key={et} value={et}>
+              {et}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {/* Tabla de datos */}
+      <table style={{ marginTop: "20px", borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            {datosFiltrados[0] &&
+              Object.keys(datosFiltrados[0]).map((key) => (
+                <th
+                  key={key}
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: "8px",
+                    background: "#f5f5f5",
+                  }}
+                >
+                  {key}
+                </th>
+              ))}
+          </tr>
+        </thead>
         <tbody>
-          {datos.map((fila, i) => (
+          {datosFiltrados.map((fila, i) => (
             <tr key={i}>
-              {fila.map((celda, j) => (
-                <td key={j} className="border px-2 py-1">{celda}</td>
+              {Object.values(fila).map((valor, j) => (
+                <td
+                  key={j}
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: "8px",
+                    textAlign: "center",
+                  }}
+                >
+                  {valor}
+                </td>
               ))}
             </tr>
           ))}
         </tbody>
       </table>
     </div>
-  )
+  );
 }
