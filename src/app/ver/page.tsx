@@ -32,13 +32,13 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     // ejemplo de envío POST si lo necesitás
-    /*
+    
     await fetch('/api/submit', {
       method: 'POST',
       body: JSON.stringify({ ticker, precio }),
       headers: { 'Content-Type': 'application/json' }
     })
-    */
+    
     console.log('Ticker:', ticker, 'Precio:', precio)
   }
 
