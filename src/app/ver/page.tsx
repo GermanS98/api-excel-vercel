@@ -1,16 +1,51 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 
-export default function Home() {
+export default function Page() {
   const [ticker, setTicker] = useState('')
   const [precio, setPrecio] = useState('')
+  const [resultado, setResultado] = useState('')
+  const [loading, setLoading] = useState(false)
+
   const [datos, setDatos] = useState<any[][]>([])
   const [filtro, setFiltro] = useState<string>('')
 
-  // Cargar datos desde la API
+  const calcularTIR = async () => {
+    setLoading(true)
+    setResultado('')
+
+    const payload = {
+      ticker,
+      precio: parseFloat(precio.replace(',', '.')),
+    }
+
+    try {
+      const res = await fetch('https://tir-backend-iop7.onrender.com/calcular-tir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.tir !== undefined) {
+        setResultado(`✅ TIR: ${data.tir}% (ajuste: ${data.ajuste})`)
+      } else {
+        const errorMsg = data.error || JSON.stringify(data)
+        setResultado(`❌ Error en el cálculo: ${errorMsg}`)
+      }
+    } catch (error) {
+      console.error('Error al conectarse con el backend:', error)
+      setResultado('❌ Error de red o del servidor. Inténtalo de nuevo.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Carga los datos que llegan desde Excel
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDatos = async () => {
       try {
         const res = await fetch('/api/recibir', { cache: 'no-store' })
         const json = await res.json()
@@ -18,38 +53,25 @@ export default function Home() {
           setDatos(json.datos)
         }
       } catch (e) {
-        console.error('Error al obtener datos:', e)
+        console.error('Error al obtener datos desde Excel:', e)
       }
     }
 
-    fetchData()
+    fetchDatos()
   }, [])
 
   const etiquetas = Array.from(new Set(datos.map(fila => fila[0])))
   const datosFiltrados = filtro ? datos.filter(fila => fila[0] === filtro) : datos
 
-  // Enviar datos si querés agregar funcionalidad POST
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    // ejemplo de envío POST si lo necesitás
-    
-    await fetch('/api/submit', {
-      method: 'POST',
-      body: JSON.stringify({ ticker, precio }),
-      headers: { 'Content-Type': 'application/json' }
-    })
-    
-    console.log('Ticker:', ticker, 'Precio:', precio)
-  }
-
   return (
     <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
       <h1 style={{ fontSize: '24px', marginBottom: '1rem' }}>Ingresar Ticker y Precio</h1>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
         <input
           type="text"
           value={ticker}
-          onChange={e => setTicker(e.target.value)}
+          onChange={e => setTicker(e.target.value.toUpperCase())}
           placeholder="Ticker"
           style={{ padding: '0.5rem', fontSize: '16px' }}
         />
@@ -60,10 +82,36 @@ export default function Home() {
           placeholder="Precio"
           style={{ padding: '0.5rem', fontSize: '16px' }}
         />
-        <button type="submit" style={{ padding: '0.5rem 1rem', fontSize: '16px' }}>
-          Enviar
+        <button
+          onClick={calcularTIR}
+          disabled={loading || !ticker || !precio}
+          style={{
+            padding: '0.5rem 1rem',
+            fontSize: '16px',
+            backgroundColor: loading ? '#ccc' : '#0070f3',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: loading ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {loading ? 'Calculando...' : 'Calcular'}
         </button>
-      </form>
+      </div>
+
+      {resultado && (
+        <div
+          style={{
+            marginBottom: '2rem',
+            padding: '1rem',
+            borderRadius: '8px',
+            backgroundColor: resultado.startsWith('✅') ? '#e6ffed' : '#ffe6e6',
+            color: resultado.startsWith('✅') ? '#03543f' : '#9b1c1c',
+          }}
+        >
+          {resultado}
+        </div>
+      )}
 
       <h2 style={{ fontSize: '20px', marginBottom: '1rem' }}>Datos recibidos desde Excel</h2>
 
