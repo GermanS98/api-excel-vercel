@@ -43,11 +43,21 @@ function TablaResultados() {
           <table className="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">Ticker</th>
-                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">Precio</th>
-                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">TIR (%)</th>
-                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">Ajuste</th>
-                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">Fecha</th>
+                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">
+                  Ticker
+                </th>
+                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">
+                  Precio
+                </th>
+                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">
+                  TIR (%)
+                </th>
+                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">
+                  Ajuste
+                </th>
+                <th className="whitespace-nowrap px-4 py-2 text-left font-medium text-gray-900">
+                  Fecha
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -81,7 +91,7 @@ function TablaResultados() {
 // --- Componente principal de la página ---
 // Contiene el formulario y ahora también la tabla de resultados.
 export default function Page() {
-  const [ticker, setTicker] = useState(""); // Corrected: Renamed from 'serTicker' to 'setTicker'
+  const [ticker, setTicker] = useState("");
   const [precio, setPrecio] = useState("");
   const [cer, setCer] = useState("");
   const [tamar, setTamar] = useState("");
@@ -91,9 +101,9 @@ export default function Page() {
 
   const calcularTIR = async () => {
     setLoading(true);
-    setResultado(""); // Clear previous result on new calculation attempt
+    setResultado(""); // Limpiar resultado previo al intentar un nuevo cálculo
 
-    // Basic validation for ticker and precio
+    // Validación básica para ticker y precio
     if (!ticker) {
       setResultado("❌ Por favor, ingresa un Ticker.");
       setLoading(false);
@@ -106,7 +116,7 @@ export default function Page() {
     }
 
     const payload = {
-      ticker: ticker.toUpperCase(), // Convert ticker to uppercase for consistency
+      ticker: ticker.toUpperCase(), // Convertir ticker a mayúsculas para consistencia
       precio: parseFloat(precio),
       cer: cer ? parseFloat(cer) : null,
       tamar: tamar ? parseFloat(tamar) : null,
@@ -132,7 +142,7 @@ export default function Page() {
         setResultado(`❌ Error en el cálculo: ${errorMsg}`);
       }
     } catch (error) {
-      console.error("Error al enviar solicitud:", error); // Log the actual error
+      console.error("Error al enviar solicitud:", error); // Registrar el error real en consola
       setResultado("❌ Error de red o del servidor. Inténtalo de nuevo.");
     } finally {
       setLoading(false);
@@ -141,8 +151,7 @@ export default function Page() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Calculadora de TIR de Bonos</h1>{" "}
-      {/* Updated title */}
+      <h1 className="text-2xl font-bold mb-6">Calculadora de TIR de Bonos</h1>
       {/* Formulario */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
         <div>
@@ -153,10 +162,10 @@ export default function Page() {
             id="tickerInput"
             type="text"
             value={ticker}
-            onChange={(e) => setTicker(e.target.value)} {/* FIXED THIS LINE! */}
+            onChange={(e) => setTicker(e.target.value)} {/* ¡CORREGIDO AQUÍ! */}
             className="border p-2 rounded w-full border-gray-300 shadow-sm"
             placeholder="Ej: AL30, GD30, T2X4"
-            required // Make ticker a required field
+            required
           />
         </div>
         <div>
@@ -170,7 +179,7 @@ export default function Page() {
             onChange={(e) => setPrecio(e.target.value)}
             className="border p-2 rounded w-full border-gray-300 shadow-sm"
             placeholder="Ej: 50000"
-            required // Make precio a required field
+            required
           />
         </div>
         <div>
@@ -216,7 +225,7 @@ export default function Page() {
 
       <button
         onClick={calcularTIR}
-        disabled={loading || !ticker || !precio} // Disable if ticker or precio are empty
+        disabled={loading || !ticker || !precio} // Deshabilitar si ticker o precio están vacíos
         className="bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
         {loading ? "Calculando..." : "Calcular TIR"}
