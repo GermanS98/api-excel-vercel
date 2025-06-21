@@ -3,14 +3,11 @@
 import { useState, useEffect } from "react";
 
 // --- Componente para la tabla de resultados ---
-// Se obtiene y muestra los últimos cálculos realizados
 function TablaResultados() {
-  // Estado para guardar los datos, el estado de carga y posibles errores
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // useEffect se ejecuta una vez cuando el componente se monta
   useEffect(() => {
     fetch("https://tir-backend-iop7.onrender.com/ultimos-resultados")
       .then(res => {
@@ -27,17 +24,17 @@ function TablaResultados() {
         setError("No se pudieron cargar los últimos resultados.");
       })
       .finally(() => {
-        setLoading(false); // La carga termina, ya sea con éxito o con error
+        setLoading(false);
       });
-  }, []); // El array vacío [] asegura que el efecto se ejecute solo una vez
+  }, []);
 
   return (
     <div className="mt-12">
       <h2 className="text-xl font-bold mb-4">📊 Últimos resultados calculados</h2>
-      
+
       {loading && <p>Cargando tabla...</p>}
       {error && <p className="text-red-600 bg-red-100 p-3 rounded">{error}</p>}
-      
+
       {!loading && !error && data.length > 0 && (
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
@@ -68,10 +65,9 @@ function TablaResultados() {
   );
 }
 
-
 // --- Componente principal de la página ---
-// Contiene el formulario y ahora también la tabla de resultados.
 export default function Page() {
+  const [ticker, setTicker] = useState("AL30");
   const [precio, setPrecio] = useState("");
   const [cer, setCer] = useState("");
   const [tamar, setTamar] = useState("");
@@ -84,7 +80,7 @@ export default function Page() {
     setResultado("");
 
     const payload = {
-      ticker: "AL30",
+      ticker,
       precio: parseFloat(precio),
       cer: cer ? parseFloat(cer) : null,
       tamar: tamar ? parseFloat(tamar) : null,
@@ -103,7 +99,6 @@ export default function Page() {
       if (res.ok && data.tir !== undefined) {
         setResultado(`✅ TIR: ${data.tir}% (ajuste: ${data.ajuste})`);
       } else {
-        // Usa el mensaje de error del backend si está disponible
         const errorMsg = data.error || JSON.stringify(data);
         setResultado(`❌ Error en el cálculo: ${errorMsg}`);
       }
@@ -115,12 +110,20 @@ export default function Page() {
   };
 
   return (
-    // Se aumentó el ancho máximo para dar espacio a la tabla
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Calcular TIR del bono AL30</h1>
+      <h1 className="text-2xl font-bold mb-6">Calcular TIR de un bono</h1>
 
-      {/* Formulario */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
+        <div>
+          <label className="block mb-2 font-medium text-gray-700">Ticker:</label>
+          <input
+            type="text"
+            value={ticker}
+            onChange={(e) => setTicker(e.target.value.toUpperCase())}
+            className="border p-2 rounded w-full border-gray-300 shadow-sm"
+            placeholder="Ej: AL30"
+          />
+        </div>
         <div>
           <label className="block mb-2 font-medium text-gray-700">Precio actual:</label>
           <input
@@ -162,10 +165,10 @@ export default function Page() {
           />
         </div>
       </div>
-      
+
       <button
         onClick={calcularTIR}
-        disabled={loading || !precio}
+        disabled={loading || !precio || !ticker}
         className="bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
         {loading ? "Calculando..." : "Calcular TIR"}
@@ -177,7 +180,6 @@ export default function Page() {
         </div>
       )}
 
-      {/* Aquí se renderiza el componente de la tabla */}
       <TablaResultados />
     </div>
   );
