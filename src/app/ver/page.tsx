@@ -122,6 +122,16 @@ export default function Page() {
 
       {/* Formulario */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
+          <div>
+          <label className="block mb-2 font-medium text-gray-700">Ticker:</label>
+          <input
+            type="text"
+            value={ticker}
+            onChange={(e) => setCer(e.target.value)}
+            className="border p-2 rounded w-full border-gray-300 shadow-sm"
+            placeholder="T30J6"
+          />
+        </div>
         <div>
           <label className="block mb-2 font-medium text-gray-700">Precio actual:</label>
           <input
