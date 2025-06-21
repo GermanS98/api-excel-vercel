@@ -1,6 +1,6 @@
 "use client";
-
 import { useState } from "react";
+import TablaResultados from "./TablaResultados"; // ajustá la ruta si está en otra carpeta
 
 export default function Page() {
   const [precio, setPrecio] = useState("");
@@ -90,7 +90,8 @@ export default function Page() {
       {resultado && (
         <div className="mt-4 p-4 bg-gray-100 rounded shadow">{resultado}</div>
       )}
+
+      <TablaResultados />
     </div>
   );
 }
-
