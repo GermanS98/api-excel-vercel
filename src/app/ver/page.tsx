@@ -72,6 +72,7 @@ function TablaResultados() {
 // --- Componente principal de la página ---
 // Contiene el formulario y ahora también la tabla de resultados.
 export default function Page() {
+  const [ticker,serTicker]=useState("");
   const [precio, setPrecio] = useState("");
   const [cer, setCer] = useState("");
   const [tamar, setTamar] = useState("");
@@ -84,7 +85,7 @@ export default function Page() {
     setResultado("");
 
     const payload = {
-      ticker: "AL30",
+      ticker: ticker,
       precio: parseFloat(precio),
       cer: cer ? parseFloat(cer) : null,
       tamar: tamar ? parseFloat(tamar) : null,
