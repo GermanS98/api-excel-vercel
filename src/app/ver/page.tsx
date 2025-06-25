@@ -66,20 +66,28 @@ export default function Page() {
     <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
       <h1 style={{ fontSize: '24px', marginBottom: '1rem' }}>Ingresar Ticker y Precio</h1>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          marginBottom: '1rem',
+          maxWidth: '600px',
+        }}
+      >
         <input
           type="text"
           value={ticker}
           onChange={e => setTicker(e.target.value.toUpperCase())}
           placeholder="Ticker"
-          style={{ padding: '0.5rem', fontSize: '16px' }}
+          style={{ padding: '0.5rem', fontSize: '16px', flex: '1 1 120px', minWidth: '100px' }}
         />
         <input
           type="text"
           value={precio}
           onChange={e => setPrecio(e.target.value)}
           placeholder="Precio"
-          style={{ padding: '0.5rem', fontSize: '16px' }}
+          style={{ padding: '0.5rem', fontSize: '16px', flex: '1 1 120px', minWidth: '100px' }}
         />
         <button
           onClick={calcularTIR}
@@ -92,6 +100,8 @@ export default function Page() {
             border: 'none',
             borderRadius: '4px',
             cursor: loading ? 'not-allowed' : 'pointer',
+            flex: '1 1 120px',
+            minWidth: '100px',
           }}
         >
           {loading ? 'Calculando...' : 'Calcular'}
@@ -134,15 +144,23 @@ export default function Page() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', minWidth: '600px' }}>
           <thead>
             <tr style={{ backgroundColor: '#f2f2f2' }}>
-              {datosFiltrados[0]?.map((_, j) => (
-                <th key={j} style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'left', fontWeight: 600 }}>
-                  Col {j + 1}
+              {datosFiltrados[0]?.map((col, j) => (
+                <th
+                  key={j}
+                  style={{
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    textAlign: 'left',
+                    fontWeight: 600,
+                  }}
+                >
+                  {col}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {datosFiltrados.map((fila, i) => (
+            {datosFiltrados.slice(1).map((fila, i) => (
               <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f9f9f9' }}>
                 {fila.map((celda, j) => (
                   <td
