@@ -43,7 +43,6 @@ export default function Page() {
     }
   }
 
-  // Carga los datos que llegan desde Excel
   useEffect(() => {
     const fetchDatos = async () => {
       try {
@@ -131,17 +130,41 @@ export default function Page() {
         </select>
       </label>
 
-      <table border={1} cellPadding={8} style={{ marginTop: '1rem', borderCollapse: 'collapse' }}>
-        <tbody>
-          {datosFiltrados.map((fila, i) => (
-            <tr key={i}>
-              {fila.map((celda, j) => (
-                <td key={j}>{celda}</td>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', minWidth: '600px' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#f2f2f2' }}>
+              {datosFiltrados[0]?.map((_, j) => (
+                <th key={j} style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'left', fontWeight: 600 }}>
+                  Col {j + 1}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {datosFiltrados.map((fila, i) => (
+              <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f9f9f9' }}>
+                {fila.map((celda, j) => (
+                  <td
+                    key={j}
+                    title={celda}
+                    style={{
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      maxWidth: '200px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {celda}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
