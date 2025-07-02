@@ -43,7 +43,6 @@ export default function Page() {
     }
   }
 
-  // Función que obtiene los datos desde el backend
   const fetchDatos = async () => {
     try {
       const res = await fetch('/api/recibir', { cache: 'no-store' })
@@ -56,16 +55,16 @@ export default function Page() {
     }
   }
 
-  // Carga inicial y refresco automático cada 10 segundos
+  // Carga inicial y refresco cada 10 segundos
   useEffect(() => {
     fetchDatos()
-    const intervalo = setInterval(fetchDatos, 5000) // cada 10 segundos
-    return () => clearInterval(intervalo) // limpieza
+    const intervalo = setInterval(fetchDatos, 10000)
+    return () => clearInterval(intervalo)
   }, [])
 
-  const etiquetas = Array.from(new Set(datos.map(fila => fila[0])))
-  const datosFiltrados = filtro ? datos.filter(fila => fila[0] === filtro) : null
-  const datosParaMostrar = filtro ? datosFiltrados : datos.slice(1)
+  const etiquetas = Array.from(new Set(datos.slice(1).map(fila => fila[0])))
+  const cuerpoDatos = datos.slice(1)
+  const datosFiltrados = filtro ? cuerpoDatos.filter(fila => fila[0] === filtro) : cuerpoDatos
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
@@ -172,10 +171,10 @@ export default function Page() {
             </tr>
           </thead>
           <tbody>
-            {datosParaMostrar.map((fila, i) => (
+            {datosFiltrados.map((fila, i) => (
               <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f9f9f9' }}>
                 {fila.map((celda, j) => {
-                  if (j === 4) return null
+                  if (j === 4) return null // Ocultar columna 5
 
                   let contenido = celda
 
