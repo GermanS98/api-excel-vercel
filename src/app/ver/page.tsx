@@ -59,7 +59,7 @@ export default function Page() {
   // Carga inicial y refresco automático cada 10 segundos
   useEffect(() => {
     fetchDatos()
-    const intervalo = setInterval(fetchDatos, 10000) // cada 10 segundos
+    const intervalo = setInterval(fetchDatos, 5000) // cada 10 segundos
     return () => clearInterval(intervalo) // limpieza
   }, [])
 
