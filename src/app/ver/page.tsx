@@ -162,22 +162,36 @@ export default function Page() {
           <tbody>
             {datosFiltrados.slice(1).map((fila, i) => (
               <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f9f9f9' }}>
-                {fila.map((celda, j) => (
-                  <td
-                    key={j}
-                    title={celda}
-                    style={{
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      maxWidth: '200px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {celda}
-                  </td>
-                ))}
+                {fila.map((celda, j) => {
+                  let contenido = celda
+                
+                  if (j === 3) {
+                    const num = parseFloat(celda.toString().replace(',', '.'))
+                    if (!isNaN(num)) contenido = num.toFixed(2)
+                  }
+                
+                  if (j === 5) {
+                    const num = parseFloat(celda.toString().replace(',', '.'))
+                    if (!isNaN(num)) contenido = `${(num * 100).toFixed(2)}%`
+                  }
+                
+                  return (
+                    <td
+                      key={j}
+                      title={contenido}
+                      style={{
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        maxWidth: '200px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {contenido}
+                    </td>
+                  )
+                })}
               </tr>
             ))}
           </tbody>
