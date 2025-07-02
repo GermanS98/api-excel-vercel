@@ -142,27 +142,33 @@ export default function Page() {
 
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', minWidth: '600px' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#f2f2f2' }}>
-              {datosFiltrados[0]?.map((col, j) => (
-                <th
-                  key={j}
-                  style={{
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    textAlign: 'left',
-                    fontWeight: 600,
-                  }}
-                >
-                  {col}
-                </th>
-              ))}
-            </tr>
-          </thead>
+        <thead>
+          <tr style={{ backgroundColor: '#f2f2f2' }}>
+            {datosFiltrados[0]
+              ?.map((col, j) => {
+                if (j === 4) return null // ocultar columna 5
+                return (
+                  <th
+                    key={j}
+                    style={{
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      textAlign: 'left',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {col}
+                  </th>
+                )
+              })}
+          </tr>
+        </thead>
           <tbody>
             {datosFiltrados.slice(1).map((fila, i) => (
               <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f9f9f9' }}>
-                {fila.map((celda, j) => {
+               {fila.map((celda, j) => {
+                  if (j === 4) return null // Ocultar columna 5
+                
                   let contenido = celda
                 
                   if (j === 3) {
@@ -170,7 +176,7 @@ export default function Page() {
                     if (!isNaN(num)) contenido = num.toFixed(2)
                   }
                 
-                  if (j === 5) {
+                  if (j === 5 || (j >= 6 && j <= 10)) {
                     const num = parseFloat(celda.toString().replace(',', '.'))
                     if (!isNaN(num)) contenido = `${(num * 100).toFixed(2)}%`
                   }
