@@ -43,25 +43,30 @@ export default function Page() {
     }
   }
 
-  useEffect(() => {
-    const fetchDatos = async () => {
-      try {
-        const res = await fetch('/api/recibir', { cache: 'no-store' })
-        const json = await res.json()
-        if (json.datos && Array.isArray(json.datos)) {
-          setDatos(json.datos)
-        }
-      } catch (e) {
-        console.error('Error al obtener datos desde Excel:', e)
+  // Función que obtiene los datos desde el backend
+  const fetchDatos = async () => {
+    try {
+      const res = await fetch('/api/recibir', { cache: 'no-store' })
+      const json = await res.json()
+      if (json.datos && Array.isArray(json.datos)) {
+        setDatos(json.datos)
       }
+    } catch (e) {
+      console.error('Error al obtener datos desde Excel:', e)
     }
+  }
 
+  // Carga inicial y refresco automático cada 10 segundos
+  useEffect(() => {
     fetchDatos()
+    const intervalo = setInterval(fetchDatos, 10000) // cada 10 segundos
+    return () => clearInterval(intervalo) // limpieza
   }, [])
 
   const etiquetas = Array.from(new Set(datos.map(fila => fila[0])))
-  const datosFiltrados = filtro ? datos.filter(fila => fila[0] === filtro) : datos
+  const datosFiltrados = filtro ? datos.filter(fila => fila[0] === filtro) : null
   const datosParaMostrar = filtro ? datosFiltrados : datos.slice(1)
+
   return (
     <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
       <h1 style={{ fontSize: '24px', marginBottom: '1rem' }}>Ingresar Ticker y Precio</h1>
@@ -142,70 +147,69 @@ export default function Page() {
 
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', minWidth: '600px' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f2f2f2' }}>
-            {datos[0]?.map((col, j) => {
-              if (j === 4) return null // Ocultar columna 5
-              return (
-                <th
-                  key={j}
-                  style={{
-                    padding: '10px',
-                    border: '1px solid #ddd',
-                    textAlign: 'left',
-                    fontWeight: 600,
-                    whiteSpace: 'nowrap',
-                    maxWidth: '200px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {col}
-                </th>
-              )
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          {datosParaMostrar.map((fila, i) => (
-            <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f9f9f9' }}>
-              {fila.map((celda, j) => {
-                if (j === 4) return null
-        
-                let contenido = celda
-        
-                if (j === 3) {
-                  const num = parseFloat(celda.toString().replace(',', '.'))
-                  if (!isNaN(num)) contenido = num.toFixed(2)
-                }
-        
-                if (j === 5 || (j >= 6 && j <= 10)) {
-                  const num = parseFloat(celda.toString().replace(',', '.'))
-                  if (!isNaN(num)) contenido = `${(num * 100).toFixed(2)}%`
-                }
-        
+          <thead>
+            <tr style={{ backgroundColor: '#f2f2f2' }}>
+              {datos[0]?.map((col, j) => {
+                if (j === 4) return null // Ocultar columna 5
                 return (
-                  <td
+                  <th
                     key={j}
-                    title={contenido}
                     style={{
                       padding: '10px',
                       border: '1px solid #ddd',
-                      maxWidth: '150px',
-                      minWidth: '60px',
+                      textAlign: 'left',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      maxWidth: '200px',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
                     }}
                   >
-                    {contenido}
-                  </td>
+                    {col}
+                  </th>
                 )
               })}
             </tr>
-          ))}
-        </tbody>
+          </thead>
+          <tbody>
+            {datosParaMostrar.map((fila, i) => (
+              <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f9f9f9' }}>
+                {fila.map((celda, j) => {
+                  if (j === 4) return null
 
+                  let contenido = celda
+
+                  if (j === 3) {
+                    const num = parseFloat(celda.toString().replace(',', '.'))
+                    if (!isNaN(num)) contenido = num.toFixed(2)
+                  }
+
+                  if (j === 5 || (j >= 6 && j <= 10)) {
+                    const num = parseFloat(celda.toString().replace(',', '.'))
+                    if (!isNaN(num)) contenido = `${(num * 100).toFixed(2)}%`
+                  }
+
+                  return (
+                    <td
+                      key={j}
+                      title={contenido}
+                      style={{
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        maxWidth: '150px',
+                        minWidth: '60px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {contenido}
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
     </div>
