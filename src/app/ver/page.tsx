@@ -61,7 +61,7 @@ export default function Page() {
 
   const etiquetas = Array.from(new Set(datos.map(fila => fila[0])))
   const datosFiltrados = filtro ? datos.filter(fila => fila[0] === filtro) : datos
-
+  const datosParaMostrar = filtro ? datosFiltrados : datos.slice(1)
   return (
     <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
       <h1 style={{ fontSize: '24px', marginBottom: '1rem' }}>Ingresar Ticker y Precio</h1>
@@ -167,44 +167,45 @@ export default function Page() {
           </tr>
         </thead>
         <tbody>
-            {datosFiltrados.slice(1).map((fila, i) => (
-              <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f9f9f9' }}>
-                {fila.map((celda, j) => {
-                  if (j === 4) return null // Ocultar columna 5
-          
-                  let contenido = celda
-          
-                  if (j === 3) {
-                    const num = parseFloat(celda.toString().replace(',', '.'))
-                    if (!isNaN(num)) contenido = num.toFixed(2)
-                  }
-          
-                  if (j === 5 || (j >= 6 && j <= 10)) {
-                    const num = parseFloat(celda.toString().replace(',', '.'))
-                    if (!isNaN(num)) contenido = `${(num * 100).toFixed(2)}%`
-                  }
-          
-                  return (
-                    <td
-                      key={j}
-                      title={contenido}
-                      style={{
-                        padding: '10px',
-                        border: '1px solid #ddd',
-                        maxWidth: '150px',
-                        minWidth: '60px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {contenido}
-                    </td>
-                  )
-                })}
-              </tr>
-            ))}
-          </tbody>
+          {datosParaMostrar.map((fila, i) => (
+            <tr key={i} style={{ backgroundColor: i % 2 === 0 ? '#fff' : '#f9f9f9' }}>
+              {fila.map((celda, j) => {
+                if (j === 4) return null
+        
+                let contenido = celda
+        
+                if (j === 3) {
+                  const num = parseFloat(celda.toString().replace(',', '.'))
+                  if (!isNaN(num)) contenido = num.toFixed(2)
+                }
+        
+                if (j === 5 || (j >= 6 && j <= 10)) {
+                  const num = parseFloat(celda.toString().replace(',', '.'))
+                  if (!isNaN(num)) contenido = `${(num * 100).toFixed(2)}%`
+                }
+        
+                return (
+                  <td
+                    key={j}
+                    title={contenido}
+                    style={{
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      maxWidth: '150px',
+                      minWidth: '60px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {contenido}
+                  </td>
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+
         </table>
       </div>
     </div>
