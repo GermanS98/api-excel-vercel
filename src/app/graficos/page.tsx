@@ -12,7 +12,7 @@ export default function Graficos() {
     const interval = setInterval(() => {
       // Forzamos un "reload" cambiando un parámetro dummy
       setUrl(`${baseUrl}&t=${Date.now()}`)
-    }, 100000)
+    }, 60000)
 
     return () => clearInterval(interval)
   }, [])
