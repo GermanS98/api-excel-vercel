@@ -55,7 +55,6 @@ export default function Page() {
     }
   }
 
-  // Carga inicial y refresco cada 10 segundos
   useEffect(() => {
     fetchDatos()
     const intervalo = setInterval(fetchDatos, 10000)
@@ -68,6 +67,23 @@ export default function Page() {
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
+      <div style={{ marginBottom: '2rem' }}>
+        <a
+          href="/graficos"
+          style={{
+            display: 'inline-block',
+            backgroundColor: '#0070f3',
+            color: '#fff',
+            padding: '0.5rem 1rem',
+            borderRadius: '4px',
+            textDecoration: 'none',
+            fontSize: '16px',
+          }}
+        >
+          Ver gráficos de Power BI →
+        </a>
+      </div>
+
       <h1 style={{ fontSize: '24px', marginBottom: '1rem' }}>Ingresar Ticker y Precio</h1>
 
       <div
