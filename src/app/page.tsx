@@ -47,6 +47,7 @@ export default function Home() {
         </div>
       </main>
       <footer className={styles.footer}>
+      <a href="/graficos" style={{ marginRight: '1rem' }}>Gráficos</a>
         <a
           href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
           target="_blank"
