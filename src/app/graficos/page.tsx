@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 
 export default function Graficos() {
   const baseUrl =
-    'https://app.powerbi.com/reportEmbed?reportId=2db49726-e5d5-4659-908a-7667d3a8d706&autoAuth=true&ctid=e631c664-107d-4e97-b93d-1965130d1449&actionBarEnabled=true'
+    'https://app.powerbi.com/reportEmbed?reportId=73116638-db46-4792-bf8d-c634972698b6&autoAuth=true&ctid=e631c664-107d-4e97-b93d-1965130d1449'
 
   const [url, setUrl] = useState(baseUrl)
 
