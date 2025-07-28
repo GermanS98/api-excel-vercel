@@ -12,7 +12,7 @@ export default function Page() {
   const [resultados, setResultados] = useState<any | null>(null)
 
   useEffect(() => {
-    fetch('/api/tickers')
+    fetch('/api/bonos')
       .then(res => res.json())
       .then(data => setTickers(data))
   }, [])
