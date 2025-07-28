@@ -1,19 +1,21 @@
-import * as React from "react"
+import React from 'react'
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
+type ButtonProps = {
+  children: React.ReactNode
+  onClick?: () => void
+  type?: 'button' | 'submit' | 'reset'
+}
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, ...props }, ref) => {
-    return (
-      <button
-        ref={ref}
-        className={`bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded ${className}`}
-        {...props}
-      />
-    )
-  }
-)
+const Button: React.FC<ButtonProps> = ({ children, onClick, type = 'button' }) => {
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+    >
+      {children}
+    </button>
+  )
+}
 
-Button.displayName = "Button"
-
-export { Button }
+export default Button
