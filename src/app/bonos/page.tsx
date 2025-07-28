@@ -20,7 +20,6 @@ export default function Page() {
 
   const calcular = async () => {
     try {
-      // Buscar características y flujos desde Supabase (API interna tuya)
       const [caracRes, flujosRes] = await Promise.all([
         fetch(`/api/caracteristicas?ticker=${ticker}`),
         fetch(`/api/flujos?ticker=${ticker}`)
@@ -29,14 +28,12 @@ export default function Page() {
       const caracteristicas = await caracRes.json()
       const flujos = await flujosRes.json()
 
-      // Si el bono es de tipo CER, cargar también la tabla CER
       let cer = []
       if (caracteristicas?.tipo === 'CER') {
         const cerRes = await fetch(`/api/cer`)
         cer = await cerRes.json()
       }
 
-      // Enviar todo al backend
       const res = await fetch('https://tir-backend.onrender.com/calcular_tir', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -53,15 +50,15 @@ export default function Page() {
       const data = await res.json()
 
       if (!res.ok) {
-        console.error('Error en el cálculo:', data)
-        alert(`Error: ${data?.error || 'Error desconocido'}`)
+        console.error('Error en cálculo:', data)
+        alert(`Error: ${data?.error || 'Cálculo fallido'}`)
         return
       }
 
       setResultados(data)
     } catch (err) {
       console.error('Error general:', err)
-      alert('Ocurrió un error inesperado.')
+      alert('Error al intentar calcular la TIR')
     }
   }
 
@@ -87,19 +84,4 @@ export default function Page() {
         onChange={e => setPrecio(e.target.value)}
       />
       <Input
-        placeholder="Fecha de compra (YYYY-MM-DD)"
-        type="date"
-        value={fecha}
-        onChange={e => setFecha(e.target.value)}
-      />
-
-      <Button onClick={calcular}>Calcular TIR</Button>
-
-      {resultados && (
-        <div className="mt-4 bg-gray-100 p-4 rounded">
-          <pre>{JSON.stringify(resultados, null, 2)}</pre>
-        </div>
-      )}
-    </div>
-  )
-}
+        placeholder="Fecha de compra"
