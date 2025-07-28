@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 export default function Page() {
-  const [tickers, setTickers] = useState<string[]>([])
+  const [tickers, setTickers] = useState<{ ticker: string }[]>([])
   const [ticker, setTicker] = useState('')
   const [precio, setPrecio] = useState('')
   const [fecha, setFecha] = useState('')
@@ -15,13 +15,18 @@ export default function Page() {
     fetch('/api/bonos')
       .then(res => res.json())
       .then(data => setTickers(data))
+      .catch(err => console.error('Error al cargar tickers:', err))
   }, [])
 
   const calcular = async () => {
     const res = await fetch('https://tir-backend.onrender.com/calcular_tir', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ticker, precio: parseFloat(precio), fecha_compra: fecha })
+      body: JSON.stringify({
+        ticker,
+        precio: parseFloat(precio),
+        fecha_compra: fecha
+      })
     })
     const data = await res.json()
     setResultados(data)
@@ -38,7 +43,7 @@ export default function Page() {
       >
         <option value="">Seleccionar bono</option>
         {tickers.map(t => (
-          <option key={t} value={t}>{t}</option>
+          <option key={t.ticker} value={t.ticker}>{t.ticker}</option>
         ))}
       </select>
 
@@ -55,34 +60,11 @@ export default function Page() {
         onChange={e => setFecha(e.target.value)}
       />
 
-      <Button onClick={calcular}>Calcular</Button>
+      <Button onClick={calcular}>Calcular TIR</Button>
 
       {resultados && (
-        <div className="mt-6 space-y-2">
-          <h2 className="text-xl font-semibold">Indicadores</h2>
-          <pre className="bg-gray-100 p-3 rounded text-sm">
-            {JSON.stringify(resultados.indicadores, null, 2)}
-          </pre>
-
-          <h2 className="text-xl font-semibold">Cashflow</h2>
-          <table className="w-full border text-sm">
-            <thead>
-              <tr>
-                <th className="border p-1">Fecha</th>
-                <th className="border p-1">Flujo</th>
-                <th className="border p-1">Valor residual</th>
-              </tr>
-            </thead>
-            <tbody>
-              {resultados.cashflow.map((f: any, i: number) => (
-                <tr key={i}>
-                  <td className="border p-1">{f.fecha}</td>
-                  <td className="border p-1">{f.flujo}</td>
-                  <td className="border p-1">{f.valor_residual}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-4 bg-gray-100 p-4 rounded">
+          <pre>{JSON.stringify(resultados, null, 2)}</pre>
         </div>
       )}
     </div>
