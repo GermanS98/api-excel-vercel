@@ -19,17 +19,50 @@ export default function Page() {
   }, [])
 
   const calcular = async () => {
-    const res = await fetch('https://tir-backend.onrender.com/calcular_tir', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ticker,
-        precio: parseFloat(precio),
-        fecha_compra: fecha
+    try {
+      // Buscar características y flujos desde Supabase (API interna tuya)
+      const [caracRes, flujosRes] = await Promise.all([
+        fetch(`/api/caracteristicas?ticker=${ticker}`),
+        fetch(`/api/flujos?ticker=${ticker}`)
+      ])
+
+      const caracteristicas = await caracRes.json()
+      const flujos = await flujosRes.json()
+
+      // Si el bono es de tipo CER, cargar también la tabla CER
+      let cer = []
+      if (caracteristicas?.tipo === 'CER') {
+        const cerRes = await fetch(`/api/cer`)
+        cer = await cerRes.json()
+      }
+
+      // Enviar todo al backend
+      const res = await fetch('https://tir-backend.onrender.com/calcular_tir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          caracteristicas,
+          flujos,
+          cer,
+          precio: parseFloat(precio),
+          fecha_valor: fecha,
+          feriados: []
+        })
       })
-    })
-    const data = await res.json()
-    setResultados(data)
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        console.error('Error en el cálculo:', data)
+        alert(`Error: ${data?.error || 'Error desconocido'}`)
+        return
+      }
+
+      setResultados(data)
+    } catch (err) {
+      console.error('Error general:', err)
+      alert('Ocurrió un error inesperado.')
+    }
   }
 
   return (
