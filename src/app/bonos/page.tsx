@@ -85,3 +85,19 @@ export default function Page() {
       />
       <Input
         placeholder="Fecha de compra"
+        type="date"
+        value={fecha}
+        onChange={e => setFecha(e.target.value)}
+      />
+
+      <Button onClick={calcular}>Calcular TIR</Button>
+
+      {resultados && (
+        <div className="mt-4 bg-gray-100 p-4 rounded">
+          <pre>{JSON.stringify(resultados, null, 2)}</pre>
+        </div>
+      )}
+    </div>
+  )
+}
+
