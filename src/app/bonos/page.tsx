@@ -1,74 +1,36 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Input } from '@/components/ui/input'
+import { useState } from 'react'
 
-export default function Page() {
-  const [tickers, setTickers] = useState<{ ticker: string }[]>([])
-  const [ticker, setTicker] = useState('')
-  const [precio, setPrecio] = useState('')
-  const [fecha, setFecha] = useState('')
-  const [resultados, setResultados] = useState<any | null>(null)
-
-  useEffect(() => {
-    fetch('/api/bonos')
-      .then(res => res.json())
-      .then(data => setTickers(data))
-      .catch(err => console.error('Error al cargar tickers:', err))
-  }, [])
+export default function BonosPage() {
+  const [ticker, setTicker] = useState('TX25')
+  const [precio, setPrecio] = useState(120)
+  const [fecha, setFecha] = useState('2025-07-28')
+  const [resultados, setResultados] = useState<any>(null)
 
   const calcular = async () => {
-  console.log('🔍 Ejecutando cálculo...')
-  try {
-    console.log('📥 Pidiendo características y flujos...')
-    const [caracRes, flujosRes] = await Promise.all([
-      fetch(`/api/caracteristicas?ticker=${ticker}`),
-      fetch(`/api/flujos?ticker=${ticker}`)
-    ])
+    console.log('🔍 Ejecutando cálculo...')
+    try {
+      console.log('📥 Pidiendo características y flujos...')
+      const [caracRes, flujosRes] = await Promise.all([
+        fetch(`/api/caracteristicas?ticker=${ticker}`),
+        fetch(`/api/flujos?ticker=${ticker}`)
+      ])
 
-    const caracteristicas = await caracRes.json()
-    const flujos = await flujosRes.json()
-    console.log('✅ Características:', caracteristicas)
-    console.log('✅ Flujos:', flujos)
+      const caracteristicas = await caracRes.json()
+      const flujos = await flujosRes.json()
+      console.log('✅ Características:', caracteristicas)
+      console.log('✅ Flujos:', flujos)
 
-    let cer = []
-    if (caracteristicas?.tipo === 'CER') {
-      console.log('📥 Pidiendo CER...')
-      const cerRes = await fetch(`/api/cer`)
-      cer = await cerRes.json()
-      console.log('✅ CER:', cer)
-    }
+      let cer = []
+      if (caracteristicas?.tipo === 'CER') {
+        console.log('📥 Pidiendo CER...')
+        const cerRes = await fetch(`/api/cer`)
+        cer = await cerRes.json()
+        console.log('✅ CER:', cer)
+      }
 
-    console.log('📤 Enviando datos al backend para calcular...')
-    const res = await fetch('https://tir-backend.onrender.com/calcular_tir', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        caracteristicas,
-        flujos,
-        cer,
-        precio: parseFloat(precio),
-        fecha_valor: fecha,
-        feriados: []
-      })
-    })
-
-    const data = await res.json()
-
-    if (!res.ok) {
-      console.error('❌ Error en cálculo:', data)
-      alert(`Error: ${data?.error || 'Cálculo fallido'}`)
-      return
-    }
-
-    console.log('✅ Resultado:', data)
-    setResultados(data)
-  } catch (err) {
-    console.error('❌ Error general:', err)
-    alert('Error al intentar calcular la TIR')
-  }
-}
-
+      console.log('📤 Enviando datos al backend para calcular...')
       const res = await fetch('https://tir-backend.onrender.com/calcular_tir', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -76,7 +38,7 @@ export default function Page() {
           caracteristicas,
           flujos,
           cer,
-          precio: parseFloat(precio),
+          precio: parseFloat(precio.toString()),
           fecha_valor: fecha,
           feriados: []
         })
@@ -85,14 +47,15 @@ export default function Page() {
       const data = await res.json()
 
       if (!res.ok) {
-        console.error('Error en cálculo:', data)
+        console.error('❌ Error en cálculo:', data)
         alert(`Error: ${data?.error || 'Cálculo fallido'}`)
         return
       }
 
+      console.log('✅ Resultado:', data)
       setResultados(data)
     } catch (err) {
-      console.error('Error general:', err)
+      console.error('❌ Error general:', err)
       alert('Error al intentar calcular la TIR')
     }
   }
@@ -101,40 +64,39 @@ export default function Page() {
     <div className="max-w-xl mx-auto mt-10 space-y-4">
       <h1 className="text-2xl font-bold">Calculadora de TIR</h1>
 
-      <select
-        className="w-full border p-2 rounded"
-        value={ticker}
-        onChange={e => setTicker(e.target.value)}
-      >
-        <option value="">Seleccionar bono</option>
-        {tickers.map(t => (
-          <option key={t.ticker} value={t.ticker}>{t.ticker}</option>
-        ))}
-      </select>
+      <div className="flex space-x-2">
+        <select value={ticker} onChange={e => setTicker(e.target.value)}>
+          <option value="TX25">TX25</option>
+          <option value="T2X6">T2X6</option>
+          {/* Agregá más opciones si querés */}
+        </select>
 
-      <Input
-        placeholder="Precio"
-        type="number"
-        value={precio}
-        onChange={e => setPrecio(e.target.value)}
-      />
-      <Input
-        placeholder="Fecha de compra"
-        type="date"
-        value={fecha}
-        onChange={e => setFecha(e.target.value)}
-      />
+        <input
+          type="number"
+          value={precio}
+          onChange={e => setPrecio(parseFloat(e.target.value))}
+          className="border px-2"
+          placeholder="Precio"
+        />
 
-      <button
-        onClick={calcular}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        Calcular TIR
-      </button>
+        <input
+          type="date"
+          value={fecha}
+          onChange={e => setFecha(e.target.value)}
+          className="border px-2"
+        />
+
+        <button onClick={calcular} className="px-4 py-1 border rounded">
+          Calcular TIR
+        </button>
+      </div>
 
       {resultados && (
-        <div className="mt-4 bg-gray-100 p-4 rounded">
-          <pre>{JSON.stringify(resultados, null, 2)}</pre>
+        <div className="mt-4">
+          <h2 className="font-semibold">Resultados:</h2>
+          <pre className="bg-gray-100 p-2 rounded text-sm">
+            {JSON.stringify(resultados, null, 2)}
+          </pre>
         </div>
       )}
     </div>
