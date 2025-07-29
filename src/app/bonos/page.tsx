@@ -18,21 +18,56 @@ export default function Page() {
   }, [])
 
   const calcular = async () => {
-    console.log('🔍 Ejecutando cálculo...')
-    try {
-      const [caracRes, flujosRes] = await Promise.all([
-        fetch(`/api/caracteristicas?ticker=${ticker}`),
-        fetch(`/api/flujos?ticker=${ticker}`)
-      ])
+  console.log('🔍 Ejecutando cálculo...')
+  try {
+    console.log('📥 Pidiendo características y flujos...')
+    const [caracRes, flujosRes] = await Promise.all([
+      fetch(`/api/caracteristicas?ticker=${ticker}`),
+      fetch(`/api/flujos?ticker=${ticker}`)
+    ])
 
-      const caracteristicas = await caracRes.json()
-      const flujos = await flujosRes.json()
+    const caracteristicas = await caracRes.json()
+    const flujos = await flujosRes.json()
+    console.log('✅ Características:', caracteristicas)
+    console.log('✅ Flujos:', flujos)
 
-      let cer = []
-      if (caracteristicas?.tipo === 'CER') {
-        const cerRes = await fetch(`/api/cer`)
-        cer = await cerRes.json()
-      }
+    let cer = []
+    if (caracteristicas?.tipo === 'CER') {
+      console.log('📥 Pidiendo CER...')
+      const cerRes = await fetch(`/api/cer`)
+      cer = await cerRes.json()
+      console.log('✅ CER:', cer)
+    }
+
+    console.log('📤 Enviando datos al backend para calcular...')
+    const res = await fetch('https://tir-backend.onrender.com/calcular_tir', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        caracteristicas,
+        flujos,
+        cer,
+        precio: parseFloat(precio),
+        fecha_valor: fecha,
+        feriados: []
+      })
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      console.error('❌ Error en cálculo:', data)
+      alert(`Error: ${data?.error || 'Cálculo fallido'}`)
+      return
+    }
+
+    console.log('✅ Resultado:', data)
+    setResultados(data)
+  } catch (err) {
+    console.error('❌ Error general:', err)
+    alert('Error al intentar calcular la TIR')
+  }
+}
 
       const res = await fetch('https://tir-backend.onrender.com/calcular_tir', {
         method: 'POST',
