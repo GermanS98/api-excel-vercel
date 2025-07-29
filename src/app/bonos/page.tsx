@@ -40,7 +40,8 @@ export default function BonosPage() {
           cer,
           precio: parseFloat(precio.toString()),
           fecha_valor: fecha,
-          feriados: []
+          feriados: [],
+          base_calculo: '30/360'
         })
       })
 
