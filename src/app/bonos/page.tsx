@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { Input } from '@/components/ui/input'
-import Button from '@/components/ui/button'
 
 export default function Page() {
   const [tickers, setTickers] = useState<{ ticker: string }[]>([])
@@ -19,6 +18,7 @@ export default function Page() {
   }, [])
 
   const calcular = async () => {
+    console.log('🔍 Ejecutando cálculo...')
     try {
       const [caracRes, flujosRes] = await Promise.all([
         fetch(`/api/caracteristicas?ticker=${ticker}`),
@@ -90,7 +90,12 @@ export default function Page() {
         onChange={e => setFecha(e.target.value)}
       />
 
-      <Button onClick={calcular}>Calcular TIR</Button>
+      <button
+        onClick={calcular}
+        className="bg-blue-600 text-white px-4 py-2 rounded"
+      >
+        Calcular TIR
+      </button>
 
       {resultados && (
         <div className="mt-4 bg-gray-100 p-4 rounded">
@@ -100,4 +105,3 @@ export default function Page() {
     </div>
   )
 }
-
