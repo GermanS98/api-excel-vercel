@@ -31,7 +31,7 @@ export default function BonosPage() {
       }
 
       console.log('📤 Enviando datos al backend para calcular...')
-      const res = await fetch('https://tir-backend.onrender.com/calcular_tir', {
+      const res = await fetch('https://tir-backend-iop7.onrender.com/tir', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
