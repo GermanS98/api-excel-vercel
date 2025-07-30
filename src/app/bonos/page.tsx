@@ -66,6 +66,12 @@ export default function BonosPage() {
     }
   }
 
+  // Helper para formatear la TIR
+  const formatTir = (tir: number | null) => {
+    if (tir === null || isNaN(tir)) return 'N/A';
+    return (tir * 100).toFixed(2) + '%'; // Multiplica por 100 y formatea a 2 decimales
+  };
+
   return (
     <div className="max-w-xl mx-auto mt-10 space-y-4">
       <h1 className="text-2xl font-bold">Calculadora de TIR</h1>
@@ -100,6 +106,11 @@ export default function BonosPage() {
       {resultados && (
         <div className="mt-4">
           <h2 className="font-semibold">Resultados:</h2>
+          {/* Puedes mostrar la TIR formateada directamente */}
+          {resultados.tir !== undefined && resultados.tir !== null && (
+            <p>TIR: **{formatTir(resultados.tir)}**</p>
+          )}
+          {/* Si quieres mantener el JSON completo para depuración, puedes hacerlo debajo */}
           <pre className="bg-gray-100 p-2 rounded text-sm">
             {JSON.stringify(resultados, null, 2)}
           </pre>
@@ -108,4 +119,3 @@ export default function BonosPage() {
     </div>
   )
 }
-
