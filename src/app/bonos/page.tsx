@@ -106,11 +106,11 @@ export default function BonosPage() {
       {resultados && (
         <div className="mt-4">
           <h2 className="font-semibold">Resultados:</h2>
-          {/* Puedes mostrar la TIR formateada directamente */}
+          {/* Muestra la TIR formateada */}
           {resultados.tir !== undefined && resultados.tir !== null && (
             <p>TIR: **{formatTir(resultados.tir)}**</p>
           )}
-          {/* Si quieres mantener el JSON completo para depuración, puedes hacerlo debajo */}
+          {/* Puedes mantener el JSON completo para depuración si lo deseas */}
           <pre className="bg-gray-100 p-2 rounded text-sm">
             {JSON.stringify(resultados, null, 2)}
           </pre>
