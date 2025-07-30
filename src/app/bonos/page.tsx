@@ -23,7 +23,7 @@ export default function BonosPage() {
       console.log('✅ Flujos:', flujos)
 
       let cer = []
-      if (caracteristicas?.tipo === 'CER') {
+      if (caracteristicas?.desctasa?.trim().toUpperCase() === 'CER') {
         console.log('📥 Pidiendo CER...')
         const cerRes = await fetch(`/api/cer`)
         cer = await cerRes.json()
