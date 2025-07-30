@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 export default function BonosPage() {
   const [ticker, setTicker] = useState('TX25')
-  const [precio, setPrecio] = useState(120)
+  const [precio, setPrecio] = useState(1270)
   const [fecha, setFecha] = useState('2025-07-28')
   const [resultados, setResultados] = useState<any>(null)
 
