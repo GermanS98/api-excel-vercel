@@ -29,7 +29,11 @@ export default function BonosPage() {
         cer = await cerRes.json()
         console.log('✅ CER:', cer)
       }
-
+      console.log('📥 Pidiendo feriados...')
+      const feriadosRes = await fetch(`/api/feriados`)
+      feriados = await feriadosRes.json()
+      console.log('✅ feriados:', feriados)
+      
       console.log('📤 Enviando datos al backend para calcular...')
       const res = await fetch('https://tir-backend-iop7.onrender.com/tir', {
         method: 'POST',
