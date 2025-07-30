@@ -23,12 +23,12 @@ export default function BonosPage() {
       console.log('✅ Flujos:', flujos)
 
       let cer = []
-      if (caracteristicas?.desctasa?.trim().toUpperCase() === 'CER') {
-        console.log('📥 Pidiendo CER...')
-        const cerRes = await fetch(`/api/cer`)
-        cer = await cerRes.json()
-        console.log('✅ CER:', cer)
-      }
+     if (caracteristicas?.desctasa?.trim().toUpperCase() === 'CER') {
+      console.log('📥 Pidiendo CER...')
+      const cerRes = await fetch(`/api/cer`)
+      cer = await cerRes.json()
+      console.log('✅ CER:', cer)
+    }
 
       console.log('📥 Pidiendo feriados...')
       const feriadosRes = await fetch(`/api/feriados`)
@@ -40,7 +40,6 @@ export default function BonosPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          caracteristicas,
           flujos,
           cer,
           precio: parseFloat(precio.toString()),
