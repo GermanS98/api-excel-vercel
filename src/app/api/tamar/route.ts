@@ -5,15 +5,11 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_KEY!
 )
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url)
-  const ticker = searchParams.get('tamar')
-
+export async function GET() {
   const { data, error } = await supabase
-    .from('caracteristicas')
+    .from('tamar')
     .select('*')
-    .eq('ticker', ticker)
-    .single()
+    .order('fecha', { ascending: true })
 
   if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 })
   return new Response(JSON.stringify(data), { status: 200 })
