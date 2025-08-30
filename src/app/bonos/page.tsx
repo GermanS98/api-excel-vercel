@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function BonosPage() {
   const [ticker, setTicker] = useState('TX25')
@@ -8,6 +8,29 @@ export default function BonosPage() {
   const [fecha, setFecha] = useState('2025-07-28')
   const [resultados, setResultados] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [tickers, setTickers] = useState([])
+  const [tickersLoading, setTickersLoading] = useState(true)
+
+  // useEffect para cargar la lista de tickers al montar el componente
+  useEffect(() => {
+    const fetchTickers = async () => {
+      try {
+        const res = await fetch('/api/tickers');
+        const data = await res.json();
+        // Si la lista no está vacía, selecciona el primer ticker por defecto
+        if (data.length > 0) {
+          setTickers(data);
+          setTicker(data[0].ticker);
+        }
+      } catch (error) {
+        console.error('Error al obtener la lista de tickers:', error);
+      } finally {
+        setTickersLoading(false);
+      }
+    };
+
+    fetchTickers();
+  }, []);
 
   const calcular = async () => {
     setLoading(true)
@@ -69,14 +92,14 @@ export default function BonosPage() {
         body: JSON.stringify({
           caracteristicas,
           flujos,
-          cer, // Se envía vacío si no es un bono CER
-          tamar, // Se envía vacío si no es un bono TAMAR/DUAL
-          dolar, // Se envía vacío si no es un bono DOLAR LINKED
+          cer,
+          tamar,
+          dolar,
           precio: parseFloat(precio.toString()),
           fecha_valor: fecha,
           feriados,
-          basemes: baseMes, // Se envía como variable individual
-          baseanual: baseAnual, // Se envía como variable individual
+          basemes: baseMes,
+          baseanual: baseAnual,
         })
       })
 
@@ -114,11 +137,15 @@ export default function BonosPage() {
             onChange={e => setTicker(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm transition duration-150 ease-in-out"
           >
-            <option value="TX25">TX25 (CER)</option>
-            <option value="T2X6">T2X6 (Tasa Fija)</option>
-            <option value="T2V5">T2V5 (Dólar Linked)</option>
-            <option value="T2Y6">T2Y6 (TAMAR)</option>
-            <option value="T2S7">T2S7 (DUAL TAMAR)</option>
+            {tickersLoading ? (
+              <option>Cargando tickers...</option>
+            ) : (
+              tickers.map(t => (
+                <option key={t.ticker} value={t.ticker}>
+                  {t.ticker} ({t.desctasa})
+                </option>
+              ))
+            )}
           </select>
         </div>
 
@@ -148,7 +175,7 @@ export default function BonosPage() {
 
       <button
         onClick={calcular}
-        disabled={loading}
+        disabled={loading || tickersLoading}
         className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-md shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out disabled:bg-blue-400"
       >
         {loading ? 'Calculando...' : 'Calcular TIR'}
