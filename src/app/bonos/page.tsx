@@ -56,6 +56,12 @@ export default function BonosPage() {
       const feriados = await feriadosRes.json()
       console.log('✅ Feriados:', feriados)
 
+      // Extrae las bases de cálculo de las características del bono por separado
+      const baseMes = caracteristicas?.basemes || '30';
+      const baseAnual = caracteristicas?.baseanual || '360';
+      console.log('✅ Base de cálculo (mes):', baseMes);
+      console.log('✅ Base de cálculo (anual):', baseAnual);
+
       console.log('📤 Enviando datos al backend para calcular...')
       const res = await fetch('https://tir-backend-iop7.onrender.com/tir', {
         method: 'POST',
@@ -69,7 +75,8 @@ export default function BonosPage() {
           precio: parseFloat(precio.toString()),
           fecha_valor: fecha,
           feriados,
-          base_calculo: '30/360'
+          basemes: baseMes, // Se envía como variable individual
+          baseanual: baseAnual, // Se envía como variable individual
         })
       })
 
