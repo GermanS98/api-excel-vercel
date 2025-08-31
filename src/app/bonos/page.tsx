@@ -48,6 +48,12 @@ export default function BonosPage() {
       console.log('✅ Características:', caracteristicas)
       console.log('✅ Flujos:', flujos)
 
+      if (!caracteristicas || !caracteristicas.basemes || !caracteristicas.base) {
+        console.error('❌ Error: Falta información de base de cálculo en las características del bono. Los campos basemes o base no están presentes.')
+        alert('Error: No se pudo obtener la información de base de cálculo del bono. Inténtalo de nuevo.')
+        return
+      }
+
       let cer = []
       let tamar = []
       let dolar = []
