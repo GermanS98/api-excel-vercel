@@ -96,7 +96,8 @@ export default function BonosPage() {
           fecha_valor: fecha,
           feriados,
           basemes: caracteristicas?.basemes,
-          baseanual: caracteristicas?.base
+          baseanual: caracteristicas?.base,
+          tipotasa: caracteristicas?.tipotasa
         })
       })
 
