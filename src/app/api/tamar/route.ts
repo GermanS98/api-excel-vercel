@@ -5,8 +5,9 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_KEY!
 )
 
-export async function GET() {
-  const { data, error } = await supabase
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+    const { data, error } = await supabase
     .from('tamar')
     .select('*')
     .order('fecha', { ascending: true })
