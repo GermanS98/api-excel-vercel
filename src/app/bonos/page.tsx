@@ -70,7 +70,7 @@ export default function BonosPage() {
         const tamarRes = await fetch(`/api/tamar`)
         tamar = await tamarRes.json()
         console.log('✅ TAMAR:', tamar)
-      } else if (tipo_bono === 'DOLAR LINKED') {
+      } else if (tipo_bono === 'DOLAR LINKED' or tipo_bono === "DOLAR LINKED") {
         console.log('📥 Pidiendo Dólar...')
         const dolarRes = await fetch(`/api/dolar`)
         dolar = await dolarRes.json()
