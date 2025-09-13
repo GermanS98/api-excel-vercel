@@ -38,33 +38,34 @@ interface DualResult {
 type ResultData = SimpleResult | DualResult | null;
 
 
-// --- COMPONENTE PARA RENDERIZAR LA TABLA DE FLUJOS ---
+// --- SUB-COMPONENTES DE UI ---
+
+// Componente para mostrar la tabla de flujos detallados
 const FlujosTable = ({ flujos }: { flujos: FlujoDetallado[] }) => {
   if (!flujos || flujos.length === 0) {
     return <p className="text-sm text-gray-500 mt-2">No hay flujos detallados para mostrar.</p>;
   }
 
   return (
-    <div className="mt-4 overflow-x-auto">
-      <h4 className="font-semibold text-md mb-2 text-gray-700">Flujos Detallados</h4>
+    <div className="mt-6 overflow-x-auto">
       <table className="min-w-full bg-white border border-gray-200 text-left text-sm rounded-lg shadow-sm">
         <thead className="bg-gray-50">
           <tr>
-            <th className="py-2 px-3 border-b border-gray-200 font-medium text-gray-600">Fecha</th>
-            <th className="py-2 px-3 border-b border-gray-200 font-medium text-gray-600">VNO Ajustado</th>
-            <th className="py-2 px-3 border-b border-gray-200 font-medium text-gray-600">Intereses</th>
-            <th className="py-2 px-3 border-b border-gray-200 font-medium text-gray-600">Amortización</th>
-            <th className="py-2 px-3 border-b border-gray-200 font-medium text-gray-600">Flujo Total</th>
+            <th className="py-2 px-4 border-b border-gray-200 font-semibold text-gray-600">Fecha de pago</th>
+            <th className="py-2 px-4 border-b border-gray-200 font-semibold text-gray-600">VNO Ajustado</th>
+            <th className="py-2 px-4 border-b border-gray-200 font-semibold text-gray-600">Intereses</th>
+            <th className="py-2 px-4 border-b border-gray-200 font-semibold text-gray-600">Amortización</th>
+            <th className="py-2 px-4 border-b border-gray-200 font-semibold text-gray-600">Flujo Total</th>
           </tr>
         </thead>
         <tbody>
           {flujos.map((flujo, index) => (
             <tr key={index} className="hover:bg-gray-50/50">
-              <td className="py-2 px-3 border-b border-gray-200">{new Date(flujo.fecha).toLocaleDateString()}</td>
-              <td className="py-2 px-3 border-b border-gray-200">{flujo.vno_ajustado?.toFixed(4)}</td>
-              <td className="py-2 px-3 border-b border-gray-200">{flujo.pago_interes?.toFixed(4)}</td>
-              <td className="py-2 px-3 border-b border-gray-200">{flujo.pago_amortizacion?.toFixed(4)}</td>
-              <td className="py-2 px-3 border-b border-gray-200 font-semibold">{flujo.flujo_total?.toFixed(4)}</td>
+              <td className="py-2 px-4 border-b border-gray-200">{new Date(flujo.fecha).toLocaleDateString()}</td>
+              <td className="py-2 px-4 border-b border-gray-200">{flujo.vno_ajustado?.toFixed(4)}</td>
+              <td className="py-2 px-4 border-b border-gray-200">{flujo.pago_interes?.toFixed(4)}</td>
+              <td className="py-2 px-4 border-b border-gray-200">{flujo.pago_amortizacion?.toFixed(4)}</td>
+              <td className="py-2 px-4 border-b border-gray-200 font-bold text-gray-800">{flujo.flujo_total?.toFixed(4)}</td>
             </tr>
           ))}
         </tbody>
@@ -72,6 +73,35 @@ const FlujosTable = ({ flujos }: { flujos: FlujoDetallado[] }) => {
     </div>
   );
 };
+
+// Componente para mostrar los datos clave en una grilla
+const ResultSummary = ({ result }: { result: SimpleResult }) => (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-3 text-sm border-t border-b border-gray-200 py-4">
+        <div>
+            <span className="text-gray-500">TIR %:</span>
+            <p className="font-semibold text-lg text-gray-800">{(result.tir * 100).toFixed(2)}</p>
+        </div>
+        <div>
+            <span className="text-gray-500">Valor Técnico:</span>
+            <p className="font-semibold text-lg text-gray-800">{result.valor_tecnico.toFixed(4)}</p>
+        </div>
+        {result.paridad && (
+            <div>
+                <span className="text-gray-500">Paridad %:</span>
+                <p className="font-semibold text-lg text-gray-800">{(result.paridad * 100).toFixed(2)}</p>
+            </div>
+        )}
+    </div>
+);
+
+// Componente principal para mostrar un bloque de resultados (simple o una pata de un dual)
+const ResultDisplay = ({ title, result, titleColor = 'text-gray-800' }: { title: string, result: SimpleResult, titleColor?: string }) => (
+    <div>
+        <h3 className={`text-xl font-bold ${titleColor} mb-3`}>{title}</h3>
+        <ResultSummary result={result} />
+        <FlujosTable flujos={result.flujos_detallados} />
+    </div>
+);
 
 
 export default function BonosPage() {
@@ -198,44 +228,26 @@ export default function BonosPage() {
 
     if ('tipo_dual' in data) {
       return (
-        <div>
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-blue-700">Resultado Pata TAMAR</h3>
-            <p><strong>TIR:</strong> {(data.resultado_tamar.tir * 100).toFixed(2)}%</p>
-            <p><strong>Valor Técnico:</strong> {data.resultado_tamar.valor_tecnico.toFixed(4)}</p>
-            {data.resultado_tamar.paridad && <p><strong>Paridad:</strong> {data.resultado_tamar.paridad.toFixed(4)}</p>}
-            <FlujosTable flujos={data.resultado_tamar.flujos_detallados} />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-green-700">Resultado Pata Fija</h3>
-            <p><strong>TIR:</strong> {(data.resultado_fija.tir * 100).toFixed(2)}%</p>
-            <p><strong>Valor Técnico:</strong> {data.resultado_fija.valor_tecnico.toFixed(4)}</p>
-            {data.resultado_fija.paridad && <p><strong>Paridad:</strong> {data.resultado_fija.paridad.toFixed(4)}</p>}
-            <FlujosTable flujos={data.resultado_fija.flujos_detallados} />
-          </div>
+        <div className="space-y-8">
+            <ResultDisplay title="Resultado Pata TAMAR" result={data.resultado_tamar} titleColor="text-blue-700" />
+            <ResultDisplay title="Resultado Pata Fija" result={data.resultado_fija} titleColor="text-green-700" />
         </div>
       );
     } 
     
-    return (
-      <div>
-        <h3 className="text-lg font-semibold text-gray-800">Resultado Simple</h3>
-        <p><strong>TIR:</strong> {(data.tir * 100).toFixed(2)}%</p>
-        <p><strong>Valor Técnico:</strong> {data.valor_tecnico.toFixed(4)}</p>
-        {data.paridad && <p><strong>Paridad:</strong> {data.paridad.toFixed(4)}</p>}
-        <FlujosTable flujos={data.flujos_detallados} />
-      </div>
-    );
+    return <ResultDisplay title="Resultados del Bono" result={data} />;
   };
 
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 p-6 space-y-4 rounded-xl shadow-lg bg-white">
-      <h1 className="text-3xl font-bold text-center text-gray-800">Calculadora de TIR de Bonos</h1>
-      <p className="text-center text-gray-600">Selecciona un bono y sus parámetros para calcular la Tasa Interna de Retorno.</p>
+    <div className="max-w-5xl mx-auto mt-10 p-6 space-y-6 rounded-xl shadow-lg bg-white">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-800">Calculadora de TIR de Bonos</h1>
+        <p className="text-gray-600 mt-2">Selecciona un bono y sus parámetros para calcular la Tasa Interna de Retorno.</p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-        <div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end p-4 border border-gray-200 rounded-lg">
+        <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700">Selecciona Ticker</label>
           <select
             value={ticker}
@@ -277,7 +289,7 @@ export default function BonosPage() {
         </div>
         <button
           onClick={calcular}
-          className={`w-full px-6 py-2 text-white font-semibold rounded-md shadow-md transition-all ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'}`}
+          className={`w-full col-span-1 md:col-span-4 px-6 py-2.5 text-white font-semibold rounded-md shadow-md transition-all ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'}`}
           disabled={isLoading}
         >
           {isLoading ? 'Calculando...' : 'Calcular TIR'}
@@ -285,13 +297,12 @@ export default function BonosPage() {
       </div>
 
       {resultados && (
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg shadow-inner">
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Resultados:</h2>
-          <div className="p-3 rounded text-sm text-gray-800">
-            {renderResults(resultados)}
-          </div>
+        <div className="mt-6 p-4 bg-gray-50/70 rounded-lg shadow-inner">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b">Resultados</h2>
+          {renderResults(resultados)}
         </div>
       )}
     </div>
   )
 }
+
