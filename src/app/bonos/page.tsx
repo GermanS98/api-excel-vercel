@@ -19,12 +19,19 @@ interface TickerItem {
   desctasa: string;
 }
 
-// Define la estructura para un resultado de bono simple
+// Define la estructura para un resultado de bono simple, ahora con todos los campos
 interface SimpleResult {
   tir: number;
   valor_tecnico: number;
-  paridad?: number; // La paridad es opcional
+  paridad?: number;
   flujos_detallados: FlujoDetallado[];
+  RD?: number;
+  tna?: number;
+  tem?: number;
+  dias_vto?: number;
+  modify_duration?: number;
+  duracion_macaulay?: number;
+  base_calculo?: string;
 }
 
 // Define la estructura para un resultado de bono DUAL
@@ -74,23 +81,29 @@ const FlujosTable = ({ flujos }: { flujos: FlujoDetallado[] }) => {
   );
 };
 
+// Componente para mostrar un único dato en la grilla de resumen
+const SummaryItem = ({ label, value }: { label: string, value: string | number | undefined }) => {
+    if (value === undefined || value === null) return null;
+    return (
+        <div>
+            <span className="text-gray-500">{label}:</span>
+            <p className="font-semibold text-lg text-gray-800">{value}</p>
+        </div>
+    );
+};
+
 // Componente para mostrar los datos clave en una grilla
 const ResultSummary = ({ result }: { result: SimpleResult }) => (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-3 text-sm border-t border-b border-gray-200 py-4">
-        <div>
-            <span className="text-gray-500">TIR %:</span>
-            <p className="font-semibold text-lg text-gray-800">{(result.tir * 100).toFixed(2)}</p>
-        </div>
-        <div>
-            <span className="text-gray-500">Valor Técnico:</span>
-            <p className="font-semibold text-lg text-gray-800">{result.valor_tecnico.toFixed(4)}</p>
-        </div>
-        {result.paridad && (
-            <div>
-                <span className="text-gray-500">Paridad %:</span>
-                <p className="font-semibold text-lg text-gray-800">{(result.paridad * 100).toFixed(2)}</p>
-            </div>
-        )}
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4 text-sm border-t border-b border-gray-200 py-4">
+        <SummaryItem label="TIR %" value={(result.tir * 100).toFixed(2)} />
+        <SummaryItem label="Valor Técnico" value={result.valor_tecnico?.toFixed(4)} />
+        <SummaryItem label="Paridad %" value={result.paridad ? (result.paridad * 100).toFixed(2) : undefined} />
+        <SummaryItem label="Modified Duration" value={result.modify_duration?.toFixed(2)} />
+        <SummaryItem label="Macaulay Duration" value={result.duracion_macaulay?.toFixed(2)} />
+        <SummaryItem label="TNA %" value={result.tna ? (result.tna * 100).toFixed(2) : undefined} />
+        <SummaryItem label="TEM %" value={result.tem ? (result.tem * 100).toFixed(2) : undefined} />
+        <SummaryItem label="Días al Vto." value={result.dias_vto} />
+        <SummaryItem label="Exit Yield %" value={result.RD ? (result.RD * 100).toFixed(2) : undefined} />
     </div>
 );
 
@@ -113,6 +126,16 @@ export default function BonosPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    // Función para obtener la fecha actual en formato YYYY-MM-DD
+    const getCurrentDate = () => {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    setFecha(getCurrentDate());
+
     const fetchTickers = async () => {
       try {
         const res = await fetch('/api/tickers')
