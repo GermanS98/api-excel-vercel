@@ -81,31 +81,55 @@ const FlujosTable = ({ flujos }: { flujos: FlujoDetallado[] }) => {
   );
 };
 
-// Componente para mostrar un único dato en la grilla de resumen
-const SummaryItem = ({ label, value }: { label: string, value: string | number | undefined }) => {
-    if (value === undefined || value === null) return null;
+// --- NUEVO COMPONENTE DE RESUMEN ---
+// Muestra los datos clave en una tabla de 4 columnas
+const ResultSummary = ({ result }: { result: SimpleResult }) => {
+    // Lista de todos los posibles datos a mostrar
+    const summaryData = [
+        { label: 'TIR %', value: (result.tir * 100).toFixed(2) },
+        { label: 'Paridad %', value: result.paridad ? (result.paridad * 100).toFixed(2) : undefined },
+        { label: 'Valor Técnico', value: result.valor_tecnico?.toFixed(4) },
+        { label: 'Exit Yield (RD) %', value: result.RD ? (result.RD * 100).toFixed(2) : undefined },
+        { label: 'Modified Duration', value: result.modify_duration?.toFixed(2) },
+        { label: 'Macaulay Duration', value: result.duracion_macaulay?.toFixed(2) },
+        { label: 'TNA %', value: result.tna ? (result.tna * 100).toFixed(2) : undefined },
+        { label: 'TEM %', value: result.tem ? (result.tem * 100).toFixed(2) : undefined },
+        { label: 'Días al Vto.', value: result.dias_vto },
+    ].filter(item => item.value !== undefined && item.value !== null); // Filtra los datos que no existen
+
+    // Agrupa los datos en pares para crear las filas de la tabla
+    const rows = [];
+    for (let i = 0; i < summaryData.length; i += 2) {
+        rows.push(summaryData.slice(i, i + 2));
+    }
+
     return (
-        <div>
-            <span className="text-gray-500">{label}:</span>
-            <p className="font-semibold text-lg text-gray-800">{value}</p>
+        <div className="border-t border-b border-gray-200 py-4">
+            <table className="w-full text-sm">
+                <tbody>
+                    {rows.map((row, index) => (
+                        <tr key={index}>
+                            <td className="py-1 px-2 text-gray-500 w-1/4">{row[0].label}:</td>
+                            <td className="py-1 px-2 font-semibold text-gray-800 w-1/4">{row[0].value}</td>
+                            {row[1] ? (
+                                <>
+                                    <td className="py-1 px-2 text-gray-500 w-1/4">{row[1].label}:</td>
+                                    <td className="py-1 px-2 font-semibold text-gray-800 w-1/4">{row[1].value}</td>
+                                </>
+                            ) : (
+                                <>
+                                    <td className="w-1/4"></td>
+                                    <td className="w-1/4"></td>
+                                </>
+                            )}
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 };
 
-// Componente para mostrar los datos clave en una grilla
-const ResultSummary = ({ result }: { result: SimpleResult }) => (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4 text-sm border-t border-b border-gray-200 py-4">
-        <SummaryItem label="TIR %" value={(result.tir * 100).toFixed(2)} />
-        <SummaryItem label="Valor Técnico" value={result.valor_tecnico?.toFixed(4)} />
-        <SummaryItem label="Paridad %" value={result.paridad ? (result.paridad * 100).toFixed(2) : undefined} />
-        <SummaryItem label="Modified Duration" value={result.modify_duration?.toFixed(2)} />
-        <SummaryItem label="Macaulay Duration" value={result.duracion_macaulay?.toFixed(2)} />
-        <SummaryItem label="TNA %" value={result.tna ? (result.tna * 100).toFixed(2) : undefined} />
-        <SummaryItem label="TEM %" value={result.tem ? (result.tem * 100).toFixed(2) : undefined} />
-        <SummaryItem label="Días al Vto." value={result.dias_vto} />
-        <SummaryItem label="Exit Yield %" value={result.RD ? (result.RD * 100).toFixed(2) : undefined} />
-    </div>
-);
 
 // Componente principal para mostrar un bloque de resultados (simple o una pata de un dual)
 const ResultDisplay = ({ title, result, titleColor = 'text-gray-800' }: { title: string, result: SimpleResult, titleColor?: string }) => (
@@ -120,7 +144,7 @@ const ResultDisplay = ({ title, result, titleColor = 'text-gray-800' }: { title:
 export default function BonosPage() {
   const [ticker, setTicker] = useState('TX25')
   const [precio, setPrecio] = useState(1270)
-  const [fecha, setFecha] = useState('2025-07-28')
+  const [fecha, setFecha] = useState('')
   const [resultados, setResultados] = useState<ResultData>(null)
   const [tickers, setTickers] = useState<TickerItem[]>([])
   const [isLoading, setIsLoading] = useState(false);
