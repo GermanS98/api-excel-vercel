@@ -162,7 +162,7 @@ export default function BonosPage() {
     }
   }
 
-  // --- FUNCIÓN CORREGIDA CON TIPADO EXPLÍCITO ---
+  // --- FUNCIÓN CORREGIDA CON TIPADO EXPLÍCITO Y ESTRUCTURA IF/ELSE ---
   const renderResults = (data: ResultData) => {
     // Maneja el estado inicial cuando no hay resultados
     if (!data) return null;
@@ -183,16 +183,16 @@ export default function BonosPage() {
           </div>
         </div>
       );
+    } else {
+      // Al usar un 'else', TypeScript sabe que si no es Dual, tiene que ser SimpleResult.
+      return (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800">Resultado Simple</h3>
+          <p><strong>TIR:</strong> {(data.tir * 100).toFixed(2)}%</p>
+          <p><strong>Valor Técnico:</strong> {data.valor_tecnico.toFixed(4)}</p>
+        </div>
+      );
     }
-
-    // Si no es dual, TypeScript sabe que es de tipo SimpleResult
-    return (
-      <div>
-        <h3 className="text-lg font-semibold text-gray-800">Resultado Simple</h3>
-        <p><strong>TIR:</strong> {(data.tir * 100).toFixed(2)}%</p>
-        <p><strong>Valor Técnico:</strong> {data.valor_tecnico.toFixed(4)}</p>
-      </div>
-    );
   };
 
 
