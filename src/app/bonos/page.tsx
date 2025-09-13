@@ -2,16 +2,32 @@
 
 import { useState, useEffect } from 'react'
 
+// --- INTERFACES PARA TIPADO ---
 interface TickerItem {
   ticker: string;
   desctasa: string;
 }
 
+interface SimpleResult {
+  tir: number;
+  valor_tecnico: number;
+}
+
+interface DualResult {
+  tipo_dual: true;
+  resultado_tamar: SimpleResult;
+  resultado_fija: SimpleResult;
+}
+
+// Tipo combinado para el estado de resultados
+type ResultData = SimpleResult | DualResult | null;
+
+
 export default function BonosPage() {
   const [ticker, setTicker] = useState('TX25')
   const [precio, setPrecio] = useState(1270)
   const [fecha, setFecha] = useState('2025-07-28')
-  const [resultados, setResultados] = useState<any>(null)
+  const [resultados, setResultados] = useState<ResultData>(null)
   const [tickers, setTickers] = useState<TickerItem[]>([])
   const [isLoading, setIsLoading] = useState(false); // Estado para la carga
 
@@ -55,7 +71,7 @@ export default function BonosPage() {
       const tipo_bono = caracteristicas?.desctasa?.trim().toUpperCase();
       let flujos = [];
 
-      // --- CAMBIO PRINCIPAL: Lógica para obtener flujos ---
+      // Lógica para obtener flujos
       if (tipo_bono === 'DUAL TAMAR') {
         console.log('📥 Pidiendo flujos para DUAL TAMAR (Fija y Variable)...')
         const tickerTamar = `${ticker} TAMAR`;
@@ -142,11 +158,11 @@ export default function BonosPage() {
     }
   }
 
-  // Función para renderizar los resultados de forma legible
-  const renderResults = (data) => {
+  // --- FUNCIÓN CORREGIDA CON TIPADO EXPLÍCITO ---
+  const renderResults = (data: ResultData) => {
     if (!data) return null;
 
-    if (data.tipo_dual) {
+    if ('tipo_dual' in data && data.tipo_dual) {
       return (
         <div>
           <div className="mb-4">
@@ -163,6 +179,7 @@ export default function BonosPage() {
       );
     }
 
+    // Si no es dual, TypeScript sabe que es de tipo SimpleResult
     return (
       <div>
         <h3 className="text-lg font-semibold text-gray-800">Resultado Simple</h3>
@@ -228,12 +245,15 @@ export default function BonosPage() {
       {resultados && (
         <div className="mt-6 p-4 bg-gray-50 rounded-lg shadow-inner">
           <h2 className="text-xl font-bold text-gray-800 mb-2">Resultados:</h2>
-          {/* Usamos la nueva función para mostrar los resultados */}
           <div className="p-3 rounded text-sm text-gray-800">
             {renderResults(resultados)}
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
     </div>
   )
 }
