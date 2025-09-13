@@ -30,7 +30,7 @@ export default function BonosPage() {
   const [ticker, setTicker] = useState('TX25')
   const [precio, setPrecio] = useState(1270)
   const [fecha, setFecha] = useState('2025-07-28')
-  // --- CORRECCIÓN DE TIPO: Se usa el tipo 'ResultData' para el estado ---
+  // Se usa el tipo 'ResultData' para el estado
   const [resultados, setResultados] = useState<ResultData>(null)
   const [tickers, setTickers] = useState<TickerItem[]>([])
   const [isLoading, setIsLoading] = useState(false); // Estado para la carga
@@ -162,13 +162,14 @@ export default function BonosPage() {
     }
   }
 
-  // --- FUNCIÓN CORREGIDA CON TIPADO EXPLÍCITO Y ESTRUCTURA IF/ELSE ---
+  // --- FUNCIÓN CORREGIDA Y SIMPLIFICADA ---
   const renderResults = (data: ResultData) => {
     // Maneja el estado inicial cuando no hay resultados
     if (!data) return null;
 
-    // Type Guard: Revisa si 'data' es del tipo DualResult para renderizar correctamente
-    if ('tipo_dual' in data && data.tipo_dual) {
+    // Type Guard: La forma más simple de diferenciar los tipos.
+    // Si 'tipo_dual' existe en el objeto, es un resultado dual.
+    if ('tipo_dual' in data) {
       return (
         <div>
           <div className="mb-4">
@@ -183,16 +184,16 @@ export default function BonosPage() {
           </div>
         </div>
       );
-    } else {
-      // Al usar un 'else', TypeScript sabe que si no es Dual, tiene que ser SimpleResult.
-      return (
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800">Resultado Simple</h3>
-          <p><strong>TIR:</strong> {(data.tir * 100).toFixed(2)}%</p>
-          <p><strong>Valor Técnico:</strong> {data.valor_tecnico.toFixed(4)}</p>
-        </div>
-      );
-    }
+    } 
+    
+    // Si la condición de arriba no se cumple, TypeScript sabe que es un resultado simple.
+    return (
+      <div>
+        <h3 className="text-lg font-semibold text-gray-800">Resultado Simple</h3>
+        <p><strong>TIR:</strong> {(data.tir * 100).toFixed(2)}%</p>
+        <p><strong>Valor Técnico:</strong> {data.valor_tecnico.toFixed(4)}</p>
+      </div>
+    );
   };
 
 
@@ -259,3 +260,4 @@ export default function BonosPage() {
     </div>
   )
 }
+
