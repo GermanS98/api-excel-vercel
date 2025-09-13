@@ -13,6 +13,7 @@ export default function BonosPage() {
   const [fecha, setFecha] = useState('2025-07-28')
   const [resultados, setResultados] = useState<any>(null)
   const [tickers, setTickers] = useState<TickerItem[]>([])
+  const [isLoading, setIsLoading] = useState(false); // Estado para la carga
 
   useEffect(() => {
     const fetchTickers = async () => {
@@ -36,29 +37,50 @@ export default function BonosPage() {
 
   const calcular = async () => {
     console.log('🔍 Ejecutando cálculo...')
+    setIsLoading(true); // Iniciar carga
+    setResultados(null); // Limpiar resultados previos
     try {
-      console.log('📥 Pidiendo características y flujos...')
-      const [caracRes, flujosRes] = await Promise.all([
-        fetch(`/api/caracteristicas?ticker=${ticker}`),
-        fetch(`/api/flujos?ticker=${ticker}`)
-      ])
-
-      const caracteristicas = await caracRes.json()
-      const flujos = await flujosRes.json()
-      console.log('✅ Características:', caracteristicas)
-      console.log('✅ Flujos:', flujos)
+      console.log('📥 Pidiendo características...')
+      const caracRes = await fetch(`/api/caracteristicas?ticker=${ticker}`);
+      const caracteristicas = await caracRes.json();
+      console.log('✅ Características:', caracteristicas);
 
       if (!caracteristicas || !caracteristicas.basemes || !caracteristicas.base) {
         console.error('❌ Error: Falta información de base de cálculo en las características del bono. Los campos basemes o base no están presentes.')
         alert('Error: No se pudo obtener la información de base de cálculo del bono. Inténtalo de nuevo.')
+        setIsLoading(false);
         return
       }
 
+      const tipo_bono = caracteristicas?.desctasa?.trim().toUpperCase();
+      let flujos = [];
+
+      // --- CAMBIO PRINCIPAL: Lógica para obtener flujos ---
+      if (tipo_bono === 'DUAL TAMAR') {
+        console.log('📥 Pidiendo flujos para DUAL TAMAR (Fija y Variable)...')
+        const tickerTamar = `${ticker} TAMAR`;
+        const [flujosFijaRes, flujosTamarRes] = await Promise.all([
+          fetch(`/api/flujos?ticker=${ticker}`),
+          fetch(`/api/flujos?ticker=${tickerTamar}`)
+        ]);
+
+        const flujosFija = await flujosFijaRes.json();
+        const flujosTamar = await flujosTamarRes.json();
+        
+        // Combinamos los flujos de ambos tickers en un solo array
+        flujos = [...flujosFija, ...flujosTamar];
+        console.log('✅ Flujos combinados para DUAL:', flujos);
+
+      } else {
+        console.log('📥 Pidiendo flujos para bono simple...')
+        const flujosRes = await fetch(`/api/flujos?ticker=${ticker}`);
+        flujos = await flujosRes.json();
+        console.log('✅ Flujos:', flujos);
+      }
+      
       let cer = []
       let tamar = []
       let dolar = []
-
-      const tipo_bono = caracteristicas?.desctasa?.trim().toUpperCase();
 
       if (tipo_bono === 'CER') {
         console.log('📥 Pidiendo CER...')
@@ -88,7 +110,7 @@ export default function BonosPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           caracteristicas,
-          flujos,
+          flujos, // Se envía el array de flujos (combinado si es DUAL)
           cer,
           tamar,
           dolar,
@@ -106,6 +128,7 @@ export default function BonosPage() {
       if (!res.ok) {
         console.error('❌ Error en cálculo:', data)
         alert(`Error: ${data?.error || 'Cálculo fallido'}`)
+        setIsLoading(false);
         return
       }
 
@@ -114,8 +137,41 @@ export default function BonosPage() {
     } catch (err) {
       console.error('❌ Error general:', err)
       alert('Error al intentar calcular la TIR')
+    } finally {
+        setIsLoading(false); // Finalizar carga
     }
   }
+
+  // Función para renderizar los resultados de forma legible
+  const renderResults = (data) => {
+    if (!data) return null;
+
+    if (data.tipo_dual) {
+      return (
+        <div>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-blue-700">Resultado Pata TAMAR</h3>
+            <p><strong>TIR:</strong> {(data.resultado_tamar.tir * 100).toFixed(2)}%</p>
+            <p><strong>Valor Técnico:</strong> {data.resultado_tamar.valor_tecnico.toFixed(4)}</p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-green-700">Resultado Pata Fija</h3>
+            <p><strong>TIR:</strong> {(data.resultado_fija.tir * 100).toFixed(2)}%</p>
+            <p><strong>Valor Técnico:</strong> {data.resultado_fija.valor_tecnico.toFixed(4)}</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <h3 className="text-lg font-semibold text-gray-800">Resultado Simple</h3>
+        <p><strong>TIR:</strong> {(data.tir * 100).toFixed(2)}%</p>
+        <p><strong>Valor Técnico:</strong> {data.valor_tecnico.toFixed(4)}</p>
+      </div>
+    );
+  };
+
 
   return (
     <div className="max-w-xl mx-auto mt-10 p-4 space-y-4 rounded-xl shadow-lg bg-white">
@@ -128,6 +184,7 @@ export default function BonosPage() {
           value={ticker}
           onChange={e => setTicker(e.target.value)}
           className="border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          disabled={isLoading}
         >
           {tickers.length > 0 ? (
             tickers.map(t => (
@@ -147,6 +204,7 @@ export default function BonosPage() {
           onChange={e => setPrecio(parseFloat(e.target.value))}
           className="border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
           placeholder="Precio"
+          disabled={isLoading}
         />
 
         <label className="block text-sm font-medium text-gray-700">Fecha de Valor</label>
@@ -155,22 +213,25 @@ export default function BonosPage() {
           value={fecha}
           onChange={e => setFecha(e.target.value)}
           className="border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          disabled={isLoading}
         />
 
         <button
           onClick={calcular}
-          className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all"
+          className={`px-6 py-3 text-white font-semibold rounded-md shadow-md transition-all ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'}`}
+          disabled={isLoading}
         >
-          Calcular TIR
+          {isLoading ? 'Calculando...' : 'Calcular TIR'}
         </button>
       </div>
 
       {resultados && (
         <div className="mt-6 p-4 bg-gray-50 rounded-lg shadow-inner">
           <h2 className="text-xl font-bold text-gray-800 mb-2">Resultados:</h2>
-          <pre className="bg-gray-200 p-3 rounded text-sm overflow-x-auto text-gray-800">
-            {JSON.stringify(resultados, null, 2)}
-          </pre>
+          {/* Usamos la nueva función para mostrar los resultados */}
+          <div className="p-3 rounded text-sm text-gray-800">
+            {renderResults(resultados)}
+          </div>
         </div>
       )}
     </div>
