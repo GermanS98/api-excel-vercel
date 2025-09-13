@@ -3,23 +3,26 @@
 import { useState, useEffect } from 'react'
 
 // --- INTERFACES PARA TIPADO ---
+// Define la estructura de los tickers en el selector
 interface TickerItem {
   ticker: string;
   desctasa: string;
 }
 
+// Define la estructura para un resultado de bono simple
 interface SimpleResult {
   tir: number;
   valor_tecnico: number;
 }
 
+// Define la estructura para un resultado de bono DUAL
 interface DualResult {
-  tipo_dual: true;
+  tipo_dual: true; // Propiedad clave para identificar este tipo de resultado
   resultado_tamar: SimpleResult;
   resultado_fija: SimpleResult;
 }
 
-// Tipo combinado para el estado de resultados
+// Crea un tipo que puede ser un resultado simple, dual, o nulo (antes de calcular)
 type ResultData = SimpleResult | DualResult | null;
 
 
@@ -27,6 +30,7 @@ export default function BonosPage() {
   const [ticker, setTicker] = useState('TX25')
   const [precio, setPrecio] = useState(1270)
   const [fecha, setFecha] = useState('2025-07-28')
+  // --- CORRECCIÓN DE TIPO: Se usa el tipo 'ResultData' para el estado ---
   const [resultados, setResultados] = useState<ResultData>(null)
   const [tickers, setTickers] = useState<TickerItem[]>([])
   const [isLoading, setIsLoading] = useState(false); // Estado para la carga
@@ -160,8 +164,10 @@ export default function BonosPage() {
 
   // --- FUNCIÓN CORREGIDA CON TIPADO EXPLÍCITO ---
   const renderResults = (data: ResultData) => {
+    // Maneja el estado inicial cuando no hay resultados
     if (!data) return null;
 
+    // Type Guard: Revisa si 'data' es del tipo DualResult para renderizar correctamente
     if ('tipo_dual' in data && data.tipo_dual) {
       return (
         <div>
@@ -250,10 +256,6 @@ export default function BonosPage() {
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
     </div>
   )
 }
