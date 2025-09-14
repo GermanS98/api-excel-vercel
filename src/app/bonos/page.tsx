@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import styles from './page.module.css'
 
 // --- INTERFACES PARA TIPADO (DE TU CÓDIGO ORIGINAL) ---
@@ -42,9 +42,6 @@ const FlujosTable = ({ flujos }: { flujos: FlujoDetallado[] }) => {
   if (!flujos || flujos.length === 0) {
     return <p className={styles.subtitle}>No hay flujos detallados para mostrar.</p>;
   }
-   const primerFlujo = flujos[0];
-   const flujosSiguientes = flujos.slice(1);
-
   return (
     <div className={styles.flujosTableContainer}>
       <table className={styles.flujosTable}>
@@ -58,7 +55,6 @@ const FlujosTable = ({ flujos }: { flujos: FlujoDetallado[] }) => {
           </tr>
         </thead>
         <tbody>
-           {/* Mantenemos tu lógica de mapeo original */}
           {flujos.map((flujo, index) => (
             <tr key={index}>
               <td>{new Date(flujo.fecha).toLocaleDateString()}</td>
@@ -75,7 +71,6 @@ const FlujosTable = ({ flujos }: { flujos: FlujoDetallado[] }) => {
 };
 
 const ResultSummary = ({ result }: { result: SimpleResult }) => {
-    // Mantenemos tu lógica de datos intacta
     const summaryData = [
         { label: 'TIR %', value: (result.tir * 100).toFixed(2) },
         { label: 'Paridad %', value: result.paridad ? (result.paridad * 100).toFixed(2) : undefined },
@@ -111,18 +106,19 @@ const ResultDisplay = ({ title, result, titleColorClass = '' }: { title: string,
 );
 
 
-// --- COMPONENTE PRINCIPAL (CON TU LÓGICA INTACTA) ---
+// --- COMPONENTE PRINCIPAL ---
 export default function BonosPage() {
-    // Lógica de estados de tu código original
-    const [ticker, setTicker] = useState('TX25')
-    const [precio, setPrecio] = useState(1270)
-    const [nominales, setNominales] = useState(100)
-    const [fecha, setFecha] = useState('')
-    const [resultados, setResultados] = useState<ResultData>(null)
-    const [tickers, setTickers] = useState<TickerItem[]>([])
+    const [ticker, setTicker] = useState('TX25');
+    const [precio, setPrecio] = useState(1270);
+    const [nominales, setNominales] = useState(100);
+    const [fecha, setFecha] = useState('');
+    const [resultados, setResultados] = useState<ResultData>(null);
+    const [tickers, setTickers] = useState<TickerItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [filtroTicker, setFiltroTicker] = useState('');
+    const [mostrarLista, setMostrarLista] = useState(false);
+    const searchContainerRef = useRef<HTMLDivElement>(null);
 
-    // Lógica useEffect de tu código original (intacta)
     useEffect(() => {
         const getCurrentDate = () => {
           const today = new Date();
@@ -135,46 +131,60 @@ export default function BonosPage() {
     
         const fetchTickers = async () => {
           try {
-            const res = await fetch('/api/tickers')
-            const data = await res.json()
+            const res = await fetch('/api/tickers');
+            const data = await res.json();
             if (res.ok) {
-              setTickers(data)
+              setTickers(data);
               if (data.length > 0) {
-                setTicker(data[0].ticker)
+                // Selecciona el primer ticker por defecto
+                setTicker(data[0].ticker);
+                // Inicializa el campo de búsqueda con el primer ticker
+                setFiltroTicker(data[0].ticker);
               }
             } else {
-              console.error('Error fetching tickers:', data)
+              console.error('Error fetching tickers:', data);
             }
           } catch (err) {
-            console.error('Failed to fetch tickers:', err)
+            console.error('Failed to fetch tickers:', err);
           }
-        }
-        fetchTickers()
-      }, [])
+        };
+        fetchTickers();
+    }, []);
+    
+    // Hook para cerrar la lista de tickers si se hace clic afuera
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+                setMostrarLista(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [searchContainerRef]);
 
-    // Lógica de cálculo de tu código original (intacta)
+    // --- LÓGICA DE CÁLCULO ORIGINAL (COMPLETA Y RESTAURADA) ---
     const calcular = async () => {
-        console.log('🔍 Ejecutando cálculo...')
+        console.log('🔍 Ejecutando cálculo...');
         setIsLoading(true);
         setResultados(null);
         try {
-          console.log('📥 Pidiendo características...')
+          console.log('📥 Pidiendo características...');
           const caracRes = await fetch(`/api/caracteristicas?ticker=${ticker}`);
           const caracteristicas = await caracRes.json();
           console.log('✅ Características:', caracteristicas);
     
           if (!caracteristicas || !caracteristicas.basemes || !caracteristicas.base) {
-            console.error('❌ Error: Falta información de base de cálculo.')
-            alert('Error: No se pudo obtener la información de base de cálculo del bono.')
+            console.error('❌ Error: Falta información de base de cálculo.');
+            alert('Error: No se pudo obtener la información de base de cálculo del bono.');
             setIsLoading(false);
-            return
+            return;
           }
     
           const tipo_bono = caracteristicas?.desctasa?.trim().toUpperCase();
           let flujos = [];
     
           if (tipo_bono === 'DUAL TAMAR') {
-            console.log('📥 Pidiendo flujos para DUAL TAMAR (Fija y Variable)...')
+            console.log('📥 Pidiendo flujos para DUAL TAMAR (Fija y Variable)...');
             const tickerTamar = `${ticker} TAMAR`;
             const [flujosFijaRes, flujosTamarRes] = await Promise.all([
               fetch(`/api/flujos?ticker=${ticker}`),
@@ -188,7 +198,7 @@ export default function BonosPage() {
             console.log('✅ Flujos combinados para DUAL:', flujos);
     
           } else {
-            console.log('📥 Pidiendo flujos para bono simple...')
+            console.log('📥 Pidiendo flujos para bono simple...');
             const flujosRes = await fetch(`/api/flujos?ticker=${ticker}`);
             flujos = await flujosRes.json();
             console.log('✅ Flujos:', flujos);
@@ -210,7 +220,7 @@ export default function BonosPage() {
           const feriadosRes = await fetch(`/api/feriados`);
           const feriados = await feriadosRes.json();
     
-          console.log('📤 Enviando datos al backend para calcular...')
+          console.log('📤 Enviando datos al backend para calcular...');
           const res = await fetch('https://tir-backend-iop7.onrender.com/tir', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -226,7 +236,7 @@ export default function BonosPage() {
               basemes: caracteristicas?.basemes,
               baseanual: caracteristicas?.base,
               tipotasa: caracteristicas?.tipotasa,
-              diasarestar: caracteristicas?.diasarestar,
+              diasarestar: caracteristicas?.diasarestar, // Mantenemos la lógica original, asumiendo que el backend ya fue corregido para manejar nulos
               nominales: parseInt(nominales.toString())
             })
           });
@@ -234,31 +244,31 @@ export default function BonosPage() {
           const data = await res.json();
     
           if (!res.ok) {
-            console.error('❌ Error en cálculo:', data)
-            alert(`Error: ${data?.error || 'Cálculo fallido'}`)
+            console.error('❌ Error en cálculo:', data);
+            alert(`Error: ${data?.error || 'Cálculo fallido'}`);
             setIsLoading(false);
-            return
+            return;
           }
     
-          console.log('✅ Resultado:', data)
-          setResultados(data)
+          console.log('✅ Resultado:', data);
+          setResultados(data);
         } catch (err) {
-          console.error('❌ Error general:', err)
-          alert('Error al intentar calcular la TIR')
+          console.error('❌ Error general:', err);
+          alert('Error al intentar calcular la TIR');
         } finally {
             setIsLoading(false);
         }
     }
 
-    // Lógica de renderizado de tu código original (intacta)
+    // --- LÓGICA DE RENDERIZADO ORIGINAL ---
     const renderResults = (data: ResultData) => {
         if (!data) return null;
     
         if ('tipo_dual' in data) {
           return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                <ResultDisplay title="Resultado Pata TAMAR" result={data.resultado_tamar} titleColorClass={styles.titleBlue} />
-                <ResultDisplay title="Resultado Pata Fija" result={data.resultado_fija} titleColorClass={styles.titleGreen} />
+              <ResultDisplay title="Resultado Pata TAMAR" result={data.resultado_tamar} titleColorClass={styles.titleBlue} />
+              <ResultDisplay title="Resultado Pata Fija" result={data.resultado_fija} titleColorClass={styles.titleGreen} />
             </div>
           );
         } 
@@ -266,7 +276,18 @@ export default function BonosPage() {
         return <ResultDisplay title="Resultados del Bono" result={data} />;
     };
 
-    // --- JSX (CON NUEVOS ESTILOS) ---
+    // --- LÓGICA PARA MANEJAR EL FILTRO DEL BUSCADOR ---
+    const tickersFiltrados = tickers.filter(t => 
+        t.ticker.toLowerCase().includes(filtroTicker.toLowerCase()) || 
+        t.desctasa.toLowerCase().includes(filtroTicker.toLowerCase())
+    );
+
+    const handleSeleccionarTicker = (tickerSeleccionado: TickerItem) => {
+        setTicker(tickerSeleccionado.ticker);
+        setFiltroTicker(tickerSeleccionado.ticker);
+        setMostrarLista(false);
+    };
+
     return (
         <div className={styles.container}>
             <div className={styles.maxWidthWrapper}>
@@ -277,20 +298,33 @@ export default function BonosPage() {
                     <p className={styles.subtitle}>Selecciona un bono y sus parámetros para calcular la Tasa Interna de Retorno.</p>
                 
                     <div className={styles.formGrid}>
-                        <div className={styles.gridColSpan2}>
-                            <label htmlFor="ticker-select" className={styles.formLabel}>Selecciona Ticker</label>
-                            <select id="ticker-select" value={ticker} onChange={e => setTicker(e.target.value)} className={styles.formSelect} disabled={isLoading}>
-                                {tickers.length > 0 ? (
-                                    tickers.map(t => (
-                                        <option key={t.ticker} value={t.ticker}>
-                                            {t.ticker} ({t.desctasa})
-                                        </option>
-                                    ))
-                                ) : (
-                                    <option disabled>Cargando tickers...</option>
-                                )}
-                            </select>
+                        <div className={`${styles.gridColSpan2} ${styles.tickerContainer}`} ref={searchContainerRef}>
+                            <label htmlFor="ticker-input" className={styles.formLabel}>Buscar Ticker</label>
+                            <input 
+                                id="ticker-input"
+                                type="text" 
+                                value={filtroTicker}
+                                onChange={e => {
+                                    setFiltroTicker(e.target.value);
+                                    setMostrarLista(true);
+                                }}
+                                onFocus={() => setMostrarLista(true)}
+                                className={styles.formInput} 
+                                disabled={isLoading || tickers.length === 0}
+                                placeholder="Escribe un ticker o tipo..."
+                                autoComplete="off"
+                            />
+                            {mostrarLista && tickersFiltrados.length > 0 && (
+                                <ul className={styles.listaTickers}>
+                                    {tickersFiltrados.map(t => (
+                                        <li key={t.ticker} onClick={() => handleSeleccionarTicker(t)}>
+                                            {t.ticker} <span>({t.desctasa})</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
+
                         <div>
                             <label htmlFor="precio-input" className={styles.formLabel}>Precio</label>
                             <input id="precio-input" type="number" value={precio} onChange={e => setPrecio(parseFloat(e.target.value))} className={styles.formInput} disabled={isLoading} />
