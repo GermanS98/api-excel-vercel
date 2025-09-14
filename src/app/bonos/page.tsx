@@ -144,7 +144,7 @@ const ResultDisplay = ({ title, result, titleColor = 'text-gray-800' }: { title:
 export default function BonosPage() {
   const [ticker, setTicker] = useState('TX25')
   const [precio, setPrecio] = useState(1270)
-  const [nominales, setNominales] = useState(100) // <-- NUEVO ESTADO PARA NOMINALES
+  const [nominales, setNominales] = useState(100)
   const [fecha, setFecha] = useState('')
   const [resultados, setResultados] = useState<ResultData>(null)
   const [tickers, setTickers] = useState<TickerItem[]>([])
@@ -242,7 +242,11 @@ export default function BonosPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          caracteristicas, flujos, cer, tamar, dolar,
+          caracteristicas,
+          flujos,
+          cer,
+          tamar,
+          dolar,
           precio: parseFloat(precio.toString()),
           fecha_valor: fecha,
           feriados,
@@ -250,10 +254,11 @@ export default function BonosPage() {
           baseanual: caracteristicas?.base,
           tipotasa: caracteristicas?.tipotasa,
           diasarestar: caracteristicas?.diasarestar,
-          nominales: nominales
-      })
+          nominales: parseInt(nominales.toString())
+        })
+      });
 
-      const data = await res.json()
+      const data = await res.json();
 
       if (!res.ok) {
         console.error('❌ Error en cálculo:', data)
@@ -316,7 +321,7 @@ export default function BonosPage() {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Precio de Venta</label>
+          <label className="block text-sm font-medium text-gray-700">Precio</label>
           <input
             type="number"
             value={precio}
@@ -327,8 +332,7 @@ export default function BonosPage() {
           />
         </div>
         <div>
-           {/* <!-- NUEVO INPUT PARA NOMINALES --> */}
-          <label className="block text-sm font-medium text-gray-700">Cantidad Nominales</label>
+          <label className="block text-sm font-medium text-gray-700">Nominales</label>
           <input
             type="number"
             value={nominales}
@@ -338,8 +342,8 @@ export default function BonosPage() {
             disabled={isLoading}
           />
         </div>
-         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">Fecha de Valor</label>
+         <div className="md:col-span-4">
+          <label className="block text-sm font-medium text-gray-700">Fecha Valor</label>
           <input
             type="date"
             value={fecha}
@@ -350,7 +354,7 @@ export default function BonosPage() {
         </div>
         <button
           onClick={calcular}
-          className={`w-full md:col-span-2 px-6 py-2.5 text-white font-semibold rounded-md shadow-md transition-all ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'}`}
+          className={`w-full md:col-span-4 px-6 py-2.5 text-white font-semibold rounded-md shadow-md transition-all ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'}`}
           disabled={isLoading}
         >
           {isLoading ? 'Calculando...' : 'Calcular TIR'}
