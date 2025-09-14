@@ -186,3 +186,39 @@
   font-weight: 700;
   color: var(--veta-text-red);
 }
+tickerContainer {
+  position: relative; /* Necesario para posicionar la lista */
+}
+
+.listaTickers {
+  position: absolute;
+  top: 100%; /* Se posiciona justo debajo del input */
+  left: 0;
+  right: 0;
+  background-color: var(--veta-input-bg);
+  border: 1px solid var(--veta-border);
+  border-top: none;
+  border-radius: 0 0 0.375rem 0.375rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.listaTickers li {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.listaTickers li:hover {
+  background-color: var(--veta-card);
+}
+
+.listaTickers li span {
+  color: var(--veta-text-muted);
+  font-size: 0.875rem;
+  margin-left: 0.5rem;
+}
