@@ -81,8 +81,8 @@ const FlujosTable = ({ flujos }: { flujos: FlujoDetallado[] }) => {
   );
 };
 
-// --- NUEVO COMPONENTE DE RESUMEN ---
-// Muestra los datos clave en una tabla de 4 columnas
+// --- COMPONENTE DE RESUMEN MEJORADO ---
+// Muestra los datos clave en una tabla de 4 columnas con más espaciado
 const ResultSummary = ({ result }: { result: SimpleResult }) => {
     // Lista de todos los posibles datos a mostrar
     const summaryData = [
@@ -109,12 +109,12 @@ const ResultSummary = ({ result }: { result: SimpleResult }) => {
                 <tbody>
                     {rows.map((row, index) => (
                         <tr key={index}>
-                            <td className="py-1 px-2 text-gray-500 w-1/4">{row[0].label}:</td>
-                            <td className="py-1 px-2 font-semibold text-gray-800 w-1/4">{row[0].value}</td>
+                            <td className="py-1 px-4 text-gray-500 w-1/4">{row[0].label}:</td>
+                            <td className="py-1 px-4 font-semibold text-gray-800 w-1/4">{row[0].value}</td>
                             {row[1] ? (
                                 <>
-                                    <td className="py-1 px-2 text-gray-500 w-1/4">{row[1].label}:</td>
-                                    <td className="py-1 px-2 font-semibold text-gray-800 w-1/4">{row[1].value}</td>
+                                    <td className="py-1 px-4 text-gray-500 w-1/4">{row[1].label}:</td>
+                                    <td className="py-1 px-4 font-semibold text-gray-800 w-1/4">{row[1].value}</td>
                                 </>
                             ) : (
                                 <>
@@ -144,6 +144,7 @@ const ResultDisplay = ({ title, result, titleColor = 'text-gray-800' }: { title:
 export default function BonosPage() {
   const [ticker, setTicker] = useState('TX25')
   const [precio, setPrecio] = useState(1270)
+  const [nominales, setNominales] = useState(100) // <-- NUEVO ESTADO PARA NOMINALES
   const [fecha, setFecha] = useState('')
   const [resultados, setResultados] = useState<ResultData>(null)
   const [tickers, setTickers] = useState<TickerItem[]>([])
@@ -248,7 +249,8 @@ export default function BonosPage() {
           basemes: caracteristicas?.basemes,
           baseanual: caracteristicas?.base,
           tipotasa: caracteristicas?.tipotasa,
-          diasarestar: caracteristicas?.diasarestar
+          diasarestar: caracteristicas?.diasarestar,
+          nominales: parseInt(nominales.toString()) // <-- NOMINALES ENVIADOS AL BACKEND
         })
       })
 
@@ -326,6 +328,18 @@ export default function BonosPage() {
           />
         </div>
         <div>
+           {/* <!-- NUEVO INPUT PARA NOMINALES --> */}
+          <label className="block text-sm font-medium text-gray-700">Cantidad Nominales</label>
+          <input
+            type="number"
+            value={nominales}
+            onChange={e => setNominales(Number(e.target.value))}
+            className="w-full mt-1 border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            placeholder="100"
+            disabled={isLoading}
+          />
+        </div>
+         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700">Fecha de Valor</label>
           <input
             type="date"
@@ -337,7 +351,7 @@ export default function BonosPage() {
         </div>
         <button
           onClick={calcular}
-          className={`w-full col-span-1 md:col-span-4 px-6 py-2.5 text-white font-semibold rounded-md shadow-md transition-all ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'}`}
+          className={`w-full md:col-span-2 px-6 py-2.5 text-white font-semibold rounded-md shadow-md transition-all ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'}`}
           disabled={isLoading}
         >
           {isLoading ? 'Calculando...' : 'Calcular TIR'}
