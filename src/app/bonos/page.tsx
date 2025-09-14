@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 // Importa el archivo CSS que acabamos de crear
-import styles from './Page.module.css'
+import styles from './page.module.css'
 
 // --- INTERFACES (Sin cambios) ---
 interface FlujoDetallado {
