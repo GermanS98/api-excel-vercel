@@ -247,7 +247,8 @@ export default function BonosPage() {
           feriados,
           basemes: caracteristicas?.basemes,
           baseanual: caracteristicas?.base,
-          tipotasa: caracteristicas?.tipotasa
+          tipotasa: caracteristicas?.tipotasa,
+          diasarestar: caracteristicas?.diasarestar
         })
       })
 
