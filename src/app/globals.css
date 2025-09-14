@@ -1,4 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Albert+Sans:wght@700&family=Roboto:wght@400;500;700&display=swap');
+
 :root {
+  /* Variables de VetaCap */
+  --veta-azul-respaldo: #021751;
+  --veta-azul-impulso: #1036E2;
+  --veta-verde-activo: #00C600;
+  --veta-card: #0d215e;
+  --veta-input-bg: #1c316e;
+  --veta-border: #3a4d8f;
+  --veta-text-muted: #a9b3d4;
+  --veta-text-white: #ffffff;
+  --veta-text-red: #ff6b6b;
+
+  /* Variables globales del proyecto */
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -9,6 +23,7 @@
     --foreground: #ededed;
   }
 }
+
 
 html,
 body {
