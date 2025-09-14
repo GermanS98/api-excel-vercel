@@ -250,8 +250,7 @@ export default function BonosPage() {
           baseanual: caracteristicas?.base,
           tipotasa: caracteristicas?.tipotasa,
           diasarestar: caracteristicas?.diasarestar,
-          nominales: parseInt(nominales.toString()) // <-- NOMINALES ENVIADOS AL BACKEND
-        })
+          nominales: nominales
       })
 
       const data = await res.json()
