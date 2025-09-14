@@ -186,7 +186,7 @@
   font-weight: 700;
   color: var(--veta-text-red);
 }
-tickerContainer {
+.tickerContainer {
   position: relative; /* Necesario para posicionar la lista */
 }
 
