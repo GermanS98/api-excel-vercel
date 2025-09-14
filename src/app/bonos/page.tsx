@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import styles from './page.module.css'
 
-// --- INTERFACES ---
+// --- INTERFACES PARA TIPADO (DE TU CÓDIGO ORIGINAL) ---
 interface FlujoDetallado {
   fecha: string;
   vno_ajustado: number;
@@ -35,59 +35,238 @@ interface DualResult {
 }
 type ResultData = SimpleResult | DualResult | null;
 
-// --- SUB-COMPONENTES DE UI ---
-const FlujosTable = ({ flujos }: { flujos: FlujoDetallado[] }) => { /* ... (Componente sin cambios) ... */ };
-const ResultSummary = ({ result }: { result: SimpleResult }) => { /* ... (Componente sin cambios) ... */ };
-const ResultDisplay = ({ title, result }: { title: string, result: SimpleResult }) => { /* ... (Componente sin cambios) ... */ };
+
+// --- SUB-COMPONENTES DE UI (CON TU LÓGICA Y NUEVOS ESTILOS) ---
+
+const FlujosTable = ({ flujos }: { flujos: FlujoDetallado[] }) => {
+  if (!flujos || flujos.length === 0) {
+    return <p className={styles.subtitle}>No hay flujos detallados para mostrar.</p>;
+  }
+   const primerFlujo = flujos[0];
+   const flujosSiguientes = flujos.slice(1);
+
+  return (
+    <div className={styles.flujosTableContainer}>
+      <table className={styles.flujosTable}>
+        <thead>
+          <tr>
+            <th className={styles.fontAlbert}>Fecha de pago</th>
+            <th className={`${styles.fontAlbert} ${styles.textRight}`}>VNO Ajustado</th>
+            <th className={`${styles.fontAlbert} ${styles.textRight}`}>Intereses</th>
+            <th className={`${styles.fontAlbert} ${styles.textRight}`}>Amortización</th>
+            <th className={`${styles.fontAlbert} ${styles.textRight}`}>Flujo Total</th>
+          </tr>
+        </thead>
+        <tbody>
+           {/* Mantenemos tu lógica de mapeo original */}
+          {flujos.map((flujo, index) => (
+            <tr key={index}>
+              <td>{new Date(flujo.fecha).toLocaleDateString()}</td>
+              <td className={styles.textRight}>{flujo.vno_ajustado?.toFixed(4)}</td>
+              <td className={styles.textRight}>{flujo.pago_interes?.toFixed(4)}</td>
+              <td className={styles.textRight}>{flujo.pago_amortizacion?.toFixed(4)}</td>
+              <td className={`${styles.textRight} ${flujo.flujo_total < 0 ? styles.pagoInicialMonto : ''}`}>{flujo.flujo_total?.toFixed(4)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const ResultSummary = ({ result }: { result: SimpleResult }) => {
+    // Mantenemos tu lógica de datos intacta
+    const summaryData = [
+        { label: 'TIR %', value: (result.tir * 100).toFixed(2) },
+        { label: 'Paridad %', value: result.paridad ? (result.paridad * 100).toFixed(2) : undefined },
+        { label: 'Valor Técnico', value: result.valor_tecnico?.toFixed(4) },
+        { label: 'Exit Yield (RD) %', value: result.RD ? (result.RD * 100).toFixed(2) : undefined },
+        { label: 'Modified Duration', value: result.modify_duration?.toFixed(2) },
+        { label: 'Macaulay Duration', value: result.duracion_macaulay?.toFixed(2) },
+        { label: 'TNA %', value: result.tna ? (result.tna * 100).toFixed(2) : undefined },
+        { label: 'TEM %', value: result.tem ? (result.tem * 100).toFixed(2) : undefined },
+        { label: 'Días al Vto.', value: result.dias_vto },
+    ].filter(item => item.value !== undefined && item.value !== null);
+
+    return (
+        <div className={styles.summaryGrid}>
+          {summaryData.map(item => (
+            <div key={item.label}>
+              <span className={styles.summaryItemLabel}>{item.label}:</span>
+              <strong className={`${styles.summaryItemValue} ${item.label === 'TIR %' ? styles.tirValue : ''}`}>
+                {item.value}
+              </strong>
+            </div>
+          ))}
+        </div>
+      );
+};
+
+const ResultDisplay = ({ title, result, titleColorClass = '' }: { title: string, result: SimpleResult, titleColorClass?: string }) => (
+  <div className={styles.card}>
+    <h3 className={`${styles.resultTitle} ${styles.fontAlbert} ${titleColorClass}`}>{title}</h3>
+    <ResultSummary result={result} />
+    <FlujosTable flujos={result.flujos_detallados} />
+  </div>
+);
 
 
-// --- COMPONENTE PRINCIPAL ---
+// --- COMPONENTE PRINCIPAL (CON TU LÓGICA INTACTA) ---
 export default function BonosPage() {
-    const [ticker, setTicker] = useState(''); // Iniciar vacío
-    const [precio, setPrecio] = useState(101.85);
-    const [nominales, setNominales] = useState(100);
-    const [fecha, setFecha] = useState('');
-    const [resultados, setResultados] = useState<ResultData>(null);
-    const [tickers, setTickers] = useState<TickerItem[]>([]);
+    // Lógica de estados de tu código original
+    const [ticker, setTicker] = useState('TX25')
+    const [precio, setPrecio] = useState(1270)
+    const [nominales, setNominales] = useState(100)
+    const [fecha, setFecha] = useState('')
+    const [resultados, setResultados] = useState<ResultData>(null)
+    const [tickers, setTickers] = useState<TickerItem[]>([])
     const [isLoading, setIsLoading] = useState(false);
 
+    // Lógica useEffect de tu código original (intacta)
     useEffect(() => {
         const getCurrentDate = () => {
           const today = new Date();
-          const offset = today.getTimezoneOffset() * 60000;
-          const localDate = new Date(today.getTime() - offset);
-          return localDate.toISOString().split('T')[0];
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
         };
         setFecha(getCurrentDate());
-
-        // --- LÓGICA PARA CARGAR TICKERS (RESTAURADA) ---
+    
         const fetchTickers = async () => {
           try {
-            const res = await fetch('/api/tickers');
-            const data = await res.json();
+            const res = await fetch('/api/tickers')
+            const data = await res.json()
             if (res.ok) {
-              setTickers(data);
+              setTickers(data)
               if (data.length > 0) {
-                setTicker(data[0].ticker); // Selecciona el primer ticker por defecto
+                setTicker(data[0].ticker)
               }
             } else {
-              console.error('Error fetching tickers:', data);
+              console.error('Error fetching tickers:', data)
             }
           } catch (err) {
-            console.error('Failed to fetch tickers:', err);
+            console.error('Failed to fetch tickers:', err)
           }
-        };
-        fetchTickers();
-        // --------------------------------------------------
+        }
+        fetchTickers()
+      }, [])
 
-    }, []);
+    // Lógica de cálculo de tu código original (intacta)
+    const calcular = async () => {
+        console.log('🔍 Ejecutando cálculo...')
+        setIsLoading(true);
+        setResultados(null);
+        try {
+          console.log('📥 Pidiendo características...')
+          const caracRes = await fetch(`/api/caracteristicas?ticker=${ticker}`);
+          const caracteristicas = await caracRes.json();
+          console.log('✅ Características:', caracteristicas);
+    
+          if (!caracteristicas || !caracteristicas.basemes || !caracteristicas.base) {
+            console.error('❌ Error: Falta información de base de cálculo.')
+            alert('Error: No se pudo obtener la información de base de cálculo del bono.')
+            setIsLoading(false);
+            return
+          }
+    
+          const tipo_bono = caracteristicas?.desctasa?.trim().toUpperCase();
+          let flujos = [];
+    
+          if (tipo_bono === 'DUAL TAMAR') {
+            console.log('📥 Pidiendo flujos para DUAL TAMAR (Fija y Variable)...')
+            const tickerTamar = `${ticker} TAMAR`;
+            const [flujosFijaRes, flujosTamarRes] = await Promise.all([
+              fetch(`/api/flujos?ticker=${ticker}`),
+              fetch(`/api/flujos?ticker=${tickerTamar}`)
+            ]);
+    
+            const flujosFija = await flujosFijaRes.json();
+            const flujosTamar = await flujosTamarRes.json();
+            
+            flujos = [...flujosFija, ...flujosTamar];
+            console.log('✅ Flujos combinados para DUAL:', flujos);
+    
+          } else {
+            console.log('📥 Pidiendo flujos para bono simple...')
+            const flujosRes = await fetch(`/api/flujos?ticker=${ticker}`);
+            flujos = await flujosRes.json();
+            console.log('✅ Flujos:', flujos);
+          }
+          
+          let cer = [], tamar = [], dolar = [];
+    
+          if (tipo_bono === 'CER') {
+            const cerRes = await fetch(`/api/cer`);
+            cer = await cerRes.json();
+          } else if (tipo_bono === 'TAMAR' || tipo_bono === 'DUAL TAMAR') {
+            const tamarRes = await fetch(`/api/tamar`);
+            tamar = await tamarRes.json();
+          } else if (tipo_bono === 'DOLAR LINKED' || tipo_bono === "DL") {
+            const dolarRes = await fetch(`/api/dolar`);
+            dolar = await dolarRes.json();
+          }
+    
+          const feriadosRes = await fetch(`/api/feriados`);
+          const feriados = await feriadosRes.json();
+    
+          console.log('📤 Enviando datos al backend para calcular...')
+          const res = await fetch('https://tir-backend-iop7.onrender.com/tir', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              caracteristicas,
+              flujos,
+              cer,
+              tamar,
+              dolar,
+              precio: parseFloat(precio.toString()),
+              fecha_valor: fecha,
+              feriados,
+              basemes: caracteristicas?.basemes,
+              baseanual: caracteristicas?.base,
+              tipotasa: caracteristicas?.tipotasa,
+              diasarestar: caracteristicas?.diasarestar,
+              nominales: parseInt(nominales.toString())
+            })
+          });
+    
+          const data = await res.json();
+    
+          if (!res.ok) {
+            console.error('❌ Error en cálculo:', data)
+            alert(`Error: ${data?.error || 'Cálculo fallido'}`)
+            setIsLoading(false);
+            return
+          }
+    
+          console.log('✅ Resultado:', data)
+          setResultados(data)
+        } catch (err) {
+          console.error('❌ Error general:', err)
+          alert('Error al intentar calcular la TIR')
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
-    const calcular = async () => { 
-        // Aquí va tu lógica de cálculo completa...
+    // Lógica de renderizado de tu código original (intacta)
+    const renderResults = (data: ResultData) => {
+        if (!data) return null;
+    
+        if ('tipo_dual' in data) {
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                <ResultDisplay title="Resultado Pata TAMAR" result={data.resultado_tamar} titleColorClass={styles.titleBlue} />
+                <ResultDisplay title="Resultado Pata Fija" result={data.resultado_fija} titleColorClass={styles.titleGreen} />
+            </div>
+          );
+        } 
+        
+        return <ResultDisplay title="Resultados del Bono" result={data} />;
     };
 
-    const renderResults = (data: ResultData) => { /* ... (Función sin cambios) ... */ };
-
+    // --- JSX (CON NUEVOS ESTILOS) ---
     return (
         <div className={styles.container}>
             <div className={styles.maxWidthWrapper}>
@@ -100,7 +279,7 @@ export default function BonosPage() {
                     <div className={styles.formGrid}>
                         <div className={styles.gridColSpan2}>
                             <label htmlFor="ticker-select" className={styles.formLabel}>Selecciona Ticker</label>
-                            <select id="ticker-select" value={ticker} onChange={e => setTicker(e.target.value)} className={styles.formSelect} disabled={isLoading || tickers.length === 0}>
+                            <select id="ticker-select" value={ticker} onChange={e => setTicker(e.target.value)} className={styles.formSelect} disabled={isLoading}>
                                 {tickers.length > 0 ? (
                                     tickers.map(t => (
                                         <option key={t.ticker} value={t.ticker}>
@@ -112,12 +291,28 @@ export default function BonosPage() {
                                 )}
                             </select>
                         </div>
-                        {/* ... resto de los inputs ... */}
+                        <div>
+                            <label htmlFor="precio-input" className={styles.formLabel}>Precio</label>
+                            <input id="precio-input" type="number" value={precio} onChange={e => setPrecio(parseFloat(e.target.value))} className={styles.formInput} disabled={isLoading} />
+                        </div>
+                        <div>
+                            <label htmlFor="nominales-input" className={styles.formLabel}>Nominales</label>
+                            <input id="nominales-input" type="number" value={nominales} onChange={e => setNominales(Number(e.target.value))} className={styles.formInput} disabled={isLoading} />
+                        </div>
+                        <div className={styles.gridColSpan4}>
+                            <label htmlFor="fecha-input" className={styles.formLabel}>Fecha Valor</label>
+                            <input id="fecha-input" type="date" value={fecha} onChange={e => setFecha(e.target.value)} className={styles.formInput} disabled={isLoading} />
+                        </div>
+                        <div className={styles.gridColSpan4}>
+                            <button onClick={calcular} className={`${styles.submitButton} ${styles.fontAlbert}`} disabled={isLoading}>
+                                {isLoading ? 'Calculando...' : 'CALCULAR TIR'}
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
                 {resultados && (
-                    <div>
+                    <div style={{marginTop: '2rem'}}>
                         {renderResults(resultados)}
                     </div>
                 )}
