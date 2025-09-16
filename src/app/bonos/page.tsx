@@ -236,7 +236,7 @@ export default function BonosPage() {
               basemes: caracteristicas?.basemes,
               baseanual: caracteristicas?.base,
               tipotasa: caracteristicas?.tipotasa,
-              diasarestar:   diasarestar: caracteristicas?.diasarestar, // Mantenemos la lógica original, asumiendo que el backend ya fue corregido para manejar nulos
+              diasarestar: caracteristicas?.diasarestar, // Mantenemos la lógica original, asumiendo que el backend ya fue corregido para manejar nulos
               nominales: parseInt(nominales.toString())
             })
           });
