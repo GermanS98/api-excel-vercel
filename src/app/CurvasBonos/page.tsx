@@ -1,11 +1,15 @@
 // Esta línea es crucial para que el código interactivo (hooks) funcione en Next.js
 'use client';
-import { createClient } from '@supabase/supabase-js'
+
 import { useState, useEffect } from 'react';
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_KEY!
-)
+import { createClient } from '@supabase/supabase-js';
+
+// --- 1. CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
+// Leemos las variables de entorno de forma segura
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; // CORRECCIÓN: Usar ANON_KEY
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 
 // --- 2. EL COMPONENTE DE TU PÁGINA ---
 export default function HomePage() {
@@ -13,7 +17,7 @@ export default function HomePage() {
   const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
   const [estado, setEstado] = useState('Cargando...');
 
-  // 'useEffect' es un hook que se ejecuta cuando el componente carga.
+  // 'useEffect' se ejecuta cuando el componente carga.
   // Es perfecto para cargar datos y suscribirse a cambios.
   useEffect(() => {
     // --- FUNCIÓN PARA CARGAR LOS DATOS DEL DÍA ---
@@ -25,8 +29,8 @@ export default function HomePage() {
       const { data, error } = await supabase
         .from('datos_financieros') // El nombre de tu tabla
         .select('*') // Pedimos todas las columnas (id, created_at, datos)
-        .gte('created_at', inicioDelDia.toISOString()) // Filtra por hoy
-        .order('created_at', { ascending: false }); // Ordena del más nuevo al más viejo
+        .gte('creado_en', inicioDelDia.toISOString()) // Filtra por hoy
+        .order('creado_en', { ascending: false }); // Ordena del más nuevo al más viejo
 
       if (error) {
         console.error("Error cargando los datos:", error);
@@ -63,27 +67,53 @@ export default function HomePage() {
     };
   }, []); // El array vacío asegura que esto se ejecute solo una vez.
 
-  // --- 3. LO QUE SE MUESTRA EN PANTALLA (JSX) ---
+  // --- 3. LÓGICA DE PREPARACIÓN DE DATOS (antes del return) ---
   const ultimoLoteDeDatos = datosHistoricos.length > 0 ? datosHistoricos[0].datos : [];
-  // --- Se filtra por fijas
   const segmentosPermitidos = ['LECAP', 'BONCAP', 'BONTE', 'TAMAR', 'CER', 'DL'];
 
-  // CAMBIO 2: Filtra la lista de datos usando la lista de segmentos permitidos
+  // Filtra la lista de datos usando la lista de segmentos permitidos
   const datosFiltrados = ultimoLoteDeDatos.filter((bono: any) => 
     segmentosPermitidos.includes(bono.segmento)
   );
+
+  // --- 4. RETURN PRINCIPAL (con todo el JSX adentro) ---
   return (
     <main style={{ fontFamily: 'sans-serif', padding: '20px' }}>
       <h1>Bonos en Tiempo Real</h1>
       <p>Estado: <strong>{estado}</strong></p>
       {datosHistoricos.length > 0 && (
-        <p>Última actualización: <strong>{new Date(datosHistoricos[0].created_at).toLocaleTimeString()}</strong></p>
+        <p>Última actualización: <strong>{new Date(datosHistoricos[0].creado_en).toLocaleTimeString()}</strong></p>
       )}
       
       <hr />
 
-      <h2>Últimos Datos Recibidos</h2>
+      <h2>Últimos Datos Recibidos (Filtrados)</h2>
       <table>
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>TIR</th>
+            <th>Segmento</th>
+            <th>Paridad</th>
+            <th>MEP Breakeven</th>
+          </tr>
+        </thead>
+        <tbody>
+          {datosFiltrados.length > 0 ? (
+            datosFiltrados.map((item: any, index: number) => (
+              <tr key={index}>
+                <td>{item.ticker}</td>
+                <td>{(item.tir * 100).toFixed(2)}%</td>
+                <td>{item.segmento}</td>
+                <td>{item.paridad?.toFixed(4) ?? 'N/A'}</td>
+                <td>{item.mep_breakeven ? item.mep_breakeven.toFixed(2) : 'N/A'}</td>
+              </tr>
+            ))
+          ) : (
+            <tr><td colSpan={5}>Cargando o no hay datos para los segmentos seleccionados...</td></tr>
+          )}
+        </tbody>
+      </table>
 
       <hr />
 
@@ -99,7 +129,7 @@ export default function HomePage() {
           {datosHistoricos.length > 0 ? (
             datosHistoricos.map((registro: any) => (
               <tr key={registro.id}>
-                <td>{new Date(registro.created_at).toLocaleTimeString()}</td>
+                <td>{new Date(registro.creado_en).toLocaleTimeString()}</td>
                 <td>{registro.datos.length}</td>
               </tr>
             ))
