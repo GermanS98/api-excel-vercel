@@ -71,7 +71,7 @@ export default function HomePage() {
   // CAMBIO 2: Filtra la lista de datos usando la lista de segmentos permitidos
   const datosFiltrados = ultimoLoteDeDatos.filter((bono: any) => 
     segmentosPermitidos.includes(bono.segmento)
-    
+  );
   return (
     <main style={{ fontFamily: 'sans-serif', padding: '20px' }}>
       <h1>Bonos en Tiempo Real</h1>
