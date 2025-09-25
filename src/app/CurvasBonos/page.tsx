@@ -1,7 +1,7 @@
 // Esta línea es crucial para que el código interactivo (hooks) funcione en Next.js
 'use client';
 import { createClient } from '@supabase/supabase-js'
-
+import { useState, useEffect } from 'react';
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_KEY!
