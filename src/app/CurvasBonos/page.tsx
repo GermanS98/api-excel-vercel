@@ -26,6 +26,7 @@ export default function HomePage() {
         .from('datos_financieros') // El nombre de tu tabla
         .select('*') // Pedimos todas las columnas (id, created_at, datos)
         .gte('created_at', inicioDelDia.toISOString()) // Filtra por hoy
+        .in('segmento', ['LECAP', 'BONCAP', 'BONTE', 'TAMAR', 'CER', 'DL'])
         .order('created_at', { ascending: false }); // Ordena del más nuevo al más viejo
 
       if (error) {
