@@ -1,15 +1,11 @@
 // Esta línea es crucial para que el código interactivo (hooks) funcione en Next.js
 'use client';
+import { createClient } from '@supabase/supabase-js'
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-// --- 1. CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
-// Leemos las variables de entorno que configuraste en .env.local
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_KEY!
+)
 
 // --- 2. EL COMPONENTE DE TU PÁGINA ---
 export default function HomePage() {
