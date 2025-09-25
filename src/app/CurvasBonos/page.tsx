@@ -24,9 +24,9 @@ export default function HomePage() {
       // Hacemos la consulta a Supabase
       const { data, error } = await supabase
         .from('datos_financieros') // El nombre de tu tabla
-        .select('*') // Pedimos todas las columnas (id, creado_en, datos)
-        .gte('creado_en', inicioDelDia.toISOString()) // Filtra por hoy
-        .order('creado_en', { ascending: false }); // Ordena del más nuevo al más viejo
+        .select('*') // Pedimos todas las columnas (id, created_at, datos)
+        .gte('created_at', inicioDelDia.toISOString()) // Filtra por hoy
+        .order('created_at', { ascending: false }); // Ordena del más nuevo al más viejo
 
       if (error) {
         console.error("Error cargando los datos:", error);
@@ -71,7 +71,7 @@ export default function HomePage() {
       <h1>Bonos en Tiempo Real</h1>
       <p>Estado: <strong>{estado}</strong></p>
       {datosHistoricos.length > 0 && (
-        <p>Última actualización: <strong>{new Date(datosHistoricos[0].creado_en).toLocaleTimeString()}</strong></p>
+        <p>Última actualización: <strong>{new Date(datosHistoricos[0].created_at).toLocaleTimeString()}</strong></p>
       )}
       
       <hr />
@@ -118,7 +118,7 @@ export default function HomePage() {
           {datosHistoricos.length > 0 ? (
             datosHistoricos.map((registro: any) => (
               <tr key={registro.id}>
-                <td>{new Date(registro.creado_en).toLocaleTimeString()}</td>
+                <td>{new Date(registro.created_at).toLocaleTimeString()}</td>
                 <td>{registro.datos.length}</td>
               </tr>
             ))
