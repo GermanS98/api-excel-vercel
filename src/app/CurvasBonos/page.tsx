@@ -84,31 +84,6 @@ export default function HomePage() {
 
       <h2>Últimos Datos Recibidos</h2>
       <table>
-        <thead>
-          <tr>
-            <th>Ticker</th>
-            <th>TIR</th>
-            <th>Segmento</th>
-            <th>Paridad</th>
-            <th>MEP Breakeven</th>
-          </tr>
-        </thead>
-          {/* CAMBIO 3: Usa la nueva variable 'datosFiltrados' para renderizar la tabla */}
-          {datosFiltrados.length > 0 ? (
-            datosFiltrados.map((item: any, index: number) => (
-              <tr key={index}>
-                <td>{item.ticker}</td>
-                <td>{(item.tir * 100).toFixed(2)}%</td>
-                <td>{item.segmento}</td>
-                <td>{item.paridad?.toFixed(4) ?? 'N/A'}</td>
-                <td>{item.mep_breakeven ? item.mep_breakeven.toFixed(2) : 'N/A'}</td>
-              </tr>
-            ))
-          ) : (
-            <tr><td colSpan={5}>Cargando o no hay datos para los segmentos seleccionados...</td></tr>
-          )}
-        </tbody>
-      </table>
 
       <hr />
 
