@@ -99,7 +99,7 @@ export default function HomePage() {
               </tr>
             ))
           ) : (
-            <tr><td colSpan={5}>{estado}</td></tr>
+            <tr><td colSpan={5}>Cargando datos...</td></tr>
           )}
         </tbody>
       </table>
