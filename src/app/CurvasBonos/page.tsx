@@ -26,7 +26,6 @@ export default function HomePage() {
         .from('datos_financieros') // El nombre de tu tabla
         .select('*') // Pedimos todas las columnas (id, created_at, datos)
         .gte('created_at', inicioDelDia.toISOString()) // Filtra por hoy
-        .in('segmento', ['LECAP', 'BONCAP', 'BONTE', 'TAMAR', 'CER', 'DL'])
         .order('created_at', { ascending: false }); // Ordena del más nuevo al más viejo
 
       if (error) {
@@ -66,7 +65,13 @@ export default function HomePage() {
 
   // --- 3. LO QUE SE MUESTRA EN PANTALLA (JSX) ---
   const ultimoLoteDeDatos = datosHistoricos.length > 0 ? datosHistoricos[0].datos : [];
+  // --- Se filtra por fijas
+  const segmentosPermitidos = ['LECAP', 'BONCAP', 'BONTE', 'TAMAR', 'CER', 'DL'];
 
+  // CAMBIO 2: Filtra la lista de datos usando la lista de segmentos permitidos
+  const datosFiltrados = ultimoLoteDeDatos.filter((bono: any) => 
+    segmentosPermitidos.includes(bono.segmento)
+    
   return (
     <main style={{ fontFamily: 'sans-serif', padding: '20px' }}>
       <h1>Bonos en Tiempo Real</h1>
@@ -88,9 +93,9 @@ export default function HomePage() {
             <th>MEP Breakeven</th>
           </tr>
         </thead>
-        <tbody>
-          {ultimoLoteDeDatos.length > 0 ? (
-            ultimoLoteDeDatos.map((item: any, index: number) => (
+          {/* CAMBIO 3: Usa la nueva variable 'datosFiltrados' para renderizar la tabla */}
+          {datosFiltrados.length > 0 ? (
+            datosFiltrados.map((item: any, index: number) => (
               <tr key={index}>
                 <td>{item.ticker}</td>
                 <td>{(item.tir * 100).toFixed(2)}%</td>
@@ -100,7 +105,7 @@ export default function HomePage() {
               </tr>
             ))
           ) : (
-            <tr><td colSpan={5}>Cargando datos...</td></tr>
+            <tr><td colSpan={5}>Cargando o no hay datos para los segmentos seleccionados...</td></tr>
           )}
         </tbody>
       </table>
