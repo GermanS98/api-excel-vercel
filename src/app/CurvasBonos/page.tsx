@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-
+import CurvaRendimientoChart from '@/components/CurvaRendimientoChart'; // CAMBIO: Importamos el nuevo componente
 // --- 1. CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
 // Leemos las variables de entorno de forma segura
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -19,18 +19,23 @@ export default function HomePage() {
 
   // 'useEffect' se ejecuta cuando el componente carga.
   // Es perfecto para cargar datos y suscribirse a cambios.
+export default function HomePage() {
+  const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
+  const [estado, setEstado] = useState('Cargando...');
+  // CAMBIO: Nuevo estado para guardar el texto del filtro
+  const [filtroTicker, setFiltroTicker] = useState('');
+
+  // useEffect se mantiene igual...
   useEffect(() => {
-    // --- FUNCIÓN PARA CARGAR LOS DATOS DEL DÍA ---
     const cargarDatosDelDia = async () => {
       const inicioDelDia = new Date();
       inicioDelDia.setHours(0, 0, 0, 0);
 
-      // Hacemos la consulta a Supabase
       const { data, error } = await supabase
-        .from('datos_financieros') // El nombre de tu tabla
-        .select('*') // Pedimos todas las columnas (id, created_at, datos)
-        .gte('created_at', inicioDelDia.toISOString()) // Filtra por hoy
-        .order('created_at', { ascending: false }); // Ordena del más nuevo al más viejo
+        .from('datos_financieros')
+        .select('*')
+        .gte('created_at', inicioDelDia.toISOString())
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error("Error cargando los datos:", error);
@@ -43,42 +48,40 @@ export default function HomePage() {
         setEstado('Datos actualizados');
       }
     };
-
-    // --- CARGA INICIAL ---
     cargarDatosDelDia();
-
-    // --- SUSCRIPCIÓN EN TIEMPO REAL ---
     const channel = supabase.channel('datos_financieros_channel')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'datos_financieros' },
+      .on( 'postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, 
         (payload) => {
           console.log('¡Cambio detectado en Supabase!', payload);
-          // Cuando Supabase nos avisa de un cambio, volvemos a cargar todo
           cargarDatosDelDia();
         }
       )
       .subscribe();
-
-    // --- FUNCIÓN DE LIMPIEZA ---
-    // Esto es muy importante para evitar que la conexión quede abierta si el usuario se va.
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []); // El array vacío asegura que esto se ejecute solo una vez.
+  }, []);
 
-  // --- 3. LÓGICA DE PREPARACIÓN DE DATOS (antes del return) ---
+  // --- LÓGICA DE PREPARACIÓN DE DATOS ---
   const ultimoLoteDeDatos = datosHistoricos.length > 0 ? datosHistoricos[0].datos : [];
   const segmentosPermitidos = ['LECAP', 'BONCAP', 'BONTE', 'TAMAR', 'CER', 'DL'];
 
-  // Filtra la lista de datos usando la lista de segmentos permitidos
-  const datosFiltrados = ultimoLoteDeDatos.filter((bono: any) => 
+  const datosFiltradosTabla = ultimoLoteDeDatos.filter((bono: any) => 
     segmentosPermitidos.includes(bono.segmento)
   );
+  
+  // CAMBIO: Nueva lógica para filtrar los datos para el gráfico
+  const datosParaGrafico = ultimoLoteDeDatos.filter((bono: any) => {
+    // Si el filtro está vacío, muestra todos los bonos
+    if (filtroTicker.trim() === '') return true;
+    // Si no, muestra solo los que incluyan el texto del filtro (ignorando mayúsculas)
+    return bono.ticker.toUpperCase().includes(filtroTicker.toUpperCase());
+  });
 
-  // --- 4. RETURN PRINCIPAL (con todo el JSX adentro) ---
+
+  // --- RENDERIZADO DE LA PÁGINA ---
   return (
-    <main style={{ fontFamily: 'sans-serif', padding: '20px' }}>
+    <main style={{ fontFamily: 'sans-serif', padding: '20px', maxWidth: '1200px', margin: 'auto' }}>
       <h1>Bonos en Tiempo Real</h1>
       <p>Estado: <strong>{estado}</strong></p>
       {datosHistoricos.length > 0 && (
@@ -87,7 +90,25 @@ export default function HomePage() {
       
       <hr />
 
-      <h2>Últimos Datos Recibidos (Filtrados)</h2>
+      {/* --- NUEVO GRÁFICO INTERACTIVO --- */}
+      <h2>Curva de Rendimiento (TIR vs Días al Vencimiento)</h2>
+      <div style={{ marginBottom: '20px' }}>
+        <label htmlFor="filtro-ticker">Filtrar por Ticker: </label>
+        <input 
+          id="filtro-ticker"
+          type="text"
+          placeholder="Ej: AL30"
+          value={filtroTicker}
+          onChange={(e) => setFiltroTicker(e.target.value)}
+          style={{ padding: '8px', fontSize: '16px' }}
+        />
+      </div>
+      <CurvaRendimientoChart data={datosParaGrafico} />
+
+      <hr />
+
+      <h2>Últimos Datos Recibidos (Filtrados por Segmento)</h2>
+      {/* La tabla de datos filtrados se mantiene igual */}
       <table>
         <thead>
           <tr>
@@ -99,8 +120,8 @@ export default function HomePage() {
           </tr>
         </thead>
         <tbody>
-          {datosFiltrados.length > 0 ? (
-            datosFiltrados.map((item: any, index: number) => (
+          {datosFiltradosTabla.length > 0 ? (
+            datosFiltradosTabla.map((item: any, index: number) => (
               <tr key={index}>
                 <td>{item.ticker}</td>
                 <td>{(item.tir * 100).toFixed(2)}%</td>
@@ -110,13 +131,14 @@ export default function HomePage() {
               </tr>
             ))
           ) : (
-            <tr><td colSpan={5}>Cargando o no hay datos para los segmentos seleccionados...</td></tr>
+            <tr><td colSpan={5}>Cargando o no hay datos...</td></tr>
           )}
         </tbody>
       </table>
 
       <hr />
 
+      {/* La tabla de historial se mantiene igual */}
       <h2>Historial Intradía</h2>
       <table>
         <thead>
