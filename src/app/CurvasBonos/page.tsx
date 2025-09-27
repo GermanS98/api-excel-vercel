@@ -25,11 +25,38 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_KEY!
 );
 
-// --- COMPONENTE REUTILIZABLE PARA LAS TABLAS ---
+// --- COMPONENTE REUTILIZABLE Y MEJORADO PARA LAS TABLAS ---
 const TablaBonos = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
-  // ... Tu componente TablaBonos se mantiene exactamente igual ...
+  <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
+    <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead style={{ position: 'sticky', top: 0, background: '#f9fafb' }}>
+          <tr>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>Ticker</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TIR</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TNA</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TEM</th>
+          </tr>
+        </thead>
+        <tbody>
+          {datos.length > 0 ? (
+            datos.map((item: Bono, index: number) => (
+              <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
+                <td style={{ padding: '0.75rem 1rem', fontWeight: 500 }}>{item.ticker}</td>
+                <td style={{ padding: '0.75rem 1rem' }}>{(item.tir * 100).toFixed(2)}%</td>
+                <td style={{ padding: '0.75rem 1rem' }}>{item.tna ? (item.tna * 100).toFixed(2) + '%' : 'N/A'}</td>
+                <td style={{ padding: '0.75rem 1rem' }}>{item.tem ? (item.tem * 100).toFixed(2) + '%' : 'N/A'}</td>
+              </tr>
+            ))
+          ) : (
+            <tr><td colSpan={4} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
 );
-
 
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA ---
 export default function HomePage() {
