@@ -81,14 +81,14 @@ export default function HomePage() {
   );
 
   // --- GRUPOS DE SEGMENTOS PARA LOS FILTROS Y TABLAS ---
-  const gruposDeSegmentos = {
-    'Todos': [],
-    'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
-    'Ajustados por CER': ['CER', 'ON CER'],
-    'Dollar Linked': ['ON DL', 'DL'],
-    'Tasa Fija (TAMAR)': ['TAMAR', 'ON TAMAR'],
-    'Bonares y Globales': ['BONAR', 'GLOBAL'], // Nueva categoría
-  };
+const gruposDeSegmentos: { [key: string]: string[] } = {
+  'Todos': [],
+  'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
+  'Ajustados por CER': ['CER', 'ON CER'],
+  'Dollar Linked': ['ON DL', 'DL'],
+  'Tasa Fija (TAMAR)': ['TAMAR', 'ON TAMAR'],
+  'Bonares y Globales': ['BONAR', 'GLOBAL'],
+};
 
   const datosParaGrafico = useMemo(() => {
     if (segmentoSeleccionado === 'Todos') return ultimoLoteDeDatos;
