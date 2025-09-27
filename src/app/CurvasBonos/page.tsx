@@ -6,16 +6,14 @@ import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/CurvaRendimientoChart';
 
 // --- 1. CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
-// Leemos las variables de entorno de forma segura
-// Usando NEXT_PUBLIC_SUPABASE_KEY como mencionaste. ¡Asegúrate de que así se llame en Vercel!
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY!; 
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; // Usando ANON_KEY como estándar
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 
-// --- 2. EL COMPONENTE DE TU PÁGINA (VERSIÓN ÚNICA Y CORRECTA) ---
+// --- 2. EL COMPONENTE DE TU PÁGINA ---
 export default function HomePage() {
-  // --- Estados del componente (unificados) ---
+  // --- Estados del componente ---
   const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
   const [estado, setEstado] = useState('Cargando...');
   const [filtroTicker, setFiltroTicker] = useState('');
@@ -149,11 +147,6 @@ export default function HomePage() {
           ) : (
             <tr><td colSpan={2}>No hay registros para hoy.</td></tr>
           )}
-        </tbody>
-      </table>
-    </main>
-  );
-}
         </tbody>
       </table>
     </main>
