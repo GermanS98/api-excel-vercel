@@ -54,7 +54,7 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
   }
 
   return (
-    <div style={{ width: '100%', height: 450 }}>
+    <div style={{ width: '100%', height: 450, userSelect: 'none' }}>
       <ResponsiveContainer>
         <ComposedChart
           margin={{ top: 20, right: 30, bottom: 40, left: 20 }}
