@@ -9,7 +9,8 @@ import {
   CartesianGrid, 
   Scatter,
   Line,
-  Brush // Importamos el componente Brush
+  Brush,
+  LabelList // Importamos LabelList para las etiquetas fijas
 } from 'recharts';
 import { linearRegression } from 'simple-statistics';
 
@@ -39,23 +40,17 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
   let trendlineData: any[] = [];
   if (data.length > 1) {
     const regressionPoints = data
-      .filter(p => p.dias_vto > 0)
+      .filter(p => p.dias_vto > 0 && typeof p.tir === 'number')
       .map(p => [Math.log(p.dias_vto), p.tir]);
 
     if (regressionPoints.length > 1) {
       const { m, b } = linearRegression(regressionPoints);
-      const xDomain = data.map(p => p.dias_vto).filter(d => d > 0);
-      const minX = Math.min(...xDomain);
-      const maxX = Math.max(...xDomain);
+      const uniqueXPoints = [...new Set(data.map(p => p.dias_vto).filter(d => d > 0))].sort((a,b) => a - b);
       
-      for (let i = 0; i < data.length; i++) {
-        const x = data[i].dias_vto;
-        if (x > 0) {
-            const y = m * Math.log(x) + b;
-            trendlineData.push({ dias_vto: x, trend: y });
-        }
-      }
-      trendlineData.sort((a,b) => a.dias_vto - b.dias_vto)
+      trendlineData = uniqueXPoints.map(x => ({
+        dias_vto: x,
+        trend: m * Math.log(x) + b
+      }));
     }
   }
 
@@ -63,7 +58,7 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
     <div style={{ width: '100%', height: 450 }}>
       <ResponsiveContainer>
         <ComposedChart
-          margin={{ top: 20, right: 30, bottom: 20, left: 20 }}
+          margin={{ top: 20, right: 30, bottom: 40, left: 20 }} // Más margen inferior para Brush
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
@@ -83,21 +78,29 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
             width={80}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Scatter data={data} fill="#3b82f6" />
+          <Scatter data={data} fill="#3b82f6">
+             {/* Añadimos la etiqueta fija del ticker a cada punto */}
+            <LabelList 
+              dataKey="ticker" 
+              position="top" 
+              style={{ fontSize: 10, fill: '#666' }} 
+            />
+          </Scatter>
           <Line 
             data={trendlineData} 
             dataKey="trend" 
             stroke="#ff7300" 
             dot={false} 
             strokeWidth={2}
-            strokeDasharray="5 5" // Línea punteada
+            strokeDasharray="5 5"
+            type="monotone"
           />
-          {/* Añadimos el Brush para seleccionar/hacer zoom */}
+          {/* El Brush necesita un dataKey y se posiciona con 'y' */}
           <Brush 
             dataKey="dias_vto" 
             height={30} 
-            stroke="#8884d8" 
-            y={380} // Posición vertical del brush
+            stroke="#8884d8"
+            y={380} // Ajusta esta posición si es necesario
           />
         </ComposedChart>
       </ResponsiveContainer>
