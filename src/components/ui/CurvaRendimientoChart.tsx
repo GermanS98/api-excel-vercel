@@ -9,12 +9,11 @@ import {
   CartesianGrid, 
   Scatter,
   Line,
-  Brush,
-  LabelList // Importamos LabelList para las etiquetas fijas
+  Brush, // 1. Importamos el componente Brush
+  LabelList
 } from 'recharts';
 import { linearRegression } from 'simple-statistics';
 
-// El Tooltip personalizado se mantiene igual
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
@@ -58,7 +57,7 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
     <div style={{ width: '100%', height: 450 }}>
       <ResponsiveContainer>
         <ComposedChart
-          margin={{ top: 20, right: 30, bottom: 40, left: 20 }} // Más margen inferior para Brush
+          margin={{ top: 20, right: 30, bottom: 40, left: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
@@ -79,7 +78,6 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
           />
           <Tooltip content={<CustomTooltip />} />
           <Scatter data={data} fill="#3b82f6">
-             {/* Añadimos la etiqueta fija del ticker a cada punto */}
             <LabelList 
               dataKey="ticker" 
               position="top" 
@@ -95,13 +93,15 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
             strokeDasharray="5 5"
             type="monotone"
           />
-          {/* El Brush necesita un dataKey y se posiciona con 'y' */}
+
+          {/* 2. Añadimos el Brush aquí, dentro del gráfico */}
           <Brush 
-            dataKey="dias_vto" 
+            dataKey="dias_vto" // Debe coincidir con el dataKey del eje X
             height={30} 
             stroke="#8884d8"
-            y={380} // Ajusta esta posición si es necesario
+            y={380} // Posición vertical desde la parte superior del gráfico
           />
+
         </ComposedChart>
       </ResponsiveContainer>
     </div>
