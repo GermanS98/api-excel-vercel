@@ -74,8 +74,8 @@ export default function HomePage() {
       const { data, error } = await supabase
         .from('datos_financieros')
         .select('*')
-        .gte('creado_en', inicioDelDia.toISOString())
-        .order('creado_en', { ascending: false });
+        .gte('created_at', inicioDelDia.toISOString())
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error("Error cargando los datos:", error);
