@@ -7,7 +7,7 @@ import CurvaRendimientoChart from '@/components/CurvaRendimientoChart'; // CAMBI
 // --- 1. CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
 // Leemos las variables de entorno de forma segura
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_KEY!; // CORRECCIÓN: Usar ANON_KEY
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 
