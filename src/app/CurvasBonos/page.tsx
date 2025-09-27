@@ -5,6 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import { X } from 'lucide-react';
 import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css';
+
 
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
 type Bono = {
@@ -63,36 +65,31 @@ const TablaBonos = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
 export default function HomePage() {
   const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
   const [estado, setEstado] = useState('Cargando...');
-  const [segmentosSeleccionados, setSegmentosSeleccionados] = useState<string[]>([]);
-  const [rangoDias, setRangoDias] = useState<[number, number]>([0, 8000]);
+  // CAMBIO: Ahora solo se selecciona UN segmento, y empieza con el primero por defecto.
+  const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>('LECAPs y Similares');
+  const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
-  // useEffect para cargar datos y suscribirse a cambios
   useEffect(() => {
-    // CORRECCIÓN: Se restaura la lógica de carga de datos que faltaba
     const cargarDatosDelDia = async () => {
       const inicioDelDia = new Date();
       inicioDelDia.setHours(0, 0, 0, 0);
-
       const { data, error } = await supabase
         .from('datos_financieros')
         .select('*')
         .gte('created_at', inicioDelDia.toISOString())
         .order('created_at', { ascending: false });
-
+        
       if (error) {
-        console.error("Error cargando los datos:", error);
         setEstado(`Error: ${error.message}`);
       } else if (data && data.length > 0) {
         setDatosHistoricos(data);
         setEstado('Datos actualizados');
       } else {
         setEstado('Esperando los primeros datos del día...');
-        setDatosHistoricos([]);
       }
     };
-
-    cargarDatosDelDia();
     
+    cargarDatosDelDia();
     const channel = supabase.channel('custom-all-channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, 
         (payload) => cargarDatosDelDia()
@@ -114,27 +111,29 @@ export default function HomePage() {
     'Bonares y Globales': ['BONAR', 'GLOBAL'],
   };
 
-  const handleSegmentoClick = (grupo: string) => {
-    setSegmentosSeleccionados(prev => {
-      if (prev.includes(grupo)) {
-        return prev.filter(s => s !== grupo);
-      } else {
-        return [...prev, grupo];
-      }
-    });
-  };
-  
-  const datosFiltrados = useMemo(() => {
-    let datos = ultimoLoteDeDatos;
+  // CAMBIO: La lógica de datos para el gráfico ahora se une en un solo bloque
+  const datosParaGrafico = useMemo(() => {
+    // 1. Filtra por el grupo de segmento seleccionado
+    const segmentosActivos = gruposDeSegmentos[segmentoSeleccionado] || [];
+    const datosFiltradosPorSegmento = ultimoLoteDeDatos.filter(b => segmentosActivos.includes(b.segmento));
     
-    if (segmentosSeleccionados.length > 0) {
-      const segmentosActivos = segmentosSeleccionados.flatMap(grupo => gruposDeSegmentos[grupo] || []);
-      datos = datos.filter(b => segmentosActivos.includes(b.segmento));
-    }
-    
-    datos = datos.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
-    return datos;
-  }, [ultimoLoteDeDatos, segmentosSeleccionados, rangoDias]);
+    // 2. Filtra por el rango de días del slider
+    return datosFiltradosPorSegmento.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
+  }, [ultimoLoteDeDatos, segmentoSeleccionado, rangoDias]);
+
+  // CAMBIO: El slider ahora se ajusta dinámicamente
+  const maxDiasDelSegmento = useMemo(() => {
+    const segmentosActivos = gruposDeSegmentos[segmentoSeleccionado] || [];
+    const bonosDelSegmento = ultimoLoteDeDatos.filter(b => segmentosActivos.includes(b.segmento));
+    if (bonosDelSegmento.length === 0) return 1000; // Valor por defecto si no hay datos
+    return Math.max(...bonosDelSegmento.map(b => b.dias_vto));
+  }, [ultimoLoteDeDatos, segmentoSeleccionado]);
+
+  // CAMBIO: Reinicia el slider cada vez que cambia el segmento
+  useEffect(() => {
+    setRangoDias([0, maxDiasDelSegmento]);
+  }, [maxDiasDelSegmento]);
+
 
   const tabla1 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['LECAPs y Similares'].includes(b.segmento)), [ultimoLoteDeDatos]);
   const tabla2 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Ajustados por CER'].includes(b.segmento)), [ultimoLoteDeDatos]);
@@ -143,7 +142,7 @@ export default function HomePage() {
   const tabla5 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.segmento)), [ultimoLoteDeDatos]);
 
   return (
-    <main style={{ background: '#f3f4f6', fontFamily: 'sans-serif', padding: '20px' }}>
+    <main style={{ background: '#f3f4f6', fontFamily: 'sans-serif', padding: '10px' }}>
       <div style={{ maxWidth: '1400px', margin: 'auto' }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Bonos en Tiempo Real</h1>
         <p style={{ color: '#6b7280' }}>Estado: <strong>{estado}</strong></p>
@@ -155,27 +154,20 @@ export default function HomePage() {
           <h2>Curva de Rendimiento (TIR vs Días al Vencimiento)</h2>
           
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', marginBottom: '10px', paddingBottom: '20px', borderBottom: '1px solid #eee' }}>
-            <span style={{ fontWeight: 'bold' }}>Filtrar Gráfico:</span>
+            <span style={{ fontWeight: 'bold' }}>Seleccionar Grupo:</span>
             {Object.keys(gruposDeSegmentos).map(grupo => (
-              <button 
-                key={grupo} 
-                onClick={() => handleSegmentoClick(grupo)}
+              <button key={grupo} onClick={() => setSegmentoSeleccionado(grupo)}
                 style={{
                   padding: '8px 16px', fontSize: '14px', cursor: 'pointer', borderRadius: '20px',
                   border: '1px solid',
-                  borderColor: segmentosSeleccionados.includes(grupo) ? '#3b82f6' : '#d1d5db',
-                  backgroundColor: segmentosSeleccionados.includes(grupo) ? '#3b82f6' : 'white',
-                  color: segmentosSeleccionados.includes(grupo) ? 'white' : '#374151',
+                  borderColor: segmentoSeleccionado === grupo ? '#3b82f6' : '#d1d5db',
+                  backgroundColor: segmentoSeleccionado === grupo ? '#3b82f6' : 'white',
+                  color: segmentoSeleccionado === grupo ? 'white' : '#374151',
                   transition: 'all 0.2s'
                 }}>
                 {grupo}
               </button>
             ))}
-            {segmentosSeleccionados.length > 0 && (
-              <button onClick={() => setSegmentosSeleccionados([])} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9ca3af', display: 'flex', alignItems: 'center' }}>
-                <X size={18} /> Limpiar
-              </button>
-            )}
           </div>
           
           <div style={{ padding: '0 10px', marginBottom: '20px' }}>
@@ -183,18 +175,17 @@ export default function HomePage() {
             <Slider
               range
               min={0}
-              max={8000}
-              defaultValue={[0, 8000]}
+              max={maxDiasDelSegmento} // Slider dinámico
+              value={rangoDias} // Controla el valor del slider
               onChange={(value) => setRangoDias(value as [number, number])}
-              step={50}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
               <span style={{ fontSize: '12px' }}>{rangoDias[0]} días</span>
-              <span style={{ fontSize: '12px' }}>{rangoDias[1]} días</span>
+              <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
             </div>
           </div>
           
-          <CurvaRendimientoChart data={datosFiltrados} />
+          <CurvaRendimientoChart data={datosParaGrafico} />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px', marginTop: '2rem' }}>
