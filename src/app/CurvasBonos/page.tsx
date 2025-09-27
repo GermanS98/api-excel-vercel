@@ -3,29 +3,24 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import CurvaRendimientoChart from '@/components/CurvaRendimientoChart'; // CAMBIO: Importamos el nuevo componente
+import CurvaRendimientoChart from '@/components/CurvaRendimientoChart';
+
 // --- 1. CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
 // Leemos las variables de entorno de forma segura
+// Usando NEXT_PUBLIC_SUPABASE_KEY como mencionaste. ¡Asegúrate de que así se llame en Vercel!
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_KEY!; 
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 
-// --- 2. EL COMPONENTE DE TU PÁGINA ---
+// --- 2. EL COMPONENTE DE TU PÁGINA (VERSIÓN ÚNICA Y CORRECTA) ---
 export default function HomePage() {
-  // Usamos 'useState' para guardar los datos y que la página se actualice sola
+  // --- Estados del componente (unificados) ---
   const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
   const [estado, setEstado] = useState('Cargando...');
-
-  // 'useEffect' se ejecuta cuando el componente carga.
-  // Es perfecto para cargar datos y suscribirse a cambios.
-export default function HomePage() {
-  const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
-  const [estado, setEstado] = useState('Cargando...');
-  // CAMBIO: Nuevo estado para guardar el texto del filtro
   const [filtroTicker, setFiltroTicker] = useState('');
 
-  // useEffect se mantiene igual...
+  // 'useEffect' para cargar datos y suscribirse a cambios
   useEffect(() => {
     const cargarDatosDelDia = async () => {
       const inicioDelDia = new Date();
@@ -48,21 +43,24 @@ export default function HomePage() {
         setEstado('Datos actualizados');
       }
     };
+
     cargarDatosDelDia();
+
     const channel = supabase.channel('datos_financieros_channel')
-      .on( 'postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, 
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, 
         (payload) => {
           console.log('¡Cambio detectado en Supabase!', payload);
           cargarDatosDelDia();
         }
       )
       .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
 
-  // --- LÓGICA DE PREPARACIÓN DE DATOS ---
+  // --- Lógica de preparación de datos ---
   const ultimoLoteDeDatos = datosHistoricos.length > 0 ? datosHistoricos[0].datos : [];
   const segmentosPermitidos = ['LECAP', 'BONCAP', 'BONTE', 'TAMAR', 'CER', 'DL'];
 
@@ -70,16 +68,12 @@ export default function HomePage() {
     segmentosPermitidos.includes(bono.segmento)
   );
   
-  // CAMBIO: Nueva lógica para filtrar los datos para el gráfico
   const datosParaGrafico = ultimoLoteDeDatos.filter((bono: any) => {
-    // Si el filtro está vacío, muestra todos los bonos
     if (filtroTicker.trim() === '') return true;
-    // Si no, muestra solo los que incluyan el texto del filtro (ignorando mayúsculas)
     return bono.ticker.toUpperCase().includes(filtroTicker.toUpperCase());
   });
 
-
-  // --- RENDERIZADO DE LA PÁGINA ---
+  // --- Renderizado de la página ---
   return (
     <main style={{ fontFamily: 'sans-serif', padding: '20px', maxWidth: '1200px', margin: 'auto' }}>
       <h1>Bonos en Tiempo Real</h1>
@@ -90,7 +84,6 @@ export default function HomePage() {
       
       <hr />
 
-      {/* --- NUEVO GRÁFICO INTERACTIVO --- */}
       <h2>Curva de Rendimiento (TIR vs Días al Vencimiento)</h2>
       <div style={{ marginBottom: '20px' }}>
         <label htmlFor="filtro-ticker">Filtrar por Ticker: </label>
@@ -108,7 +101,6 @@ export default function HomePage() {
       <hr />
 
       <h2>Últimos Datos Recibidos (Filtrados por Segmento)</h2>
-      {/* La tabla de datos filtrados se mantiene igual */}
       <table>
         <thead>
           <tr>
@@ -138,7 +130,6 @@ export default function HomePage() {
 
       <hr />
 
-      {/* La tabla de historial se mantiene igual */}
       <h2>Historial Intradía</h2>
       <table>
         <thead>
@@ -158,6 +149,11 @@ export default function HomePage() {
           ) : (
             <tr><td colSpan={2}>No hay registros para hoy.</td></tr>
           )}
+        </tbody>
+      </table>
+    </main>
+  );
+}
         </tbody>
       </table>
     </main>
