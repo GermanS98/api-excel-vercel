@@ -2,13 +2,14 @@
 
 import { 
   ResponsiveContainer, 
-  ComposedChart, // Cambiamos a ComposedChart
+  ComposedChart,
   XAxis, 
   YAxis, 
   Tooltip, 
   CartesianGrid, 
   Scatter,
-  Line // Añadimos el componente Line
+  Line,
+  Brush // Importamos el componente Brush
 } from 'recharts';
 import { linearRegression } from 'simple-statistics';
 
@@ -16,7 +17,7 @@ import { linearRegression } from 'simple-statistics';
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    if (!data.ticker) return null; // No mostrar tooltip para la línea de tendencia
+    if (!data.ticker) return null;
     return (
       <div style={{
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -35,19 +36,14 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export default function CurvaRendimientoChart({ data }: { data: any[] }) {
-  // --- Cálculo de la Línea de Tendencia Logarítmica ---
   let trendlineData: any[] = [];
   if (data.length > 1) {
-    // 1. Preparamos los datos para una regresión lineal sobre el logaritmo de X
     const regressionPoints = data
-      .filter(p => p.dias_vto > 0) // El logaritmo solo funciona para X > 0
+      .filter(p => p.dias_vto > 0)
       .map(p => [Math.log(p.dias_vto), p.tir]);
 
     if (regressionPoints.length > 1) {
-      // 2. Calculamos la regresión lineal: y = m*x + b (donde x es log(dias_vto))
       const { m, b } = linearRegression(regressionPoints);
-
-      // 3. Generamos los puntos para dibujar la línea en el gráfico
       const xDomain = data.map(p => p.dias_vto).filter(d => d > 0);
       const minX = Math.min(...xDomain);
       const maxX = Math.max(...xDomain);
@@ -56,7 +52,7 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
         const x = data[i].dias_vto;
         if (x > 0) {
             const y = m * Math.log(x) + b;
-            trendlineData.push({ dias_vto: x, trend: y, ticker: null });
+            trendlineData.push({ dias_vto: x, trend: y });
         }
       }
       trendlineData.sort((a,b) => a.dias_vto - b.dias_vto)
@@ -74,7 +70,6 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
             type="number" 
             dataKey="dias_vto" 
             name="Días al Vencimiento" 
-            unit=" días" 
             tick={{ fontSize: 12 }}
             domain={['dataMin', 'dataMax']}
           />
@@ -88,15 +83,21 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
             width={80}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Scatter data={data} fill="#8884d8" />
-          {/* Añadimos la línea de tendencia al gráfico */}
+          <Scatter data={data} fill="#3b82f6" />
           <Line 
             data={trendlineData} 
             dataKey="trend" 
             stroke="#ff7300" 
             dot={false} 
             strokeWidth={2}
-            type="monotone"
+            strokeDasharray="5 5" // Línea punteada
+          />
+          {/* Añadimos el Brush para seleccionar/hacer zoom */}
+          <Brush 
+            dataKey="dias_vto" 
+            height={30} 
+            stroke="#8884d8" 
+            y={380} // Posición vertical del brush
           />
         </ComposedChart>
       </ResponsiveContainer>
