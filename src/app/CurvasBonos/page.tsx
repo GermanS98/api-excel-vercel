@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import CurvaRendimientoChart from 'src/components/CurvaRendimientoChart';
+import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 
 // --- 1. CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
