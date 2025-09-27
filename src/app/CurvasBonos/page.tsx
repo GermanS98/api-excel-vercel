@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import { X } from 'lucide-react';
-import Slider from 'rc-slider'; // Importamos el componente Slider
+import Slider from 'rc-slider';
 
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
 type Bono = {
@@ -25,7 +25,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_KEY!
 );
 
-// --- COMPONENTE REUTILIZABLE Y MEJORADO PARA LAS TABLAS ---
+// --- COMPONENTE REUTILIZABLE PARA LAS TABLAS ---
 const TablaBonos = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
   <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
     <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
@@ -58,23 +58,46 @@ const TablaBonos = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
   </div>
 );
 
+
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA ---
 export default function HomePage() {
   const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
   const [estado, setEstado] = useState('Cargando...');
   const [segmentosSeleccionados, setSegmentosSeleccionados] = useState<string[]>([]);
-  // Nuevo estado para el rango del slider
   const [rangoDias, setRangoDias] = useState<[number, number]>([0, 8000]);
 
-
+  // useEffect para cargar datos y suscribirse a cambios
   useEffect(() => {
-    // La carga de datos y suscripción se mantienen igual
-    const cargarDatosDelDia = async () => { /* ...código sin cambios... */ };
+    // CORRECCIÓN: Se restaura la lógica de carga de datos que faltaba
+    const cargarDatosDelDia = async () => {
+      const inicioDelDia = new Date();
+      inicioDelDia.setHours(0, 0, 0, 0);
+
+      const { data, error } = await supabase
+        .from('datos_financieros')
+        .select('*')
+        .gte('created_at', inicioDelDia.toISOString())
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error cargando los datos:", error);
+        setEstado(`Error: ${error.message}`);
+      } else if (data && data.length > 0) {
+        setDatosHistoricos(data);
+        setEstado('Datos actualizados');
+      } else {
+        setEstado('Esperando los primeros datos del día...');
+        setDatosHistoricos([]);
+      }
+    };
+
     cargarDatosDelDia();
+    
     const channel = supabase.channel('custom-all-channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, 
         (payload) => cargarDatosDelDia()
       ).subscribe();
+      
     return () => { supabase.removeChannel(channel) };
   }, []);
 
@@ -91,31 +114,28 @@ export default function HomePage() {
     'Bonares y Globales': ['BONAR', 'GLOBAL'],
   };
 
-  const handleSegmentoClick = (segmento: string) => {
-    const segmentosDelGrupo = gruposDeSegmentos[segmento as keyof typeof gruposDeSegmentos] || [];
+  const handleSegmentoClick = (grupo: string) => {
     setSegmentosSeleccionados(prev => {
-        const yaEstanTodosSeleccionados = segmentosDelGrupo.every(s => prev.includes(s));
-        if (yaEstanTodosSeleccionados) {
-            return prev.filter(s => !segmentosDelGrupo.includes(s)); // Quita el grupo
-        } else {
-            return [...new Set([...prev, ...segmentosDelGrupo])]; // Añade el grupo
-        }
+      if (prev.includes(grupo)) {
+        return prev.filter(s => s !== grupo);
+      } else {
+        return [...prev, grupo];
+      }
     });
   };
-
-  // Los datos se filtran por segmento y LUEGO por el rango de días del slider
+  
   const datosFiltrados = useMemo(() => {
     let datos = ultimoLoteDeDatos;
-    // 1. Filtrar por segmentos seleccionados
+    
     if (segmentosSeleccionados.length > 0) {
-      datos = datos.filter(b => segmentosSeleccionados.includes(b.segmento));
+      const segmentosActivos = segmentosSeleccionados.flatMap(grupo => gruposDeSegmentos[grupo] || []);
+      datos = datos.filter(b => segmentosActivos.includes(b.segmento));
     }
-    // 2. Filtrar por el rango de días del slider
+    
     datos = datos.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
     return datos;
   }, [ultimoLoteDeDatos, segmentosSeleccionados, rangoDias]);
-  
-  // Las tablas ahora no reaccionan al filtro del gráfico (slider), solo muestran sus segmentos
+
   const tabla1 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['LECAPs y Similares'].includes(b.segmento)), [ultimoLoteDeDatos]);
   const tabla2 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Ajustados por CER'].includes(b.segmento)), [ultimoLoteDeDatos]);
   const tabla3 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Dollar Linked'].includes(b.segmento)), [ultimoLoteDeDatos]);
@@ -134,37 +154,43 @@ export default function HomePage() {
         <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '2rem' }}>
           <h2>Curva de Rendimiento (TIR vs Días al Vencimiento)</h2>
           
-          {/* --- FILTROS POR GRUPO DE SEGMENTO --- */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', marginBottom: '10px', paddingBottom: '20px', borderBottom: '1px solid #eee' }}>
-            <span style={{ fontWeight: 'bold' }}>Filtrar Gráfico y Tablas:</span>
+            <span style={{ fontWeight: 'bold' }}>Filtrar Gráfico:</span>
             {Object.keys(gruposDeSegmentos).map(grupo => (
-              <button key={grupo} onClick={() => handleSegmentoClick(grupo)}
-                style={{ /* ... estilos de botones ... */ }}
-              >
+              <button 
+                key={grupo} 
+                onClick={() => handleSegmentoClick(grupo)}
+                style={{
+                  padding: '8px 16px', fontSize: '14px', cursor: 'pointer', borderRadius: '20px',
+                  border: '1px solid',
+                  borderColor: segmentosSeleccionados.includes(grupo) ? '#3b82f6' : '#d1d5db',
+                  backgroundColor: segmentosSeleccionados.includes(grupo) ? '#3b82f6' : 'white',
+                  color: segmentosSeleccionados.includes(grupo) ? 'white' : '#374151',
+                  transition: 'all 0.2s'
+                }}>
                 {grupo}
               </button>
             ))}
             {segmentosSeleccionados.length > 0 && (
-              <button onClick={() => setSegmentosSeleccionados([])} style={{ /* ... estilos de botón limpiar ... */ }}>
+              <button onClick={() => setSegmentosSeleccionados([])} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9ca3af', display: 'flex', alignItems: 'center' }}>
                 <X size={18} /> Limpiar
               </button>
             )}
           </div>
           
-          {/* --- NUEVO SLIDER PARA FILTRAR EL GRÁFICO --- */}
           <div style={{ padding: '0 10px', marginBottom: '20px' }}>
-            <label style={{ fontWeight: 'bold' }}>Filtrar Gráfico por Días al Vencimiento:</label>
+            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
             <Slider
               range
               min={0}
-              max={8000} // Puedes ajustar este máximo
+              max={8000}
               defaultValue={[0, 8000]}
               onChange={(value) => setRangoDias(value as [number, number])}
               step={50}
             />
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>{rangoDias[0]} días</span>
-              <span>{rangoDias[1]} días</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
+              <span style={{ fontSize: '12px' }}>{rangoDias[0]} días</span>
+              <span style={{ fontSize: '12px' }}>{rangoDias[1]} días</span>
             </div>
           </div>
           
