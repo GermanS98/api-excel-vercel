@@ -13,7 +13,6 @@ import {
 } from 'recharts';
 import { linearRegression } from 'simple-statistics';
 
-// --- CORRECCIÓN APLICADA AQUÍ ---
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
@@ -32,12 +31,11 @@ const CustomTooltip = ({ active, payload }: any) => {
       </div>
     );
   }
-  
-  // Añade esta línea para que la función siempre devuelva algo
   return null;
 };
 
 export default function CurvaRendimientoChart({ data }: { data: any[] }) {
+  // El cálculo de la línea de tendencia se mantiene igual
   let trendlineData: any[] = [];
   if (data.length > 1) {
     const regressionPoints = data

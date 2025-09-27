@@ -58,6 +58,7 @@ const TablaBonos = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
   </div>
 );
 
+
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA ---
 export default function HomePage() {
   const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
@@ -66,12 +67,12 @@ export default function HomePage() {
   const gruposDeSegmentos: { [key: string]: string[] } = {
     'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
     'Ajustados por CER': ['CER', 'ON CER'],
-    'Dollar Linked': ['ON DL', 'DL', 'ON HD'], // CAMBIO: Se añade ON HD
+    'Dollar Linked': ['ON DL', 'DL'], // CAMBIO: Vuelve a su estado original
     'Tasa Fija (TAMAR)': ['TAMAR', 'ON TAMAR'],
     'Bonares y Globales': ['BONAR', 'GLOBAL'],
+    'Obligaciones Negociables': ['ON'] // CAMBIO: Nuevo grupo y tabla
   };
   
-  // CAMBIO: El estado inicial ahora es el primer grupo de la lista
   const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>(Object.keys(gruposDeSegmentos)[0]);
   const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
@@ -113,11 +114,14 @@ export default function HomePage() {
     return datosDelSegmentoSeleccionado.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
   }, [datosDelSegmentoSeleccionado, rangoDias]);
 
+  // Se crean los datos para las tablas (ahora 6)
   const tabla1 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['LECAPs y Similares'].includes(b.segmento)), [ultimoLoteDeDatos]);
   const tabla2 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Ajustados por CER'].includes(b.segmento)), [ultimoLoteDeDatos]);
   const tabla3 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Dollar Linked'].includes(b.segmento)), [ultimoLoteDeDatos]);
   const tabla4 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Tasa Fija (TAMAR)'].includes(b.segmento)), [ultimoLoteDeDatos]);
   const tabla5 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.segmento)), [ultimoLoteDeDatos]);
+  const tabla6 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Obligaciones Negociables'].includes(b.segmento)), [ultimoLoteDeDatos]);
+
 
   return (
     <main style={{ background: '#f3f4f6', fontFamily: 'sans-serif', padding: '10px' }}>
@@ -154,7 +158,7 @@ export default function HomePage() {
             <Slider
               range
               min={0}
-              max={maxDiasDelSegmento > 0 ? maxDiasDelSegmento : 1} // Evita max <= min
+              max={maxDiasDelSegmento > 0 ? maxDiasDelSegmento : 1}
               value={rangoDias}
               onChange={(value) => setRangoDias(value as [number, number])}
             />
@@ -170,9 +174,10 @@ export default function HomePage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px', marginTop: '2rem' }}>
           <TablaBonos titulo="LECAPs y Similares" datos={tabla1} />
           <TablaBonos titulo="Ajustados por CER" datos={tabla2} />
-          <TablaBonos titulo="Dollar Linked y ON HD" datos={tabla3} />
+          <TablaBonos titulo="Dollar Linked" datos={tabla3} />
           <TablaBonos titulo="Tasa Fija (TAMAR)" datos={tabla4} />
           <TablaBonos titulo="Bonares y Globales" datos={tabla5} />
+          <TablaBonos titulo="Obligaciones Negociables" datos={tabla6} />
         </div>
       </div>
     </main>
