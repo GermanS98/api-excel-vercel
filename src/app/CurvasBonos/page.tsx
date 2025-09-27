@@ -65,15 +65,50 @@ export default function HomePage() {
   const [estado, setEstado] = useState('Cargando...');
   const [tickersSeleccionados, setTickersSeleccionados] = useState<string[]>([]);
 
+// useEffect para cargar datos y suscribirse a cambios
   useEffect(() => {
-    // La lógica de carga de datos se mantiene igual
     const cargarDatosDelDia = async () => {
-      // ... (código de carga de datos sin cambios)
+      const inicioDelDia = new Date();
+      inicioDelDia.setHours(0, 0, 0, 0);
+
+      const { data, error } = await supabase
+        .from('datos_financieros')
+        .select('*')
+        .gte('creado_en', inicioDelDia.toISOString())
+        .order('creado_en', { ascending: false });
+
+      if (error) {
+        console.error("Error cargando los datos:", error);
+        setEstado(`Error: ${error.message}`);
+      } else if (data.length === 0) {
+        setEstado('Esperando los primeros datos del día...');
+        setDatosHistoricos([]);
+      } else {
+        setDatosHistoricos(data);
+        setEstado('Datos actualizados');
+      }
     };
+
     cargarDatosDelDia();
-    const channel = supabase.channel('...').on('...', {}, () => cargarDatosDelDia()).subscribe();
-    return () => { supabase.removeChannel(channel) };
-  }, []);
+
+    // --- CORRECCIÓN APLICADA AQUÍ ---
+    const channel = supabase
+      .channel('custom-all-channel') // Dale un nombre único a tu canal
+      .on(
+        'postgres_changes', // Escucha los cambios en la base de datos
+        { event: '*', schema: 'public', table: 'datos_financieros' }, // Filtra por tu tabla
+        (payload) => {
+          console.log('¡Cambio detectado en Supabase!', payload);
+          cargarDatosDelDia();
+        }
+      )
+      .subscribe();
+
+    // Función de limpieza
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []); // El array vacío asegura que esto se ejecute solo una vez.
 
   // --- LÓGICA DE PREPARACIÓN Y FILTRADO DE DATOS ---
   const ultimoLoteDeDatos: Bono[] = useMemo(() => 
