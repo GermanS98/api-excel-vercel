@@ -5,6 +5,16 @@ import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import { X } from 'lucide-react'; // Importamos el icono para el botón de limpiar
 
+
+type Bono = {
+  ticker: string;
+  tir: number;
+  segmento: string;
+  paridad: number | null;
+  mep_breakeven: number | null;
+  // Añade otras propiedades que uses si es necesario
+};
+
 // --- 1. CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -68,7 +78,7 @@ export default function HomePage() {
   };
 
   // Los datos se filtran primero por segmento, y luego por ticker
-  const datosFiltrados = ultimoLoteDeDatos.filter(bono => {
+  const datosFiltrados = ultimoLoteDeDatos.filter((bono: Bono) => {
     // Si no hay segmentos seleccionados, se muestran todos
     const pasaFiltroSegmento = segmentosSeleccionados.length === 0 ? true : segmentosSeleccionados.includes(bono.segmento);
     // El filtro de ticker se aplica sobre el resultado del filtro de segmento
