@@ -13,19 +13,52 @@ import {
 } from 'recharts';
 import { linearRegression } from 'simple-statistics';
 
-// El componente CustomTooltip se mantiene igual
-const CustomTooltip = ({ active, payload }: any) => { /* ...código sin cambios... */ };
+// --- CORRECCIÓN APLICADA AQUÍ ---
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    if (!data.ticker) return null;
+    return (
+      <div style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        border: '1px solid #ccc',
+        padding: '10px',
+        borderRadius: '5px',
+        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+      }}>
+        <p style={{ margin: 0, fontWeight: 'bold', color: '#333' }}>{`Ticker: ${data.ticker}`}</p>
+        <p style={{ margin: 0, color: '#666' }}>{`TIR: ${(data.tir * 100).toFixed(2)}%`}</p>
+        <p style={{ margin: 0, color: '#666' }}>{`Días al Vto: ${data.dias_vto}`}</p>
+      </div>
+    );
+  }
+  
+  // Añade esta línea para que la función siempre devuelva algo
+  return null;
+};
 
 export default function CurvaRendimientoChart({ data }: { data: any[] }) {
-  // El cálculo de la línea de tendencia se mantiene igual
   let trendlineData: any[] = [];
-  if (data.length > 1) { /* ...código sin cambios... */ }
+  if (data.length > 1) {
+    const regressionPoints = data
+      .filter(p => p.dias_vto > 0 && typeof p.tir === 'number')
+      .map(p => [Math.log(p.dias_vto), p.tir]);
+
+    if (regressionPoints.length > 1) {
+      const { m, b } = linearRegression(regressionPoints);
+      const uniqueXPoints = [...new Set(data.map(p => p.dias_vto).filter(d => d > 0))].sort((a,b) => a - b);
+      
+      trendlineData = uniqueXPoints.map(x => ({
+        dias_vto: x,
+        trend: m * Math.log(x) + b
+      }));
+    }
+  }
 
   return (
     <div style={{ width: '100%', height: 450, userSelect: 'none' }}>
       <ResponsiveContainer>
         <ComposedChart
-          // CAMBIO: Se reduce el margen izquierdo para mejor ajuste en móviles
           margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
@@ -43,7 +76,7 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
             tickFormatter={(tick) => `${(tick * 100).toFixed(0)}%`}
             domain={['auto', 'auto']}
             tick={{ fontSize: 12 }}
-            width={70} // Se ajusta el ancho para compensar el margen
+            width={70}
           />
           <Tooltip content={<CustomTooltip />} />
           <Scatter data={data} fill="#3b82f6">
