@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import { X } from 'lucide-react';
@@ -26,37 +26,8 @@ const supabase = createClient(
 
 // --- COMPONENTE REUTILIZABLE PARA LAS TABLAS ---
 const TablaBonos = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
-  <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
-    <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead style={{ position: 'sticky', top: 0, background: '#f9fafb' }}>
-          <tr>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>Ticker</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TIR</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TNA</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TEM</th>
-          </tr>
-        </thead>
-        <tbody>
-          {datos.length > 0 ? (
-            datos.map((item: Bono, index: number) => (
-              <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '0.75rem 1rem', fontWeight: 500 }}>{item.ticker}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{(item.tir * 100).toFixed(2)}%</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{item.tna ? (item.tna * 100).toFixed(2) + '%' : 'N/A'}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{item.tem ? (item.tem * 100).toFixed(2) + '%' : 'N/A'}</td>
-              </tr>
-            ))
-          ) : (
-            <tr><td colSpan={4} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  </div>
+    // ... Tu componente TablaBonos se mantiene exactamente igual que antes ...
 );
-
 
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA ---
 export default function HomePage() {
@@ -65,45 +36,86 @@ export default function HomePage() {
   const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>('Todos');
 
   useEffect(() => {
-    // La carga de datos y suscripción se mantienen igual
-    const cargarDatosDelDia = async () => { /* ...código sin cambios... */ };
+    const cargarDatosDelDia = async () => {
+      const inicioDelDia = new Date();
+      inicioDelDia.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase
+        .from('datos_financieros')
+        .select('*')
+        .gte('created_at', inicioDelDia.toISOString())
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error("Error al obtener datos de Supabase:", error);
+        setEstado(`Error: ${error.message}`);
+      } else {
+        // --- DIAGNÓSTICO 1: ¿Qué datos llegan de Supabase? ---
+        console.log("Datos recibidos de Supabase:", data);
+        
+        if (data.length === 0) {
+          setEstado('Esperando los primeros datos del día...');
+          setDatosHistoricos([]);
+        } else {
+          setDatosHistoricos(data);
+          setEstado('Datos actualizados');
+        }
+      }
+    };
+    
     cargarDatosDelDia();
+
     const channel = supabase.channel('custom-all-channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, 
-        (payload) => cargarDatosDelDia()
+        (payload) => {
+          console.log('Detectado cambio en Supabase, recargando datos...');
+          cargarDatosDelDia();
+        }
       ).subscribe();
-    return () => { supabase.removeChannel(channel) };
+      
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const ultimoLoteDeDatos: Bono[] = useMemo(() => 
-    datosHistoricos.length > 0 ? datosHistoricos[0].datos : [], 
-    [datosHistoricos]
-  );
+  // --- LÓGICA DE PREPARACIÓN Y FILTRADO DE DATOS (VERSIÓN SIMPLIFICADA) ---
+  const ultimoLoteDeDatos: Bono[] = datosHistoricos.length > 0 ? datosHistoricos[0].datos : [];
 
-  // --- GRUPOS DE SEGMENTOS PARA LOS FILTROS Y TABLAS ---
-const gruposDeSegmentos: { [key: string]: string[] } = {
-  'Todos': [],
-  'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
-  'Ajustados por CER': ['CER', 'ON CER'],
-  'Dollar Linked': ['ON DL', 'DL'],
-  'Tasa Fija (TAMAR)': ['TAMAR', 'ON TAMAR'],
-  'Bonares y Globales': ['BONAR', 'GLOBAL'],
-};
+  // --- DIAGNÓSTICO 2: ¿Cuál es el último lote de datos que estamos usando? ---
+  console.log("Último lote de datos a procesar:", ultimoLoteDeDatos);
 
-  const datosParaGrafico = useMemo(() => {
-    if (segmentoSeleccionado === 'Todos') return ultimoLoteDeDatos;
-    const segmentosActivos = gruposDeSegmentos[segmentoSeleccionado as keyof typeof gruposDeSegmentos] || [];
+  const gruposDeSegmentos: { [key: string]: string[] } = {
+    'Todos': [],
+    'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
+    'Ajustados por CER': ['CER', 'ON CER'],
+    'Dollar Linked': ['ON DL', 'DL'],
+    'Tasa Fija (TAMAR)': ['TAMAR', 'ON TAMAR'],
+    'Bonares y Globales': ['BONAR', 'GLOBAL'],
+  };
+
+  const datosParaGrafico = (() => {
+    if (segmentoSeleccionado === 'Todos' || !gruposDeSegmentos[segmentoSeleccionado]) {
+      return ultimoLoteDeDatos;
+    }
+    const segmentosActivos = gruposDeSegmentos[segmentoSeleccionado];
     return ultimoLoteDeDatos.filter(b => segmentosActivos.includes(b.segmento));
-  }, [ultimoLoteDeDatos, segmentoSeleccionado]);
+  })();
 
-  // Filtros para cada una de las 5 tablas
-  const tabla1 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['LECAPs y Similares'].includes(b.segmento)), [ultimoLoteDeDatos]);
-  const tabla2 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Ajustados por CER'].includes(b.segmento)), [ultimoLoteDeDatos]);
-  const tabla3 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Dollar Linked'].includes(b.segmento)), [ultimoLoteDeDatos]);
-  const tabla4 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Tasa Fija (TAMAR)'].includes(b.segmento)), [ultimoLoteDeDatos]);
-  const tabla5 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.segmento)), [ultimoLoteDeDatos]);
+  // --- DIAGNÓSTICO 3: ¿Cuántos bonos se van a mostrar en el gráfico? ---
+  console.log(`Datos para el gráfico (segmento: ${segmentoSeleccionado}):`, datosParaGrafico.length, "bonos");
 
+  const tabla1 = ultimoLoteDeDatos.filter(b => gruposDeSegmentos['LECAPs y Similares'].includes(b.segmento));
+  const tabla2 = ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Ajustados por CER'].includes(b.segmento));
+  const tabla3 = ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Dollar Linked'].includes(b.segmento));
+  const tabla4 = ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Tasa Fija (TAMAR)'].includes(b.segmento));
+  const tabla5 = ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.segmento));
 
+  return (
+    <main style={{ background: '#f3f4f6', fontFamily: 'sans-serif', padding: '20px' }}>
+      <div style={{ maxWidth: '1400px', margin: 'auto' }}>
+        {/* ... Tu JSX se mantiene exactamente igual que antes ... */}
+        {/* ... No necesitas cambiar nada en la sección del return ... */}
+      </div>
+    </main>
+  );
+}
   return (
     <main style={{ background: '#f3f4f6', fontFamily: 'sans-serif', padding: '20px' }}>
       <div style={{ maxWidth: '1400px', margin: 'auto' }}>
