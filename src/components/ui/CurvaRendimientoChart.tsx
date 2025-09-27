@@ -2,20 +2,21 @@
 
 import { 
   ResponsiveContainer, 
-  ScatterChart, 
+  ComposedChart, // Cambiamos a ComposedChart
   XAxis, 
   YAxis, 
-  ZAxis,
   Tooltip, 
   CartesianGrid, 
   Scatter,
-  Cell // Importamos Cell para poder cambiar colores
+  Line // Añadimos el componente Line
 } from 'recharts';
+import { linearRegression } from 'simple-statistics';
 
 // El Tooltip personalizado se mantiene igual
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
+    if (!data.ticker) return null; // No mostrar tooltip para la línea de tendencia
     return (
       <div style={{
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -33,11 +34,39 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export default function CurvaRendimientoChart({ data, filtroTicker }: { data: any[], filtroTicker: string }) {
+export default function CurvaRendimientoChart({ data }: { data: any[] }) {
+  // --- Cálculo de la Línea de Tendencia Logarítmica ---
+  let trendlineData: any[] = [];
+  if (data.length > 1) {
+    // 1. Preparamos los datos para una regresión lineal sobre el logaritmo de X
+    const regressionPoints = data
+      .filter(p => p.dias_vto > 0) // El logaritmo solo funciona para X > 0
+      .map(p => [Math.log(p.dias_vto), p.tir]);
+
+    if (regressionPoints.length > 1) {
+      // 2. Calculamos la regresión lineal: y = m*x + b (donde x es log(dias_vto))
+      const { m, b } = linearRegression(regressionPoints);
+
+      // 3. Generamos los puntos para dibujar la línea en el gráfico
+      const xDomain = data.map(p => p.dias_vto).filter(d => d > 0);
+      const minX = Math.min(...xDomain);
+      const maxX = Math.max(...xDomain);
+      
+      for (let i = 0; i < data.length; i++) {
+        const x = data[i].dias_vto;
+        if (x > 0) {
+            const y = m * Math.log(x) + b;
+            trendlineData.push({ dias_vto: x, trend: y, ticker: null });
+        }
+      }
+      trendlineData.sort((a,b) => a.dias_vto - b.dias_vto)
+    }
+  }
+
   return (
     <div style={{ width: '100%', height: 450 }}>
       <ResponsiveContainer>
-        <ScatterChart
+        <ComposedChart
           margin={{ top: 20, right: 30, bottom: 20, left: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
@@ -47,6 +76,7 @@ export default function CurvaRendimientoChart({ data, filtroTicker }: { data: an
             name="Días al Vencimiento" 
             unit=" días" 
             tick={{ fontSize: 12 }}
+            domain={['dataMin', 'dataMax']}
           />
           <YAxis 
             type="number" 
@@ -55,23 +85,20 @@ export default function CurvaRendimientoChart({ data, filtroTicker }: { data: an
             tickFormatter={(tick) => `${(tick * 100).toFixed(0)}%`}
             domain={['auto', 'auto']}
             tick={{ fontSize: 12 }}
+            width={80}
           />
-          <ZAxis type="category" dataKey="ticker" name="Ticker" />
-          <Tooltip cursor={{ strokeDasharray: '3 3' }} content={<CustomTooltip />} />
-          <Scatter name="Bonos" data={data}>
-            {/* Lógica para colorear los puntos */}
-            {data.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={
-                  filtroTicker && entry.ticker.toUpperCase().includes(filtroTicker.toUpperCase()) 
-                  ? '#ff7300' // Color resaltado si coincide con el filtro
-                  : '#8884d8' // Color por defecto
-                } 
-              />
-            ))}
-          </Scatter>
-        </ScatterChart>
+          <Tooltip content={<CustomTooltip />} />
+          <Scatter data={data} fill="#8884d8" />
+          {/* Añadimos la línea de tendencia al gráfico */}
+          <Line 
+            data={trendlineData} 
+            dataKey="trend" 
+            stroke="#ff7300" 
+            dot={false} 
+            strokeWidth={2}
+            type="monotone"
+          />
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );
