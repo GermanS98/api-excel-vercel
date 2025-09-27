@@ -3,10 +3,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
-import { X } from 'lucide-react';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-
 
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
 type Bono = {
@@ -60,80 +58,60 @@ const TablaBonos = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
   </div>
 );
 
-
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA ---
 export default function HomePage() {
   const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
   const [estado, setEstado] = useState('Cargando...');
-  // CAMBIO: Ahora solo se selecciona UN segmento, y empieza con el primero por defecto.
-  const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>('LECAPs y Similares');
+  
+  const gruposDeSegmentos: { [key: string]: string[] } = {
+    'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
+    'Ajustados por CER': ['CER', 'ON CER'],
+    'Dollar Linked': ['ON DL', 'DL', 'ON HD'], // CAMBIO: Se añade ON HD
+    'Tasa Fija (TAMAR)': ['TAMAR', 'ON TAMAR'],
+    'Bonares y Globales': ['BONAR', 'GLOBAL'],
+  };
+  
+  // CAMBIO: El estado inicial ahora es el primer grupo de la lista
+  const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>(Object.keys(gruposDeSegmentos)[0]);
   const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
   useEffect(() => {
     const cargarDatosDelDia = async () => {
       const inicioDelDia = new Date();
       inicioDelDia.setHours(0, 0, 0, 0);
-      const { data, error } = await supabase
-        .from('datos_financieros')
-        .select('*')
-        .gte('created_at', inicioDelDia.toISOString())
-        .order('created_at', { ascending: false });
-        
-      if (error) {
-        setEstado(`Error: ${error.message}`);
-      } else if (data && data.length > 0) {
+      const { data, error } = await supabase.from('datos_financieros').select('*').gte('created_at', inicioDelDia.toISOString()).order('created_at', { ascending: false });
+      if (error) setEstado(`Error: ${error.message}`);
+      else if (data && data.length > 0) {
         setDatosHistoricos(data);
         setEstado('Datos actualizados');
       } else {
         setEstado('Esperando los primeros datos del día...');
       }
     };
-    
     cargarDatosDelDia();
-    const channel = supabase.channel('custom-all-channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, 
-        (payload) => cargarDatosDelDia()
-      ).subscribe();
-      
+    const channel = supabase.channel('custom-all-channel').on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, () => cargarDatosDelDia()).subscribe();
     return () => { supabase.removeChannel(channel) };
   }, []);
 
-  const ultimoLoteDeDatos: Bono[] = useMemo(() => 
-    datosHistoricos.length > 0 ? datosHistoricos[0].datos : [], 
-    [datosHistoricos]
-  );
+  const ultimoLoteDeDatos: Bono[] = useMemo(() => datosHistoricos.length > 0 ? datosHistoricos[0].datos : [], [datosHistoricos]);
 
-  const gruposDeSegmentos: { [key: string]: string[] } = {
-    'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
-    'Ajustados por CER': ['CER', 'ON CER'],
-    'Dollar Linked': ['ON DL', 'DL'],
-    'Tasa Fija (TAMAR)': ['TAMAR', 'ON TAMAR'],
-    'Bonares y Globales': ['BONAR', 'GLOBAL'],
-  };
-
-  // CAMBIO: La lógica de datos para el gráfico ahora se une en un solo bloque
-  const datosParaGrafico = useMemo(() => {
-    // 1. Filtra por el grupo de segmento seleccionado
+  const datosDelSegmentoSeleccionado = useMemo(() => {
     const segmentosActivos = gruposDeSegmentos[segmentoSeleccionado] || [];
-    const datosFiltradosPorSegmento = ultimoLoteDeDatos.filter(b => segmentosActivos.includes(b.segmento));
-    
-    // 2. Filtra por el rango de días del slider
-    return datosFiltradosPorSegmento.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
-  }, [ultimoLoteDeDatos, segmentoSeleccionado, rangoDias]);
-
-  // CAMBIO: El slider ahora se ajusta dinámicamente
-  const maxDiasDelSegmento = useMemo(() => {
-    const segmentosActivos = gruposDeSegmentos[segmentoSeleccionado] || [];
-    const bonosDelSegmento = ultimoLoteDeDatos.filter(b => segmentosActivos.includes(b.segmento));
-    if (bonosDelSegmento.length === 0) return 1000; // Valor por defecto si no hay datos
-    return Math.max(...bonosDelSegmento.map(b => b.dias_vto));
+    return ultimoLoteDeDatos.filter(b => segmentosActivos.includes(b.segmento));
   }, [ultimoLoteDeDatos, segmentoSeleccionado]);
 
-  // CAMBIO: Reinicia el slider cada vez que cambia el segmento
+  const maxDiasDelSegmento = useMemo(() => {
+    if (datosDelSegmentoSeleccionado.length === 0) return 1000;
+    return Math.max(...datosDelSegmentoSeleccionado.map(b => b.dias_vto));
+  }, [datosDelSegmentoSeleccionado]);
+
   useEffect(() => {
     setRangoDias([0, maxDiasDelSegmento]);
   }, [maxDiasDelSegmento]);
-
+  
+  const datosParaGrafico = useMemo(() => {
+    return datosDelSegmentoSeleccionado.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
+  }, [datosDelSegmentoSeleccionado, rangoDias]);
 
   const tabla1 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['LECAPs y Similares'].includes(b.segmento)), [ultimoLoteDeDatos]);
   const tabla2 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Ajustados por CER'].includes(b.segmento)), [ultimoLoteDeDatos]);
@@ -144,17 +122,18 @@ export default function HomePage() {
   return (
     <main style={{ background: '#f3f4f6', fontFamily: 'sans-serif', padding: '10px' }}>
       <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Bonos en Tiempo Real</h1>
-        <p style={{ color: '#6b7280' }}>Estado: <strong>{estado}</strong></p>
-        {datosHistoricos.length > 0 && (
-          <p style={{ color: '#6b7280' }}>Última actualización: <strong>{new Date(datosHistoricos[0].created_at).toLocaleTimeString()}</strong></p>
-        )}
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Bonos en Tiempo Real</h1>
+        <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
+            <span>Estado: <strong>{estado}</strong></span>
+            {datosHistoricos.length > 0 && (
+              <span style={{ marginLeft: '1rem' }}>Última act: <strong>{new Date(datosHistoricos[0].created_at).toLocaleTimeString()}</strong></span>
+            )}
+        </div>
         
-        <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '2rem' }}>
+        <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
           <h2>Curva de Rendimiento (TIR vs Días al Vencimiento)</h2>
           
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', marginBottom: '10px', paddingBottom: '20px', borderBottom: '1px solid #eee' }}>
-            <span style={{ fontWeight: 'bold' }}>Seleccionar Grupo:</span>
             {Object.keys(gruposDeSegmentos).map(grupo => (
               <button key={grupo} onClick={() => setSegmentoSeleccionado(grupo)}
                 style={{
@@ -175,8 +154,8 @@ export default function HomePage() {
             <Slider
               range
               min={0}
-              max={maxDiasDelSegmento} // Slider dinámico
-              value={rangoDias} // Controla el valor del slider
+              max={maxDiasDelSegmento > 0 ? maxDiasDelSegmento : 1} // Evita max <= min
+              value={rangoDias}
               onChange={(value) => setRangoDias(value as [number, number])}
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
@@ -191,7 +170,7 @@ export default function HomePage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px', marginTop: '2rem' }}>
           <TablaBonos titulo="LECAPs y Similares" datos={tabla1} />
           <TablaBonos titulo="Ajustados por CER" datos={tabla2} />
-          <TablaBonos titulo="Dollar Linked" datos={tabla3} />
+          <TablaBonos titulo="Dollar Linked y ON HD" datos={tabla3} />
           <TablaBonos titulo="Tasa Fija (TAMAR)" datos={tabla4} />
           <TablaBonos titulo="Bonares y Globales" datos={tabla5} />
         </div>
