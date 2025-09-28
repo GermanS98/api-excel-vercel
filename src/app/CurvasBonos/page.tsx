@@ -40,11 +40,28 @@ const slugify = (text: string) => {
 // --- COMPONENTES DE TABLA CON TÍTULOS CLICKEABLES Y CUERPO COMPLETO ---
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
     <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-      <Link href={`/segmento/${slugify(titulo)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-        <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
-          {titulo}
-        </h2>
-      </Link>
+      
+      {/* AÑADIMOS UNA LÓGICA CONDICIONAL AQUÍ */}
+      {titulo === 'LECAPs y Similares' ? (
+        // Si el título es de LECAPs, usa una etiqueta <a> para el enlace externo
+        <a 
+          href="https://api-excel-vercel.vercel.app/RentaFijaArs" 
+          target="_blank" // Abre el enlace en una nueva pestaña
+          rel="noopener noreferrer" // Buena práctica de seguridad para enlaces externos
+          style={{ textDecoration: 'none', color: 'inherit' }}
+        >
+          <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
+            {titulo}
+          </h2>
+        </a>
+      ) : (
+        // Para cualquier otra tabla, usa el <Link> de Next.js para el enlace interno
+        <Link href={`/segmento/${slugify(titulo)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
+            {titulo}
+          </h2>
+        </Link>
+      )}
       <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ position: 'sticky', top: 0 }}>
