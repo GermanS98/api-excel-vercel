@@ -122,7 +122,22 @@ export default function HomePage() {
   const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
   useEffect(() => {
-    // ...código de carga y suscripción sin cambios...
+    const cargarDatosDelDia = async () => {
+      const inicioDelDia = new Date();
+      inicioDelDia.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase.from('datos_financieros').select('*').gte('created_at', inicioDelDia.toISOString()).order('created_at', { ascending: false });
+      if (error) setEstado(`Error: ${error.message}`);
+      else if (data && data.length > 0) {
+        setDatosHistoricos(data);
+        setEstado('Datos actualizados');
+      } else {
+        setEstado('Esperando los primeros datos del día...');
+      }
+    };
+    cargarDatosDelDia();
+    const channel = supabase.channel('custom-all-channel').on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, () => cargarDatosDelDia()).subscribe();
+    return () => { supabase.removeChannel(channel) };
+
   }, []);
 
   const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
