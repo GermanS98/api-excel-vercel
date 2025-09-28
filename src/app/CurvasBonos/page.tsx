@@ -145,6 +145,7 @@ export default function HomePage() {
     return () => { supabase.removeChannel(channel) };
   }, []);
 
+  // --- LÓGICA DE PREPARACIÓN DE DATOS (SIN useMemo) ---
   const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
 
   const datosDelSegmentoSeleccionado = (() => {
@@ -164,12 +165,12 @@ export default function HomePage() {
   
   const datosParaGrafico = datosDelSegmentoSeleccionado.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
 
-  // --- CAMBIO: SE APLICA EL ORDENAMIENTO AQUÍ ---
+  // Función auxiliar para ordenar por fecha de vencimiento
   const ordenarPorVencimiento = (datos: Bono[]) => {
-    // Se usa [...datos] para crear una copia y no modificar el array original
     return [...datos].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
   };
 
+  // Se crean y ordenan los datos para cada tabla
   const tabla1 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['LECAPs y Similares'].includes(b.segmento)));
   const tabla2 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Ajustados por CER'].includes(b.segmento)));
   const tabla3 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Dollar Linked'].includes(b.segmento)));
