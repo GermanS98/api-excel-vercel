@@ -41,7 +41,7 @@ const slugify = (text: string) => {
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
     const enlacesExternos: { [key: string]: string } = {
         'LECAPs y Similares': 'https://api-excel-vercel.vercel.app/RentaFijaArs',
-        'Ajustados por CER': 'https://api-excel-vercel.vercel.app/cer'
+        'Ajustados por CER': 'https://api-excel-vercel.vercel.app/cer',
         'Dollar Linked': 'https://api-excel-vercel.vercel.app/dl',
     };
     const urlExterna = enlacesExternos[titulo];
