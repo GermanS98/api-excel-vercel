@@ -2,7 +2,7 @@
 
 import { 
   ResponsiveContainer, ComposedChart, XAxis, YAxis, Tooltip, 
-  CartesianGrid, Scatter, Line, LabelList, Cell, Legend 
+  CartesianGrid, Scatter, Line, LabelList, Cell, Legend, ZAxis
 } from 'recharts';
 import { linearRegression } from 'simple-statistics';
 
