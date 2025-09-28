@@ -43,6 +43,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
         'LECAPs y Similares': 'https://api-excel-vercel.vercel.app/RentaFijaArs',
         'Ajustados por CER': 'https://api-excel-vercel.vercel.app/cer',
         'Dollar Linked': 'https://api-excel-vercel.vercel.app/dl',
+        'TAMAR': 'https://api-excel-vercel.vercel.app/tamar',
     };
     const urlExterna = enlacesExternos[titulo];
 
