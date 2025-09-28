@@ -1,22 +1,28 @@
 'use client';
 
 import { 
-  ResponsiveContainer, ComposedChart, XAxis, YAxis, Tooltip, 
-  CartesianGrid, Scatter, Line, LabelList, Cell, Legend
+  ResponsiveContainer, 
+  ComposedChart,
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  CartesianGrid, 
+  Scatter,
+  Line,
+  LabelList,
+  Cell,
+  Legend,
+  ZAxis // 1. Importamos ZAxis
 } from 'recharts';
 import { linearRegression } from 'simple-statistics';
 
-// CAMBIO: Paleta de colores más granular para cada segmento
 const PALETA_SEGMENTOS: { [key: string]: string } = {
   'LECAP': '#1036E2', 'BONCAP': '#1036E2', 'BONTE': '#1036E2', 'DUAL TAMAR': '#1036E2',
   'CER': '#00C600', 'ON CER': '#99E899',
   'DL': '#4C68E9', 'ON DL': '#4C68E9', 'ON HD': '#4C68E9',
   'TAMAR': '#283A6B', 'ON TAMAR': '#283A6B',
-  'BONAR': '#808080', // Color único para Bonares
-  'GLOBAL': '#4b5563', // Color único para Globales
-  'BOPREAL': '#a1a1aa', // Color único para Bopreales
-  'ON': '#021751',
-  'default': '#d1d5db'
+  'BONAR': '#808080', 'GLOBAL': '#4b5563', 'BOPREAL': '#a1a1aa',
+  'ON': '#021751', 'default': '#d1d5db'
 };
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -58,16 +64,14 @@ const calcularTendencia = (datos: any[], segmento?: string) => {
     trend: m * Math.log(x) + b
   }));
 };
-
-export default function CurvaRendimientoChart({ data }: { data: any[] }) {
-  // CAMBIO: Lógica para múltiples líneas de tendencia
+export default function CurvaRendimientoChart({ data, segmentoActivo }: { data: any[], segmentoActivo: string }) {
   const segmentosSoberanos = ['BONAR', 'GLOBAL', 'BOPREAL'];
-  const contieneSoberanos = data.some(p => segmentosSoberanos.includes(p.segmento));
+  const esGrupoSoberano = data.some(p => segmentosSoberanos.includes(p.segmento));
 
-  const trendlineBonar = contieneSoberanos ? calcularTendencia(data, 'BONAR') : [];
-  const trendlineGlobal = contieneSoberanos ? calcularTendencia(data, 'GLOBAL') : [];
-  const trendlineBopreal = contieneSoberanos ? calcularTendencia(data, 'BOPREAL') : [];
-  const trendlineGeneral = !contieneSoberanos ? calcularTendencia(data) : [];
+  const trendlineBonar = esGrupoSoberano ? calcularTendencia(data, 'BONAR') : [];
+  const trendlineGlobal = esGrupoSoberano ? calcularTendencia(data, 'GLOBAL') : [];
+  const trendlineBopreal = esGrupoSoberano ? calcularTendencia(data, 'BOPREAL') : [];
+  const trendlineGeneral = !esGrupoSoberano ? calcularTendencia(data) : [];
 
   return (
     <div style={{ width: '100%', height: 450, userSelect: 'none' }}>
@@ -76,24 +80,29 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis type="number" dataKey="dias_vto" name="Días al Vencimiento" tick={{ fontSize: 12 }} domain={['dataMin', 'dataMax']} />
           <YAxis type="number" dataKey="tir" name="TIR" tickFormatter={(tick) => `${(tick * 100).toFixed(0)}%`} domain={['auto', 'auto']} tick={{ fontSize: 12 }} width={80} />
+          
+          {/* 2. Añadimos el ZAxis para controlar el tamaño */}
+          <ZAxis type="number" range={[25, 25]} /> 
+          
           <Tooltip content={<CustomTooltip />} />
           <Legend />
-          <Scatter name="Bonos" data={data}>
+          
+          {/* 3. Quitamos las propiedades 'shape' y 'size' de Scatter */}
+          <Scatter name={segmentoActivo} data={data}>
             <LabelList dataKey="ticker" position="top" style={{ fontSize: 10, fill: '#666' }} />
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={PALETA_SEGMENTOS[entry.segmento] || PALETA_SEGMENTOS.default} />
             ))}
           </Scatter>
           
-          {/* CAMBIO: Renderizado condicional de líneas de tendencia */}
-          {contieneSoberanos ? (
+          {esGrupoSoberano ? (
             <>
               <Line name="Tendencia Bonares" data={trendlineBonar} dataKey="trend" stroke="#1036E2" dot={false} strokeWidth={2} type="monotone" />
               <Line name="Tendencia Globales" data={trendlineGlobal} dataKey="trend" stroke="#283A6B" dot={false} strokeWidth={2} type="monotone" />
               <Line name="Tendencia Bopreales" data={trendlineBopreal} dataKey="trend" stroke="#4C68E9" dot={false} strokeWidth={2} type="monotone" />
             </>
           ) : (
-            <Line name="Tendencia" data={trendlineGeneral} dataKey="trend" stroke="#1036E2" dot={false} strokeWidth={2} strokeDasharray="5 5" type="monotone" />
+            <Line name={`Tendencia ${segmentoActivo}`} data={trendlineGeneral} dataKey="trend" stroke="#1036E2" dot={false} strokeWidth={2} strokeDasharray="5 5" type="monotone" />
           )}
         </ComposedChart>
       </ResponsiveContainer>
