@@ -8,11 +8,21 @@ import 'rc-slider/assets/index.css';
 import Sidebar from '@/components/ui/Sidebar';
 import Link from 'next/link';
 
-// --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
+// PASO 1: ACTUALIZAR LA DEFINICIÓN DE TIPO PARA INCLUIR NUEVOS CAMPOS
 type Bono = {
-  ticker: string; vto: string; precio: number | null; tir: number;
-  tna: number | null; tem: number | null; segmento: string;
-  modify_duration: number | null; dias_vto: number;
+  ticker: string;
+  vto: string;
+  precio: number | null;
+  tir: number;
+  tna: number | null;
+  tem: number | null;
+  segmento: string;
+  dias_vto: number;
+  modify_duration: number | null;
+  RD: number | null; // Nuevo campo
+  duracion_macaulay: number | null; // Nuevo campo
+  mep_breakeven: number | null; // Nuevo campo
+  tipo_bono: string; // Nuevo campo
 };
 
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
@@ -32,8 +42,7 @@ const formatDate = (dateString: string) => {
   return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 };
 
-// --- COMPONENTE DE TABLA (OPCIONAL: SIN LINK) ---
-// Como ya estás en la página de Lecaps, podrías quitar el Link para no navegar a la misma página.
+// --- COMPONENTE DE TABLA ACTUALIZADO ---
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>
@@ -48,7 +57,9 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Precio</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TIR</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TNA</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TEM</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>RD</th>
+              {/* --- CAMBIO DE COLUMNA --- */}
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>MEP Breakeven</th>
             </tr>
           </thead>
           <tbody>
@@ -60,11 +71,14 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.precio ?? '-'}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tna)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tem)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.RD)}</td>
+                  {/* --- CAMBIO DE DATO --- */}
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.mep_breakeven ? `$${item.mep_breakeven.toFixed(2)}` : '-'}</td>
                 </tr>
               ))
             ) : (
-              <tr><td colSpan={6} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
+              // El colSpan sigue siendo 7
+              <tr><td colSpan={7} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
             )}
           </tbody>
         </table>
@@ -72,14 +86,13 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
     </div>
 );
 
-// --- COMPONENTE PRINCIPAL DE LA PÁGINA DE LECAPS ---
+// --- COMPONENTE PRINCIPAL DE LA PÁGINA DE LECAPS (sin cambios de lógica) ---
 export default function LecapsPage() {
     const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
     const [estado, setEstado] = useState('Cargando...');
     const [menuAbierto, setMenuAbierto] = useState(false);
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
-    // SIMPLIFICADO: Definimos solo los segmentos de esta página.
     const segmentosDeEstaPagina = ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'];
     
     useEffect(() => {
@@ -101,10 +114,7 @@ export default function LecapsPage() {
     }, []);
     
     const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
-
-    // SIMPLIFICADO: Filtramos directamente por los segmentos de esta página.
     const datosDeLecaps = ultimoLoteDeDatos.filter(b => segmentosDeEstaPagina.includes(b.segmento));
-
     const maxDiasDelSegmento = (() => {
         if (datosDeLecaps.length === 0) return 1000;
         const maxDias = Math.max(...datosDeLecaps.map(b => b.dias_vto));
@@ -116,7 +126,7 @@ export default function LecapsPage() {
     }, [maxDiasDelSegmento]);
 
     const datosParaGrafico = datosDeLecaps.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
-    const datosParaTabla = [...datosDeLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
+    const datosParaTabla = [...datosDeLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.to).getTime());
 
     return (
         <div style={{ display: 'flex' }}>
@@ -156,7 +166,6 @@ export default function LecapsPage() {
                     </div>
                     
                     <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
-                        {/* ELIMINADO: Quitamos la sección de botones de filtro */}
                         
                         <div style={{ padding: '0 10px', marginBottom: '20px' }}>
                             <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
