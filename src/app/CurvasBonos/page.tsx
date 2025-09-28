@@ -29,7 +29,7 @@ const formatValue = (value: number | null | undefined, unit: string = '%', decim
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
-  return date.toLocaleDateDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 };
 
 // MANTENEMOS LA FUNCIÓN PARA CREAR URLs AMIGABLES
