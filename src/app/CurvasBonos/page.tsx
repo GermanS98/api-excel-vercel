@@ -140,7 +140,7 @@ export default function HomePage() {
       'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
       'Ajustados por CER': ['CER', 'ON CER'],
       'Dollar Linked': ['ON DL', 'DL', 'ON HD'],
-      'Tasa Fija (TAMAR)': ['TAMAR', 'ON TAMAR'],
+      'TAMAR': ['TAMAR', 'ON TAMAR'],
       'Bonares y Globales': ['BONAR', 'GLOBAL', 'BOPREAL'],
       'Obligaciones Negociables': ['ON']
     };
@@ -192,7 +192,7 @@ export default function HomePage() {
     const tabla1 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['LECAPs y Similares'].includes(b.segmento)));
     const tabla2 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Ajustados por CER'].includes(b.segmento)));
     const tabla3 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Dollar Linked'].includes(b.segmento)));
-    const tabla4 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Tasa Fija (TAMAR)'].includes(b.segmento)));
+    const tabla4 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['TAMAR'].includes(b.segmento)));
     const tabla5 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.segmento)));
     const tabla6 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Obligaciones Negociables'].includes(b.segmento)));
 
@@ -272,7 +272,7 @@ export default function HomePage() {
                         <TablaGeneral titulo="LECAPs y Similares" datos={tabla1} />
                         <TablaGeneral titulo="Ajustados por CER" datos={tabla2} />
                         <TablaGeneral titulo="Dollar Linked" datos={tabla3} />
-                        <TablaGeneral titulo="Tasa Fija (TAMAR)" datos={tabla4} />
+                        <TablaGeneral titulo="TAMAR" datos={tabla4} />
                         <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} />
                         <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} />
                     </div>

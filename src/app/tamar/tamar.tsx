@@ -95,7 +95,7 @@ export default function LecapsPage() {
     const [menuAbierto, setMenuAbierto] = useState(false);
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
-    const segmentosDeEstaPagina = ['Dollar Linked'];
+    const segmentosDeEstaPagina = ['TAMAR'];
     
     useEffect(() => {
         const cargarDatosDelDia = async () => {
