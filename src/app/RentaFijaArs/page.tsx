@@ -126,7 +126,7 @@ export default function LecapsPage() {
     }, [maxDiasDelSegmento]);
 
     const datosParaGrafico = datosDeLecaps.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
-    const datosParaTabla = [...datosDeLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.to).getTime());
+    const datosParaTabla = [...datosDeLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
 
     return (
         <div style={{ display: 'flex' }}>
