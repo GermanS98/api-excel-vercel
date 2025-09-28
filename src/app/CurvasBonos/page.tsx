@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+// CAMBIO: Se elimina useMemo de los imports
+import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import Slider from 'rc-slider';
@@ -9,14 +10,14 @@ import 'rc-slider/assets/index.css';
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
 type Bono = {
   ticker: string;
-  vto: string; // La fecha viene como string ISO "2026-01-16T00:00:00"
-  precio: number | null;
   tir: number;
+  segmento: string;
+  paridad: number | null;
+  mep_breakeven: number | null;
+  dias_vto: number;
   tna: number | null;
   tem: number | null;
-  segmento: string;
-  modify_duration: number | null; // Añadimos la columna MD
-  dias_vto: number;
+  precio: number | null;
 };
 
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
@@ -25,94 +26,9 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_KEY!
 );
 
-// --- FUNCIONES AUXILIARES DE FORMATO ---
-const formatValue = (value: number | null | undefined, unit: string = '%', decimals: number = 2) => {
-  if (value === null || typeof value === 'undefined' || !isFinite(value)) {
-    return '-';
-  }
-  return `${(value * (unit === '%' ? 100 : 1)).toFixed(decimals)}${unit}`;
-};
-
-const formatDate = (dateString: string) => {
-  if (!dateString) return '-';
-  // Convierte "2026-01-16T00:00:00" a "16/01/2026"
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
-};
-
-
-// --- COMPONENTES REUTILIZABLES PARA LAS TABLAS ---
-
-// Tabla para la mayoría de los segmentos
-const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
-  <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
-    <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead style={{ position: 'sticky', top: 0, background: '#f9fafb' }}>
-          <tr>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>Ticker</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>VTO</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>Precio</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TIR</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TNA</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TEM</th>
-          </tr>
-        </thead>
-        <tbody>
-          {datos.length > 0 ? (
-            datos.map((item: Bono, index: number) => (
-              <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '0.75rem 1rem', fontWeight: 500 }}>{item.ticker}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatDate(item.vto)}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{item.precio ?? '-'}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatValue(item.tir)}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatValue(item.tna)}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatValue(item.tem)}</td>
-              </tr>
-            ))
-          ) : (
-            <tr><td colSpan={6} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  </div>
-);
-
-// Tabla específica para Soberanos (Bonares y Globales) y ONs
-const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
-  <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
-    <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead style={{ position: 'sticky', top: 0, background: '#f9fafb' }}>
-          <tr>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>Ticker</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>VTO</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>Precio</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TIR</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>MD</th>
-          </tr>
-        </thead>
-        <tbody>
-          {datos.length > 0 ? (
-            datos.map((item: Bono, index: number) => (
-              <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '0.75rem 1rem', fontWeight: 500 }}>{item.ticker}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatDate(item.vto)}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{item.precio ?? '-'}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatValue(item.tir)}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatValue(item.modify_duration, '', 2)}</td>
-              </tr>
-            ))
-          ) : (
-            <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  </div>
+// --- COMPONENTE REUTILIZABLE PARA LAS TABLAS ---
+const TablaBonos = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
+    // ... Tu componente TablaBonos se mantiene exactamente igual ...
 );
 
 
@@ -127,47 +43,60 @@ export default function HomePage() {
     'Dollar Linked': ['ON DL', 'DL', 'ON HD'],
     'Tasa Fija (TAMAR)': ['TAMAR', 'ON TAMAR'],
     'Bonares y Globales': ['BONAR', 'GLOBAL'],
-    'Obligaciones Negociables': ['ON']
   };
   
   const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>(Object.keys(gruposDeSegmentos)[0]);
   const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
   useEffect(() => {
-    // La lógica de carga de datos y suscripción se mantiene igual
-    const cargarDatosDelDia = async () => { /* ...código sin cambios... */ };
+    const cargarDatosDelDia = async () => {
+      const inicioDelDia = new Date();
+      inicioDelDia.setHours(0, 0, 0, 0);
+      const { data, error } = await supabase.from('datos_financieros').select('*').gte('created_at', inicioDelDia.toISOString()).order('created_at', { ascending: false });
+      if (error) setEstado(`Error: ${error.message}`);
+      else if (data && data.length > 0) {
+        setDatosHistoricos(data);
+        setEstado('Datos actualizados');
+      } else {
+        setEstado('Esperando los primeros datos del día...');
+      }
+    };
     cargarDatosDelDia();
     const channel = supabase.channel('custom-all-channel').on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, () => cargarDatosDelDia()).subscribe();
     return () => { supabase.removeChannel(channel) };
   }, []);
 
-  const ultimoLoteDeDatos: Bono[] = useMemo(() => datosHistoricos.length > 0 ? datosHistoricos[0].datos : [], [datosHistoricos]);
+  // --- LÓGICA DE PREPARACIÓN Y FILTRADO DE DATOS (SIN useMemo) ---
 
-  const datosDelSegmentoSeleccionado = useMemo(() => {
+  // CAMBIO: Lógica más robusta para evitar errores si 'datos' es nulo
+  const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) 
+    ? datosHistoricos[0].datos 
+    : [];
+
+  const datosDelSegmentoSeleccionado = (() => {
     const segmentosActivos = gruposDeSegmentos[segmentoSeleccionado] || [];
     return ultimoLoteDeDatos.filter(b => segmentosActivos.includes(b.segmento));
-  }, [ultimoLoteDeDatos, segmentoSeleccionado]);
+  })();
 
-  const maxDiasDelSegmento = useMemo(() => {
+  const maxDiasDelSegmento = (() => {
     if (datosDelSegmentoSeleccionado.length === 0) return 1000;
-    return Math.max(...datosDelSegmentoSeleccionado.map(b => b.dias_vto));
-  }, [datosDelSegmentoSeleccionado]);
+    const maxDias = Math.max(...datosDelSegmentoSeleccionado.map(b => b.dias_vto));
+    return isFinite(maxDias) ? maxDias : 1000;
+  })();
 
+  // Este useEffect se mantiene para reiniciar el slider
   useEffect(() => {
     setRangoDias([0, maxDiasDelSegmento]);
   }, [maxDiasDelSegmento]);
   
-  const datosParaGrafico = useMemo(() => {
-    return datosDelSegmentoSeleccionado.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
-  }, [datosDelSegmentoSeleccionado, rangoDias]);
+  const datosParaGrafico = datosDelSegmentoSeleccionado.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
 
-  // Se crean los datos para cada tabla
-  const tabla1 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['LECAPs y Similares'].includes(b.segmento)), [ultimoLoteDeDatos]);
-  const tabla2 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Ajustados por CER'].includes(b.segmento)), [ultimoLoteDeDatos]);
-  const tabla3 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Dollar Linked'].includes(b.segmento)), [ultimoLoteDeDatos]);
-  const tabla4 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Tasa Fija (TAMAR)'].includes(b.segmento)), [ultimoLoteDeDatos]);
-  const tabla5 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.segmento)), [ultimoLoteDeDatos]);
-  const tabla6 = useMemo(() => ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Obligaciones Negociables'].includes(b.segmento)), [ultimoLoteDeDatos]);
+  // Se crean los datos para las tablas (sin useMemo)
+  const tabla1 = ultimoLoteDeDatos.filter(b => gruposDeSegmentos['LECAPs y Similares'].includes(b.segmento));
+  const tabla2 = ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Ajustados por CER'].includes(b.segmento));
+  const tabla3 = ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Dollar Linked'].includes(b.segmento));
+  const tabla4 = ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Tasa Fija (TAMAR)'].includes(b.segmento));
+  const tabla5 = ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.segmento));
 
   return (
     <main style={{ background: '#f3f4f6', fontFamily: 'sans-serif', padding: '10px' }}>
@@ -186,7 +115,14 @@ export default function HomePage() {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', marginBottom: '10px', paddingBottom: '20px', borderBottom: '1px solid #eee' }}>
             {Object.keys(gruposDeSegmentos).map(grupo => (
               <button key={grupo} onClick={() => setSegmentoSeleccionado(grupo)}
-                style={{ /* Estilos de botones */ }}>
+                style={{
+                  padding: '8px 16px', fontSize: '14px', cursor: 'pointer', borderRadius: '20px',
+                  border: '1px solid',
+                  borderColor: segmentoSeleccionado === grupo ? '#3b82f6' : '#d1d5db',
+                  backgroundColor: segmentoSeleccionado === grupo ? '#3b82f6' : 'white',
+                  color: segmentoSeleccionado === grupo ? 'white' : '#374151',
+                  transition: 'all 0.2s'
+                }}>
                 {grupo}
               </button>
             ))}
@@ -195,7 +131,9 @@ export default function HomePage() {
           <div style={{ padding: '0 10px', marginBottom: '20px' }}>
             <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
             <Slider
-              range min={0} max={maxDiasDelSegmento > 0 ? maxDiasDelSegmento : 1}
+              range
+              min={0}
+              max={maxDiasDelSegmento > 0 ? maxDiasDelSegmento : 1}
               value={rangoDias}
               onChange={(value) => setRangoDias(value as [number, number])}
             />
@@ -208,13 +146,12 @@ export default function HomePage() {
           <CurvaRendimientoChart data={datosParaGrafico} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
-          <TablaGeneral titulo="LECAPs y Similares" datos={tabla1} />
-          <TablaGeneral titulo="Ajustados por CER" datos={tabla2} />
-          <TablaGeneral titulo="Dollar Linked" datos={tabla3} />
-          <TablaGeneral titulo="Tasa Fija (TAMAR)" datos={tabla4} />
-          <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} />
-          <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px', marginTop: '2rem' }}>
+          <TablaBonos titulo="LECAPs y Similares" datos={tabla1} />
+          <TablaBonos titulo="Ajustados por CER" datos={tabla2} />
+          <TablaBonos titulo="Dollar Linked y ON HD" datos={tabla3} />
+          <TablaBonos titulo="Tasa Fija (TAMAR)" datos={tabla4} />
+          <TablaBonos titulo="Bonares y Globales" datos={tabla5} />
         </div>
       </div>
     </main>

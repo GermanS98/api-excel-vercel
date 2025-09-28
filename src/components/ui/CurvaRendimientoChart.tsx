@@ -35,7 +35,6 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export default function CurvaRendimientoChart({ data }: { data: any[] }) {
-  // El cálculo de la línea de tendencia se mantiene igual
   let trendlineData: any[] = [];
   if (data.length > 1) {
     const regressionPoints = data
@@ -57,7 +56,8 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
     <div style={{ width: '100%', height: 450, userSelect: 'none' }}>
       <ResponsiveContainer>
         <ComposedChart
-          margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+          // CAMBIO: Margen izquierdo reducido para mejor vista en móviles
+          margin={{ top: 20, right: 30, bottom: 20, left: -20 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
@@ -74,7 +74,7 @@ export default function CurvaRendimientoChart({ data }: { data: any[] }) {
             tickFormatter={(tick) => `${(tick * 100).toFixed(0)}%`}
             domain={['auto', 'auto']}
             tick={{ fontSize: 12 }}
-            width={70}
+            width={80} // Se aumenta el ancho para que entren los números
           />
           <Tooltip content={<CustomTooltip />} />
           <Scatter data={data} fill="#3b82f6">
