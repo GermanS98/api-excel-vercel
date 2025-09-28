@@ -40,24 +40,24 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
         <thead style={{ position: 'sticky', top: 0 }}>
           {/* CAMBIO: Se cambia el fondo del encabezado de la tabla */}
           <tr style={{ background: '#1036E2', color: 'white' }}>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>Ticker</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>VTO</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>Precio</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TIR</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TNA</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TEM</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Ticker</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>VTO</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Precio</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TIR</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TNA</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TEM</th>
           </tr>
         </thead>
         <tbody>
           {datos.length > 0 ? (
             datos.map((item: Bono, index: number) => (
               <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '0.75rem 1rem', fontWeight: 500 }}>{item.ticker}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatDate(item.vto)}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{item.precio ?? '-'}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatValue(item.tir)}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatValue(item.tna)}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatValue(item.tem)}</td>
+                <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
+                <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
+                <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.precio ?? '-'}</td>
+                <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
+                <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tna)}</td>
+                <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tem)}</td>
               </tr>
             ))
           ) : (
@@ -78,22 +78,22 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
         <thead style={{ position: 'sticky', top: 0 }}>
           {/* CAMBIO: Se cambia el fondo del encabezado de la tabla */}
           <tr style={{ background: '#1036E2', color: 'white' }}>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>Ticker</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>VTO</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>Precio</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>TIR</th>
-            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, color: '#4b5563' }}>MD</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Ticker</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>VTO</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Precio</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>TIR</th>
+            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>MD</th>
           </tr>
         </thead>
         <tbody>
           {datos.length > 0 ? (
             datos.map((item: Bono, index: number) => (
               <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '0.75rem 1rem', fontWeight: 500 }}>{item.ticker}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatDate(item.vto)}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{item.precio ?? '-'}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatValue(item.tir)}</td>
-                <td style={{ padding: '0.75rem 1rem' }}>{formatValue(item.modify_duration, '', 2)}</td>
+                <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
+                <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
+                <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.precio ?? '-'}</td>
+                <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
+                <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.modify_duration, '', 2)}</td>
               </tr>
             ))
           ) : (
