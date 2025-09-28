@@ -5,7 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-
+import Link from 'next/link';
+import Sidebar from '@/components/ui/Sidebar';
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
 type Bono = {
   ticker: string; vto: string; precio: number | null; tir: number;
@@ -29,12 +30,28 @@ const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 };
-
+// NUEVA FUNCIÓN para crear URLs amigables
+const slugify = (text: string) => {
+  return text
+    .toString()
+    .toLowerCase()
+    .replace(/\s+/g, '-')           // Reemplaza espacios con -
+    .replace(/[^\w\-]+/g, '')       // Remueve caracteres no válidos
+    .replace(/\-\-+/g, '-')         // Reemplaza múltiples - con uno solo
+    .replace(/^-+/, '')             // Remueve - del inicio
+    .replace(/-+$/, '');            // Remueve - del final
+};
 // --- COMPONENTES REUTILIZABLES PARA LAS TABLAS ---
 // Tabla para la mayoría de los segmentos
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
-  <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
+  // La id es para el menú lateral que haremos después
+  <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+    {/* ENVOLVEMOS EL H2 CON EL COMPONENTE LINK */}
+    <Link href={`/segmento/${slugify(titulo)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+      <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
+        {titulo}
+      </h2>
+    </Link>
     <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead style={{ position: 'sticky', top: 0 }}>
@@ -71,8 +88,14 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
 
 // Tabla específica para Soberanos (Bonares y Globales) y ONs
 const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
-  <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
+  // La id es para el menú lateral que haremos después
+  <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+    {/* ENVOLVEMOS EL H2 CON EL COMPONENTE LINK */}
+    <Link href={`/segmento/${slugify(titulo)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+      <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
+        {titulo}
+      </h2>
+    </Link>
     <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead style={{ position: 'sticky', top: 0 }}>
@@ -108,7 +131,7 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
 export default function HomePage() {
   const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
   const [estado, setEstado] = useState('Cargando...');
-  
+  const [menuAbierto, setMenuAbierto] = useState(false);
   const gruposDeSegmentos: { [key: string]: string[] } = {
     'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
     'Ajustados por CER': ['CER', 'ON CER'],
@@ -170,62 +193,72 @@ export default function HomePage() {
   const tabla5 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.segmento)));
   const tabla6 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Obligaciones Negociables'].includes(b.segmento)));
 
-  return (
-    <main style={{ background: '#f3f4f6', fontFamily: 'Albert Sans, sans-serif', padding: '10px' }}>
-      <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Bonos en Tiempo Real</h1>
-        <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
-            <span>Estado: <strong>{estado}</strong></span>
-            {datosHistoricos.length > 0 && (
-              <span style={{ marginLeft: '1rem' }}>Última act: <strong>{new Date(datosHistoricos[0].created_at).toLocaleTimeString()}</strong></span>
-            )}
-        </div>
-        
-        <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#021751' }}>Curva de Rendimiento (TIR vs Días al Vencimiento)</h2>
-          
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', marginBottom: '10px', paddingBottom: '20px', borderBottom: '1px solid #eee' }}>
-            {Object.keys(gruposDeSegmentos).map(grupo => (
-              <button key={grupo} onClick={() => setSegmentoSeleccionado(grupo)}
-                // CAMBIO: Estilos de los botones restaurados
-                style={{
-                  padding: '8px 16px', fontSize: '14px', cursor: 'pointer', borderRadius: '20px',
-                  border: '1px solid',
-                  borderColor: segmentoSeleccionado === grupo ? '#3b82f6' : '#d1d5db',
-                  backgroundColor: segmentoSeleccionado === grupo ? '#3b82f6' : 'white',
-                  color: segmentoSeleccionado === grupo ? 'white' : '#374151',
-                  transition: 'all 0.2s'
-                }}>
-                {grupo}
-              </button>
-            ))}
-          </div>
-          
-          <div style={{ padding: '0 10px', marginBottom: '20px' }}>
-            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
-            <Slider
-              range min={0} max={maxDiasDelSegmento > 0 ? maxDiasDelSegmento : 1}
-              value={rangoDias}
-              onChange={(value) => setRangoDias(value as [number, number])}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
-              <span style={{ fontSize: '12px' }}>{rangoDias[0]} días</span>
-              <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
-            </div>
-          </div>
-          
-         <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo={segmentoSeleccionado} />
-        </div>
+return (
+    <div style={{ display: 'flex' }}>
+      {/* PASO 1: AÑADIMOS EL SIDEBAR */}
+      <Sidebar 
+        isOpen={menuAbierto}
+        onClose={() => setMenuAbierto(false)}
+        segmentos={Object.keys(gruposDeSegmentos)}
+      />
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
-          <TablaGeneral titulo="LECAPs y Similares" datos={tabla1} />
-          <TablaGeneral titulo="Ajustados por CER" datos={tabla2} />
-          <TablaGeneral titulo="Dollar Linked" datos={tabla3} />
-          <TablaGeneral titulo="Tasa Fija (TAMAR)" datos={tabla4} />
-          <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} />
-          <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} />
+      <main style={{ 
+        background: '#f3f4f6', 
+        fontFamily: 'Albert Sans, sans-serif', 
+        padding: '10px',
+        width: '100%', // Ocupa todo el espacio disponible
+        transition: 'margin-left 0.3s ease-in-out', // Animación suave
+        // Opcional: Empuja el contenido cuando el menú está abierto en pantallas grandes
+        // marginLeft: menuAbierto ? '250px' : '0' 
+        // Esto es más útil para menús fijos. Para uno desplegable, no es necesario.
+      }}>
+
+        {/* PASO 2: AÑADIMOS UN BOTÓN PARA ABRIR EL MENÚ */}
+        <button 
+          onClick={() => setMenuAbierto(true)}
+          style={{
+            position: 'fixed',
+            top: '15px',
+            left: '15px',
+            zIndex: 101,
+            background: '#fff',
+            border: '1px solid #ddd',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+          }}
+        >
+          {/* Un ícono simple de "hamburguesa" */}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 6H20M4 12H20M4 18H20" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+
+        {/* TODO TU CONTENIDO ANTERIOR VA AQUÍ DENTRO */}
+        <div style={{ maxWidth: '1400px', margin: 'auto' }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Bonos en Tiempo Real</h1>
+            <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
+                {/* ... */}
+            </div>
+            
+            {/* ... Curva de Rendimiento ... */}
+            
+            {/* ... Grilla de Tablas ... */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
+                <TablaGeneral titulo="LECAPs y Similares" datos={tabla1} />
+                <TablaGeneral titulo="Ajustados por CER" datos={tabla2} />
+                <TablaGeneral titulo="Dollar Linked" datos={tabla3} />
+                <TablaGeneral titulo="Tasa Fija (TAMAR)" datos={tabla4} />
+                <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} />
+                <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} />
+            </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
