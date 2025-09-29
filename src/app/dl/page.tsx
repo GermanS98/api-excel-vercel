@@ -159,7 +159,7 @@ export default function LecapsPage() {
                 </button>
         
                 <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: LECAPs y Similares</h1>
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Dólar Linked</h1>
                     <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                         <span>Estado: <strong>{estado}</strong></span>
                         {datosHistoricos.length > 0 && (
@@ -182,11 +182,11 @@ export default function LecapsPage() {
                             </div>
                         </div>
                         
-                        <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="LECAPs y Similares" />
+                        <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="Dollar Linked" />
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
-                        <TablaGeneral titulo="LECAPs y Similares" datos={datosParaTabla} />
+                        <TablaGeneral titulo="Dólar Linked" datos={datosParaTabla} />
                     </div>
                 </div>
             </main>
