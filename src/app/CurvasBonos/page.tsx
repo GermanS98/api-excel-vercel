@@ -198,9 +198,9 @@ export default function HomePage() {
       // --- NUEVO: EFECTO PARA CARGAR LOS DATOS DEL TIPO DE CAMBIO ---
   useEffect(() => {
     const fetchTipoDeCambio = async () => {
-        // Hacemos la consulta a la tabla 'tipodecamibio'
+        // Hacemos la consulta a la tabla 'tipodecambio'
         const { data, error } = await supabase
-          .from('tipodecamibio')
+          .from('tipodecambio')
           .select('datos') // Seleccionamos solo la columna que nos interesa
           .order('created_at', { ascending: false }) // Ordenamos para obtener el más reciente
           .limit(1) // Solo queremos un resultado
@@ -218,10 +218,10 @@ export default function HomePage() {
 
     // Opcional: Escuchar cambios en tiempo real en la tabla de tipo de cambio
     const channel = supabase
-      .channel('tipodecamibio-changes')
+      .channel('tipodecambio-changes')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'tipodecamibio' },
+        { event: 'INSERT', schema: 'public', table: 'tipodecambio' },
         (payload) => {
           // Cuando llega un nuevo dato, actualizamos el estado
           if (payload.new && payload.new.datos) {
