@@ -14,7 +14,11 @@ type Bono = {
   tna: number | null; tem: number | null; segmento: string;
   modify_duration: number | null; dias_vto: number;
 };
-
+// --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
+type TipoDeCambio = {
+  valor_ccl: number;
+  valor_mep: number;
+};
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,6 +40,30 @@ const slugify = (text: string) => {
   return text.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
 };
 
+// --- NUEVO: COMPONENTE PARA LAS TARJETAS DE INFORMACIÓN ---
+const InfoCard = ({ title, value }: { title: string, value: number | null | undefined }) => {
+    // Formatea el valor como moneda, mostrando 'Cargando...' si aún no hay datos.
+    const formattedValue = value 
+      ? `$${value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+      : 'Cargando...';
+  
+    return (
+      <div style={{
+        background: '#fff',
+        padding: '1rem',
+        borderRadius: '8px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+        textAlign: 'center',
+        flex: 1, // Para que ocupe el espacio disponible
+        minWidth: '200px'
+      }}>
+        <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#6b7280', fontWeight: 500 }}>{title}</h3>
+        <p style={{ margin: '0.5rem 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#111827' }}>
+          {formattedValue}
+        </p>
+      </div>
+    );
+};
 
 // --- COMPONENTES DE TABLA CON TÍTULOS CLICKEABLES Y CUERPO COMPLETO ---
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
@@ -136,7 +164,8 @@ export default function HomePage() {
     const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
     const [estado, setEstado] = useState('Cargando...');
     const [menuAbierto, setMenuAbierto] = useState(false);
-    
+    // --- NUEVO: ESTADO PARA LOS DATOS DEL TIPO DE CAMBIO ---
+    const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
     const gruposDeSegmentos: { [key: string]: string[] } = {
       'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
       'Ajustados por CER': ['CER', 'ON CER'],
@@ -166,7 +195,47 @@ export default function HomePage() {
         const channel = supabase.channel('custom-all-channel').on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, () => cargarDatosDelDia()).subscribe();
         return () => { supabase.removeChannel(channel) };
     }, []);
-    
+      // --- NUEVO: EFECTO PARA CARGAR LOS DATOS DEL TIPO DE CAMBIO ---
+  useEffect(() => {
+    const fetchTipoDeCambio = async () => {
+        // Hacemos la consulta a la tabla 'tipodecamibio'
+        const { data, error } = await supabase
+          .from('tipodecamibio')
+          .select('datos') // Seleccionamos solo la columna que nos interesa
+          .order('created_at', { ascending: false }) // Ordenamos para obtener el más reciente
+          .limit(1) // Solo queremos un resultado
+          .single(); // .single() nos devuelve un objeto en lugar de un array
+
+        if (error) {
+          console.error('Error al obtener tipo de cambio:', error);
+        } else if (data) {
+          // El resultado está en la columna 'datos', que es un JSONB
+          setTipoDeCambio(data.datos);
+        }
+    };
+
+    fetchTipoDeCambio();
+
+    // Opcional: Escuchar cambios en tiempo real en la tabla de tipo de cambio
+    const channel = supabase
+      .channel('tipodecamibio-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'tipodecamibio' },
+        (payload) => {
+          // Cuando llega un nuevo dato, actualizamos el estado
+          if (payload.new && payload.new.datos) {
+            setTipoDeCambio(payload.new.datos);
+          }
+        }
+      )
+      .subscribe();
+
+    // Limpiamos la suscripción al desmontar el componente
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []); // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
     const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
 
     const datosDelSegmentoSeleccionado = (() => {
@@ -233,6 +302,14 @@ export default function HomePage() {
                             <span style={{ marginLeft: '1rem' }}>Última act: <strong>{new Date(datosHistoricos[0].created_at).toLocaleTimeString()}</strong></span>
                         )}
                     </div>
+                    {/* --- NUEVO: CONTENEDOR PARA LAS TARJETAS DE TIPO DE CAMBIO --- */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      gap: '20px',
+                      margin: '1.5rem 0',
+                      flexWrap: 'wrap' // Para que se adapte en pantallas pequeñas
+                    }}></div>                    
                     
                     <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#021751' }}>Curva de Rendimiento (TIR vs Días al Vencimiento)</h2>
