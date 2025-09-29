@@ -308,8 +308,12 @@ export default function HomePage() {
                       justifyContent: 'center',
                       gap: '20px',
                       margin: '1.5rem 0',
-                      flexWrap: 'wrap' // Para que se adapte en pantallas pequeñas
-                    }}></div>                    
+                      flexWrap: 'wrap'
+                    }}>
+                        <InfoCard title="Dólar MEP" value={tipoDeCambio?.valor_mep} />
+                        <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
+                    </div>
+                   
                     
                     <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#021751' }}>Curva de Rendimiento (TIR vs Días al Vencimiento)</h2>
