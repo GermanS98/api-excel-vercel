@@ -95,7 +95,7 @@ export default function LecapsPage() {
     const [menuAbierto, setMenuAbierto] = useState(false);
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
-    const segmentosDeEstaPagina = ['Dollar Linked'];
+    const segmentosDeEstaPagina = ['DL'];
     
     useEffect(() => {
         const cargarDatosDelDia = async () => {
@@ -182,7 +182,7 @@ export default function LecapsPage() {
                             </div>
                         </div>
                         
-                        <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="Dollar Linked" />
+                        <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="DL" />
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
