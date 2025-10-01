@@ -1,0 +1,22 @@
+name: Actualizar TAMAR desde BCRA
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # cada 6 horas
+  workflow_dispatch:       # permite ejecutarlo a mano desde GitHub Actions
+
+jobs:
+  update-bcra:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repo
+        uses: actions/checkout@v4
+
+      - name: Instalar dependencias
+        run: npm install @supabase/supabase-js node-fetch
+
+      - name: Ejecutar script
+        run: node update.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
