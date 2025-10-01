@@ -23,7 +23,7 @@ const QUERIES = [
 // Cliente de Supabase con variables de entorno
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY_ROLE
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 async function actualizar() {
