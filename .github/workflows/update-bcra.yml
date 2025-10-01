@@ -1,22 +1,27 @@
-name: Actualizar TAMAR desde BCRA
+name: Actualizar BCRA
 
 on:
   schedule:
-    - cron: "30 12 * * *"   # todos los días 09:30 hora Argentina (UTC-3)
-  workflow_dispatch:         # también lo podés ejecutar manualmente
+    - cron: "30 12 * * *" # 09:30 Argentina = 12:30 UTC
+  workflow_dispatch: # para ejecutarlo manualmente también
 
 jobs:
-  update-bcra:
+  update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout del repo
-        uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      - name: Instalar dependencias
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install deps
         run: npm install @supabase/supabase-js node-fetch
 
-      - name: Ejecutar script
+      - name: Run update
         run: node update.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
