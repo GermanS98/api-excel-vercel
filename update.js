@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 import { createClient } from "@supabase/supabase-js";
-
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";  // ⚠ ignora SSL
 const BCRA_API_URL = "https://api.bcra.gob.ar/estadisticas/v4.0/monetarias/44";
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
