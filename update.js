@@ -20,10 +20,9 @@ const QUERIES = [
   },
 ];
 
-// Cliente de Supabase con variables de entorno
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY // 🔑 esta es la clave correcta
 );
 
 async function actualizar() {
