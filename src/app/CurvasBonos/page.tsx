@@ -83,7 +83,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                     <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>{titulo}</h2>
                 </a>
             ) : (
-                <Link href={`/segmento/${slugify(titulo)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <Link href={`/${slugify(titulo)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                     <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>{titulo}</h2>
                 </Link>
             )}
