@@ -182,7 +182,11 @@ export default function LecapsPage() {
                             </div>
                         </div>
                         
-                        <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="LECAPs y Similares" />
+                        <CurvaRendimientoChart 
+                        data={datosParaGrafico} 
+                        segmentoActivo="LECAPs y Similares" 
+                        xAxisKey="dias_vto" // <-- Añadir esta línea
+                        />
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
