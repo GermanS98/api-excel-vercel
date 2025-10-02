@@ -14,15 +14,12 @@ type Bono = {
   vto: string;
   precio: number | null;
   tir: number;
-  tna: number | null;
-  tem: number | null;
   segmento: string;
-  paridad: number;
   dias_vto: number;
   modify_duration: number | null;
   RD: number | null; // Nuevo campo
   duracion_macaulay: number | null; // Nuevo campo
-  mep_breakeven: number | null; // Nuevo campo
+  paridad: number | null; // Nuevo campo
   tipo_bono: string; // Nuevo campo
 };
 
@@ -58,6 +55,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Precio</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TIR</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TNA</th>
+              {/* --- COLUMNA AGREGADA --- */}
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TEM</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>RD</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Paridad</th>
@@ -72,9 +70,10 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.precio ?? '-'}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tna)}</td>
+                  {/* --- DATO AGREGADO --- */}
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tem)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.RD)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.paridad)}</td></td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.paridad ? `$${item.paridad.toFixed(2)}` : '-'}</td>
                 </tr>
               ))
             ) : (
@@ -94,7 +93,7 @@ export default function LecapsPage() {
     const [menuAbierto, setMenuAbierto] = useState(false);
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
-    const segmentosDeEstaPagina = ['CER'];
+    const segmentosDeEstaPagina = ['Bonares y Globales'];
     
     useEffect(() => {
         const cargarDatosDelDia = async () => {
@@ -183,7 +182,7 @@ export default function LecapsPage() {
                         
                           <CurvaRendimientoChart 
                           data={datosParaGrafico} 
-                          segmentoActivo="CER" 
+                          segmentoActivo="Bonares y Globales" 
                           xAxisKey="dias_vto" // <-- Añadir esta línea
                         />                        
                     </div>
