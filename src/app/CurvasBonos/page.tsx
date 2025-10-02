@@ -396,7 +396,7 @@ export default function HomePage() {
                         <TablaGeneral titulo="Ajustados por CER" datos={tabla2} />
                         <TablaGeneral titulo="Dollar Linked" datos={tabla3} />
                         <TablaGeneral titulo="TAMAR" datos={tabla4} />
-                        <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} />
+                        <TablaGeneral titulo="Bonares y Globales" datos={tabla5} />
                         <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} />
                     </div>
                 </div>
