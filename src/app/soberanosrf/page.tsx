@@ -91,7 +91,7 @@ export default function LecapsPage() {
     const [menuAbierto, setMenuAbierto] = useState(false);
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
-    const segmentosDeEstaPagina = ['Bonares y Globales'];
+    const segmentosDeEstaPagina = ['BONAR', 'GLOBAL', 'BOPREAL'];
     
     useEffect(() => {
         const cargarDatosDelDia = async () => {
