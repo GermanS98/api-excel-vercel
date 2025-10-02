@@ -12,7 +12,7 @@ import Link from 'next/link';
 type Bono = {
   ticker: string; vto: string; precio: number | null; var: number; tir: number;
   tna: number | null; tem: number | null; segmento: string; 
-  dias_vto: number; paridad: number | null;
+  dias_vto: number; paridad: number | null; modify_duration: number | null;
 };
 // --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
 type TipoDeCambio = {
@@ -192,7 +192,7 @@ export default function HomePage() {
     };
     
     const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>(Object.keys(gruposDeSegmentos)[0]);
-    const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
+    const [rangoX, setRangoX] = useState<[number, number]>([0, 0]);
   
     useEffect(() => {
         const cargarDatosDelDia = async () => {
@@ -246,7 +246,7 @@ export default function HomePage() {
         }
       )
       .subscribe();
-
+    const isBonaresSegment = segmentoSeleccionado === 'Bonares y Globales';
     // Limpiamos la suscripción al desmontar el componente
     return () => {
       supabase.removeChannel(channel);
@@ -259,17 +259,30 @@ export default function HomePage() {
         return ultimoLoteDeDatos.filter(b => segmentosActivos.includes(b.segmento));
     })();
 
-    const maxDiasDelSegmento = (() => {
-        if (datosDelSegmentoSeleccionado.length === 0) return 1000;
-        const maxDias = Math.max(...datosDelSegmentoSeleccionado.map(b => b.dias_vto));
-        return isFinite(maxDias) ? maxDias : 1000;
+    const maxXValue = (() => {
+        if (datosDelSegmentoSeleccionado.length === 0) return isBonaresSegment ? 10 : 1000;
+        
+        // Si es Bonares, calculamos el máximo de la duration
+        if (isBonaresSegment) {
+            const maxDuration = Math.max(...datosDelSegmentoSeleccionado.map(b => b.modify_duration ?? 0));
+            return isFinite(maxDuration) ? Math.ceil(maxDuration) : 10;
+        } 
+        // Para el resto, usamos los días al vencimiento
+        else {
+            const maxDias = Math.max(...datosDelSegmentoSeleccionado.map(b => b.dias_vto));
+            return isFinite(maxDias) ? maxDias : 1000;
+        }
     })();
 
     useEffect(() => {
-        setRangoDias([0, maxDiasDelSegmento]);
-    }, [maxDiasDelSegmento]);
+        setRangoX([0, maxXValue]);
+    }, [maxXValue]);
 
-    const datosParaGrafico = datosDelSegmentoSeleccionado.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
+    const datosParaGrafico = datosDelSegmentoSeleccionado.filter(b => {
+        const value = isBonaresSegment ? b.modify_duration : b.dias_vto;
+        if (value === null || typeof value === 'undefined') return false;
+        return value >= rangoX[0] && value <= rangoX[1];
+    });
 
     const ordenarPorVencimiento = (datos: Bono[]) => {
         return [...datos].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
@@ -351,17 +364,29 @@ export default function HomePage() {
                         </div>
                         
                         <div style={{ padding: '0 10px', marginBottom: '20px' }}>
-                            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
+                            {/* La etiqueta ahora es dinámica */}
+                            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>
+                                {isBonaresSegment ? 'Filtrar por Modified Duration (años):' : 'Filtrar por Días al Vencimiento:'}
+                            </label>
                             <Slider
-                                range min={0} max={maxDiasDelSegmento > 0 ? maxDiasDelSegmento : 1}
-                                value={rangoDias}
-                                onChange={(value) => setRangoDias(value as [number, number])}
+                                range min={0} max={maxXValue > 0 ? maxXValue : 1}
+                                value={rangoX} // Usa el nuevo estado
+                                onChange={(value) => setRangoX(value as [number, number])}
+                                step={isBonaresSegment ? 0.1 : 1} // Un paso más fino para la duration
                             />
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
-                                <span style={{ fontSize: '12px' }}>{rangoDias[0]} días</span>
-                                <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
+                                <span style={{ fontSize: '12px' }}>{rangoX[0]} {isBonaresSegment ? 'años' : 'días'}</span>
+                                <span style={{ fontSize: '12px' }}>{maxXValue} {isBonaresSegment ? 'años' : 'días'}</span>
                             </div>
                         </div>
+
+                        {/* Pasamos una nueva prop 'xAxisKey' al gráfico */}
+                        <CurvaRendimientoChart 
+                            data={datosParaGrafico} 
+                            segmentoActivo={segmentoSeleccionado}
+                            xAxisKey={isBonaresSegment ? 'modify_duration' : 'dias_vto'}
+                        />
+
                         
                         <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo={segmentoSeleccionado} />
                     </div>
