@@ -388,9 +388,6 @@ export default function HomePage() {
                             segmentoActivo={segmentoSeleccionado}
                             xAxisKey={isBonaresSegment ? 'modify_duration' : 'dias_vto'}
                         />
-
-                        
-                        <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo={segmentoSeleccionado} />
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
