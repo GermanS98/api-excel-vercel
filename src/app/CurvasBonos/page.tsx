@@ -192,7 +192,8 @@ export default function HomePage() {
     };
     
     const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>(Object.keys(gruposDeSegmentos)[0]);
-    const [rangoX, setRangoX] = useState<[number, number]>([0, 0]);
+    
+    
   
     useEffect(() => {
         const cargarDatosDelDia = async () => {
@@ -246,19 +247,20 @@ export default function HomePage() {
         }
       )
       .subscribe();
-    const isBonaresSegment = segmentoSeleccionado === 'Bonares y Globales';
+    
     // Limpiamos la suscripción al desmontar el componente
     return () => {
       supabase.removeChannel(channel);
     };
   }, []); // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
     const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
-
+    
     const datosDelSegmentoSeleccionado = (() => {
         const segmentosActivos = gruposDeSegmentos[segmentoSeleccionado] || [];
         return ultimoLoteDeDatos.filter(b => segmentosActivos.includes(b.segmento));
     })();
-
+    const isBonaresSegment = segmentoSeleccionado === 'Bonares y Globales';
+    const [rangoX, setRangoX] = useState<[number, number]>([0, 0]);
     const maxXValue = (() => {
         if (datosDelSegmentoSeleccionado.length === 0) return isBonaresSegment ? 10 : 1000;
         
