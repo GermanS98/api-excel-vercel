@@ -10,8 +10,8 @@ import Link from 'next/link';
 
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
 type Bono = {
-  ticker: string; vto: string; precio: number | null; tir: number;
-  tna: number | null; tem: number | null; segmento: string;
+  ticker: string; vto: string; precio: number | null; var: number; tir: number;
+  tna: number | null; tem: number | null; segmento: string; 
   modify_duration: number | null; dias_vto: number;
 };
 // --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
@@ -93,6 +93,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                             <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Ticker</th>
                             <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>VTO</th>
                             <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Precio</th>
+                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>var</th>
                             <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TIR</th>
                             <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TNA</th>
                             <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TEM</th>
