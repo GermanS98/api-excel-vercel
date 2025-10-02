@@ -87,6 +87,7 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
             tick={{ fontSize: 12 }} 
             domain={['dataMin', 'dataMax']}
             allowDuplicatedCategory={false}
+            tickFormatter={(tick) => tick.toFixed(xAxisKey === 'modify_duration' ? 2 : 0)}
           />
           <YAxis type="number" dataKey="tir" name="TIR" tickFormatter={(tick) => `${(tick * 100).toFixed(0)}%`} domain={['auto', 'auto']} tick={{ fontSize: 12 }} width={80} />
           <Tooltip content={<CustomTooltip />} />
