@@ -106,7 +106,13 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                                     <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.precio ?? '-'}</td>
-                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.var)}</td>
+                                    <td style={{ 
+                                        padding: '0.75rem 1rem', 
+                                        color: item.var >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
+                                        fontWeight: 500
+                                    }}>
+                                        {formatValue(item.var)}
+                                    </td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tna)}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tem)}</td>
@@ -148,7 +154,13 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.precio ?? '-'}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.var)}</td>
+                  <td style={{ 
+                      padding: '0.75rem 1rem', 
+                      color: item.var >= 0 ? '#22c55e' : '#ef4444', // Verde si es >= 0, Rojo si es < 0
+                      fontWeight: 500 
+                  }}>
+                      {formatValue(item.var)}
+                  </td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.paridad, '', 2)}</td>
                 </tr>
