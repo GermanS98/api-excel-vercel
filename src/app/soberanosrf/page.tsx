@@ -129,7 +129,18 @@ export default function LecapsPage() {
         b.modify_duration >= rangoDuration[0] && 
         b.modify_duration <= rangoDuration[1]
     );
-    const datosParaTabla = [...datosDeLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
+    const datosParaTabla = [...datosDeLecaps].sort((a, b) => {
+    // 1. Criterio principal: ordenar por segmento (alfabéticamente)
+      const comparacionSegmento = a.segmento.localeCompare(b.segmento);
+
+      // Si los segmentos son diferentes, usamos ese resultado para ordenar
+      if (comparacionSegmento !== 0) {
+          return comparacionSegmento;
+      }
+
+      // 2. Criterio secundario: si los segmentos son iguales, ordenar por fecha de VTO
+      return new Date(a.vto).getTime() - new Date(b.vto).getTime();
+    });
     // --- INICIO DEL CÓDIGO NUEVO ---
 
     // 1. Creamos un mapa para buscar Globales por fecha de VTO de forma rápida.
