@@ -87,7 +87,7 @@ export default function LecapsPage() {
     const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
     const [estado, setEstado] = useState('Cargando...');
     const [menuAbierto, setMenuAbierto] = useState(false);
-    const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
+    const [rangoDuration, setRangoDuration] = useState<[number, number]>([0, 0]);
 
     const segmentosDeEstaPagina = ['BONAR', 'GLOBAL', 'BOPREAL'];
     
@@ -111,17 +111,22 @@ export default function LecapsPage() {
     
     const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
     const datosDeLecaps = ultimoLoteDeDatos.filter(b => segmentosDeEstaPagina.includes(b.segmento));
-    const maxDiasDelSegmento = (() => {
-        if (datosDeLecaps.length === 0) return 1000;
-        const maxDias = Math.max(...datosDeLecaps.map(b => b.dias_vto));
-        return isFinite(maxDias) ? maxDias : 1000;
+    const maxDurationDelSegmento = (() => {
+        if (datosDeLecaps.length === 0) return 10; // Un valor por defecto razonable para duration
+        // Usamos modify_duration y ?? 0 para manejar valores nulos
+        const maxDuration = Math.max(...datosDeLecaps.map(b => b.modify_duration ?? 0));
+        return isFinite(maxDuration) ? Math.ceil(maxDuration) : 10;
     })();
 
     useEffect(() => {
-        setRangoDias([0, maxDiasDelSegmento]);
-    }, [maxDiasDelSegmento]);
+        setRangoDuration([0, maxDurationDelSegmento]);
+    }, [maxDurationDelSegmento]);
 
-    const datosParaGrafico = datosDeLecaps.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
+    const datosParaGrafico = datosDeLecaps.filter(b => 
+        b.modify_duration !== null && // Asegurarnos que no sea nulo
+        b.modify_duration >= rangoDuration[0] && 
+        b.modify_duration <= rangoDuration[1]
+    );
     const datosParaTabla = [...datosDeLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
 
     return (
@@ -164,22 +169,23 @@ export default function LecapsPage() {
                     <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
                         
                         <div style={{ padding: '0 10px', marginBottom: '20px' }}>
-                            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
-                            <Slider
-                                range min={0} max={maxDiasDelSegmento > 0 ? maxDiasDelSegmento : 1}
-                                value={rangoDias}
-                                onChange={(value) => setRangoDias(value as [number, number])}
-                            />
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
-                                <span style={{ fontSize: '12px' }}>{rangoDias[0]} días</span>
-                                <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
-                            </div>
+                          <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Modified Duration (años):</label>
+                          <Slider
+                              range min={0} max={maxDurationDelSegmento > 0 ? maxDurationDelSegmento : 1}
+                              value={rangoDuration}
+                              onChange={(value) => setRangoDuration(value as [number, number])}
+                              step={0.1} // Un paso más fino para la duration
+                          />
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
+                              <span style={{ fontSize: '12px' }}>{rangoDuration[0].toFixed(1)} años</span>
+                              <span style={{ fontSize: '12px' }}>{maxDurationDelSegmento} años</span>
+                          </div>
                         </div>
                         
                           <CurvaRendimientoChart 
                           data={datosParaGrafico} 
                           segmentoActivo="Bonares y Globales" 
-                          xAxisKey="dias_vto" // <-- Añadir esta línea
+                          xAxisKey="modify_duration" // <-- Añadir esta línea
                         />                        
                     </div>
 
