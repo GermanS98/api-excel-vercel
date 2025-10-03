@@ -72,17 +72,10 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
         'Ajustados por CER': 'https://api-excel-vercel.vercel.app/cer',
         'Dollar Linked': 'https://api-excel-vercel.vercel.app/dl',
         'TAMAR': 'https://api-excel-vercel.vercel.app/tamar',
-        'Bonares y Globales': 'https://api-excel-vercel.vercel.app/soberanosrf',
-        'ON': 'https://api-excel-vercel.vercel.app/ONs'
+        'Bonares y Globales': 'https://api-excel-vercel.vercel.app/soberanosrf'
     };
     const urlExterna = enlacesExternos[titulo];
- const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
 
-    const enlacesExternos: { [key: string]: string } = {
-        'Obligaciones Negociables': 'https://api-excel-vercel.vercel.app/ONs'
-    };
-
-   
     return (
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
             {urlExterna ? (
@@ -136,62 +129,64 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
     );
 };
   
-const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
-    <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-            {/* 2. Agregamos lógica condicional:
-                   - Si existe una 'urlExterna', crea una etiqueta <a> para abrir en una nueva pestaña.
-                   - Si no, crea un <Link> para la navegación interna como antes. */}
-          {urlExterna ? (
-              <a href={urlExterna} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
-                      {titulo}
-                  </h2>
-              </a>
-          ) : (
-              <Link href={`/${slugify(titulo)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
-                      {titulo}
-                  </h2>
-              </Link>
-          )}
-      <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead style={{ position: 'sticky', top: 0 }}>
-            <tr style={{ background: '#1036E2', color: 'white' }}>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Ticker</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Vto</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Precio</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Var</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>TIR</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Paridad</th>
-            </tr>
-          </thead>
-          <tbody>
-            {datos.length > 0 ? (
-              datos.map((item: Bono, index: number) => (
-                <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.precio ?? '-'}</td>
-                  <td style={{ 
-                      padding: '0.75rem 1rem', 
-                      color: item.var >= 0 ? '#22c55e' : '#ef4444', // Verde si es >= 0, Rojo si es < 0
-                      fontWeight: 500 
-                  }}>
-                      {formatValue(item.var)}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.paridad, '', 2)}</td>
-                </tr>
-              ))
+const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
+    // 1. Añadimos el diccionario de enlaces externos.
+    const enlacesExternos: { [key: string]: string } = {
+        'Obligaciones Negociables': 'https://api-excel-vercel.vercel.app/ONs'
+    };
+    const urlExterna = enlacesExternos[titulo];
+
+    return (
+        <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+            {/* 2. Agregamos lógica condicional */}
+            {urlExterna ? (
+                <a href={urlExterna} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
+                        {titulo}
+                    </h2>
+                </a>
             ) : (
-              <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
+                <Link href={`/${slugify(titulo)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
+                        {titulo}
+                    </h2>
+                </Link>
             )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-);
+            <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead style={{ position: 'sticky', top: 0 }}>
+                        <tr style={{ background: '#1036E2', color: 'white' }}>
+                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Ticker</th>
+                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Vto</th>
+                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Precio</th>
+                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Var</th>
+                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>TIR</th>
+                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Paridad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {datos.length > 0 ? (
+                            datos.map((item: Bono, index: number) => (
+                                <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
+                                    <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
+                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
+                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.precio ?? '-'}</td>
+                                    <td style={{ padding: '0.75rem 1rem', color: item.var >= 0 ? '#22c55e' : '#ef4444', fontWeight: 500 }}>
+                                        {formatValue(item.var)}
+                                    </td>
+                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
+                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.paridad, '', 2)}</td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr><td colSpan={6} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+};
 
 
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA ---
