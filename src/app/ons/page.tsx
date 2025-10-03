@@ -19,8 +19,6 @@ type Bono = {
   modify_duration: number | null;
   RD: number | null; // Nuevo campo
   duracion_macaulay: number | null; // Nuevo campo
-  paridad: number | null; // Nuevo campo
-  tipo_bono: string; // Nuevo campo
 };
 
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
@@ -51,11 +49,14 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
           <thead style={{ position: 'sticky', top: 0 }}>
             <tr style={{ background: '#1036E2', color: 'white' }}>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Ticker</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>VTO</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Vto</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Precio</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TIR</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Paridad</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>MD</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TNA</th>
+              {/* --- COLUMNA AGREGADA --- */}
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TEM</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>RD</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>MEP Breakeven</th>
             </tr>
           </thead>
           <tbody>
@@ -66,10 +67,11 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.precio ?? '-'}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tna)}</td>
                   {/* --- DATO AGREGADO --- */}
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.paridad, '', 2)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.modify_duration, '', 2)}</td>
-                  
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tem)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.RD)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.mep_breakeven ? `$${item.mep_breakeven.toFixed(2)}` : '-'}</td>
                 </tr>
               ))
             ) : (
@@ -87,9 +89,9 @@ export default function LecapsPage() {
     const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
     const [estado, setEstado] = useState('Cargando...');
     const [menuAbierto, setMenuAbierto] = useState(false);
-    const [rangoDuration, setRangoDuration] = useState<[number, number]>([0, 0]);
+    const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
-    const segmentosDeEstaPagina = ['BONAR', 'GLOBAL', 'BOPREAL'];
+    const segmentosDeEstaPagina = ['ON'];
     
     useEffect(() => {
         const cargarDatosDelDia = async () => {
@@ -111,22 +113,17 @@ export default function LecapsPage() {
     
     const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
     const datosDeLecaps = ultimoLoteDeDatos.filter(b => segmentosDeEstaPagina.includes(b.segmento));
-    const maxDurationDelSegmento = (() => {
-        if (datosDeLecaps.length === 0) return 10; // Un valor por defecto razonable para duration
-        // Usamos modify_duration y ?? 0 para manejar valores nulos
-        const maxDuration = Math.max(...datosDeLecaps.map(b => b.modify_duration ?? 0));
-        return isFinite(maxDuration) ? Math.ceil(maxDuration) : 10;
+    const maxDiasDelSegmento = (() => {
+        if (datosDeLecaps.length === 0) return 1000;
+        const maxDias = Math.max(...datosDeLecaps.map(b => b.dias_vto));
+        return isFinite(maxDias) ? maxDias : 1000;
     })();
 
     useEffect(() => {
-        setRangoDuration([0, maxDurationDelSegmento]);
-    }, [maxDurationDelSegmento]);
+        setRangoDias([0, maxDiasDelSegmento]);
+    }, [maxDiasDelSegmento]);
 
-    const datosParaGrafico = datosDeLecaps.filter(b => 
-        b.modify_duration !== null && // Asegurarnos que no sea nulo
-        b.modify_duration >= rangoDuration[0] && 
-        b.modify_duration <= rangoDuration[1]
-    );
+    const datosParaGrafico = datosDeLecaps.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
     const datosParaTabla = [...datosDeLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
 
     return (
@@ -158,7 +155,7 @@ export default function LecapsPage() {
                 </button>
         
                 <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Soberanos</h1>
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: LECAPs y Similares</h1>
                     <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                         <span>Estado: <strong>{estado}</strong></span>
                         {datosHistoricos.length > 0 && (
@@ -169,28 +166,27 @@ export default function LecapsPage() {
                     <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
                         
                         <div style={{ padding: '0 10px', marginBottom: '20px' }}>
-                          <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Modified Duration (años):</label>
-                          <Slider
-                              range min={0} max={maxDurationDelSegmento > 0 ? maxDurationDelSegmento : 1}
-                              value={rangoDuration}
-                              onChange={(value) => setRangoDuration(value as [number, number])}
-                              step={0.1} // Un paso más fino para la duration
-                          />
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
-                              <span style={{ fontSize: '12px' }}>{rangoDuration[0].toFixed(1)} años</span>
-                              <span style={{ fontSize: '12px' }}>{maxDurationDelSegmento} años</span>
-                          </div>
+                            <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
+                            <Slider
+                                range min={0} max={maxDiasDelSegmento > 0 ? maxDiasDelSegmento : 1}
+                                value={rangoDias}
+                                onChange={(value) => setRangoDias(value as [number, number])}
+                            />
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
+                                <span style={{ fontSize: '12px' }}>{rangoDias[0]} días</span>
+                                <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
+                            </div>
                         </div>
                         
                           <CurvaRendimientoChart 
                           data={datosParaGrafico} 
-                          segmentoActivo="Bonares y Globales" 
-                          xAxisKey="modify_duration" // <-- Añadir esta línea
+                          segmentoActivo="ON" 
+                          xAxisKey="dias_vto" // <-- Añadir esta línea
                         />                        
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
-                        <TablaGeneral titulo="Soberanos" datos={datosParaTabla} />
+                        <TablaGeneral titulo="ONs HD" datos={datosParaTabla} />
                     </div>
                 </div>
             </main>
