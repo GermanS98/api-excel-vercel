@@ -31,21 +31,27 @@ const supabase = createClient(
 );
 
 // --- FUNCIONES AUXILIARES DE FORMATO ---
+// --- FUNCIONES AUXILIARES DE FORMATO ---
 const formatValue = (value: number | null | undefined, unit: string = '%', decimals: number = 2) => {
     // 1. Mantenemos la validación inicial
-   if (value === null || typeof value === 'undefined' || !isFinite(value)) return '-';
+    if (value === null || typeof value === 'undefined' || !isFinite(value)) return '-';
 
     // 2. Realizamos el cálculo si es un porcentaje
-   const numeroAFormatear = value * (unit === '%' ? 100 : 1);
+    const numeroAFormatear = value * (unit === '%' ? 100 : 1);
 
     // 3. Usamos toLocaleString para aplicar el formato deseado
-  const numeroFormateado = numeroAFormatear.toLocaleString('es-AR', {
-   minimumFractionDigits: decimals,
-   maximumFractionDigits: decimals,
-  });
+    const numeroFormateado = numeroAFormatear.toLocaleString('es-AR', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
 
     // 4. Devolvemos el número formateado con su unidad
    return `${numeroFormateado}${unit}`;
+};
+const formatDate = (dateString: string) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 };
 
 // --- COMPONENTE DE TABLA ACTUALIZADO ---
