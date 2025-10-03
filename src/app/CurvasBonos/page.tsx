@@ -141,19 +141,19 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
             {/* 2. Agregamos lógica condicional:
                    - Si existe una 'urlExterna', crea una etiqueta <a> para abrir en una nueva pestaña.
                    - Si no, crea un <Link> para la navegación interna como antes. */}
-            {urlExterna ? (
-                <a href={urlExterna} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
-                        {titulo}
-                    </h2>
-                </a>
-            ) : (
-                <Link href={`/${slugify(titulo)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
-                        {titulo}
-                    </h2>
-                </Link>
-            )}
+          {urlExterna ? (
+              <a href={urlExterna} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
+                      {titulo}
+                  </h2>
+              </a>
+          ) : (
+              <Link href={`/${slugify(titulo)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
+                      {titulo}
+                  </h2>
+              </Link>
+          )}
       <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ position: 'sticky', top: 0 }}>
