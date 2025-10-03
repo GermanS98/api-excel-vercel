@@ -20,7 +20,8 @@ type Bono = {
   RD: number | null; // Nuevo campo
   duracion_macaulay: number | null; // Nuevo campo
   paridad: number | null; // Nuevo campo
-  tipo_bono: string; // Nuevo campo
+  tipo_bono: string; // Nuevo campo;
+  spread?: number | null;
 };
 
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
@@ -56,6 +57,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TIR</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Paridad</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>MD</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Spread l. tasa</th>
             </tr>
           </thead>
           <tbody>
@@ -69,12 +71,12 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   {/* --- DATO AGREGADO --- */}
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.paridad, '', 2)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.modify_duration, '', 2)}</td>
-                  
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontWeight: 500 }}>{formatValue(item.spread)}</td>
                 </tr>
               ))
             ) : (
-              // --- COLSPAN ACTUALIZADO A 8 ---
-              <tr><td colSpan={8} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
+              // --- COLSPAN ACTUALIZADO A 7 ---
+               <tr><td colSpan={7} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
             )}
           </tbody>
         </table>
@@ -128,7 +130,32 @@ export default function LecapsPage() {
         b.modify_duration <= rangoDuration[1]
     );
     const datosParaTabla = [...datosDeLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
+    // --- INICIO DEL CÓDIGO NUEVO ---
 
+    // 1. Creamos un mapa para buscar Globales por fecha de VTO de forma rápida.
+    const globalesPorVto = new Map<string, Bono>();
+    datosParaTabla.forEach(bono => {
+        if (bono.segmento === 'GLOBAL') {
+            globalesPorVto.set(bono.vto, bono);
+        }
+    });
+
+    // 2. Recorremos los datos de la tabla para calcular y añadir el spread a los Bonares.
+    const datosParaTablaConSpread = datosParaTabla.map(bono => {
+        // Si el bono es un BONAR, intentamos calcular su spread
+        if (bono.segmento === 'BONAR') {
+            const globalEquivalente = globalesPorVto.get(bono.vto);
+            // Si encontramos un Global con el mismo VTO...
+            if (globalEquivalente) {
+                return {
+                    ...bono,
+                    spread: bono.tir - globalEquivalente.tir // Calculamos la diferencia de TIRs
+                };
+            }
+        }
+        // Si no es un BONAR o no tiene un Global equivalente, lo devolvemos como está.
+        return bono;
+    });
     return (
         <div style={{ display: 'flex' }}>
             <Sidebar 
@@ -190,7 +217,7 @@ export default function LecapsPage() {
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
-                        <TablaGeneral titulo="Soberanos" datos={datosParaTabla} />
+                        <TablaGeneral titulo="Soberanos" datos={datosParaTablaConSpread} />
                     </div>
                 </div>
             </main>
