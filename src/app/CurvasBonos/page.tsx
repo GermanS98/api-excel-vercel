@@ -132,7 +132,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
 const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
     // 1. Añadimos el diccionario de enlaces externos.
     const enlacesExternos: { [key: string]: string } = {
-        'Obligaciones Negociables': 'https://api-excel-vercel.vercel.app/ONs'
+        'Obligaciones Negociables': 'https://api-excel-vercel.vercel.app/ons'
     };
     const urlExterna = enlacesExternos[titulo];
 
