@@ -67,7 +67,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.precio ?? '-'}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                   {/* --- DATO AGREGADO --- */}
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.paridad.toFixed(2)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.paridad, '', 2)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.modify_duration}</td>
                   
                 </tr>
