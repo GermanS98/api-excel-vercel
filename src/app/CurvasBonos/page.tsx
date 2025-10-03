@@ -72,7 +72,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
         'Ajustados por CER': 'https://api-excel-vercel.vercel.app/cer',
         'Dollar Linked': 'https://api-excel-vercel.vercel.app/dl',
         'TAMAR': 'https://api-excel-vercel.vercel.app/tamar',
-        'Bonares y Globales': 'https://api-excel-vercel.vercel.app/soberanosrf'
+        
     };
     const urlExterna = enlacesExternos[titulo];
 
@@ -132,7 +132,8 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
 const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
     // 1. Añadimos el diccionario de enlaces externos.
     const enlacesExternos: { [key: string]: string } = {
-        'Obligaciones Negociables': 'https://api-excel-vercel.vercel.app/ons'
+        'Obligaciones Negociables': 'https://api-excel-vercel.vercel.app/ons',
+        'Bonares y Globales': 'https://api-excel-vercel.vercel.app/soberanosrf'
     };
     const urlExterna = enlacesExternos[titulo];
 
@@ -409,7 +410,7 @@ export default function HomePage() {
                         <TablaGeneral titulo="Ajustados por CER" datos={tabla2} />
                         <TablaGeneral titulo="Dollar Linked" datos={tabla3} />
                         <TablaGeneral titulo="TAMAR" datos={tabla4} />
-                        <TablaGeneral titulo="Bonares y Globales" datos={tabla5} />
+                        <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} />
                         <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} />
                     </div>
                 </div>
