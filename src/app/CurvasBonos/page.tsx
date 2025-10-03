@@ -76,7 +76,13 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
         'ON': 'https://api-excel-vercel.vercel.app/ONs'
     };
     const urlExterna = enlacesExternos[titulo];
+ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
 
+    const enlacesExternos: { [key: string]: string } = {
+        'Obligaciones Negociables': 'https://api-excel-vercel.vercel.app/ONs'
+    };
+
+   
     return (
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
             {urlExterna ? (
@@ -131,16 +137,23 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
 };
   
 const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
-        <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+    <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+            {/* 2. Agregamos lógica condicional:
+                   - Si existe una 'urlExterna', crea una etiqueta <a> para abrir en una nueva pestaña.
+                   - Si no, crea un <Link> para la navegación interna como antes. */}
             {urlExterna ? (
-                <a href={urlExterna} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>{titulo}</h2>
+                <a href={urlExterna} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
+                        {titulo}
+                    </h2>
                 </a>
             ) : (
                 <Link href={`/${slugify(titulo)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>{titulo}</h2>
+                    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>
+                        {titulo}
+                    </h2>
                 </Link>
-      )}
+            )}
       <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ position: 'sticky', top: 0 }}>
