@@ -22,7 +22,7 @@ type LayoutProps = {
     { label: 'Renta Fija ARS', href: '/RentaFijaArs'},
     { label: 'CER', href: '/cer'},
     { label: 'Dollar Linked', href: '/dl'},
-    { label: 'Obligaciones Negociables', href:'/on'},
+    { label: 'Obligaciones Negociables', href:'/ons'},
     { label: 'TAMAR', href:'/tamar'},
     { label: 'Bonares y Globales', href:'/soberanosrf'},
     // Enlace a otra página interna de tu sitio

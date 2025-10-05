@@ -1,5 +1,5 @@
 'use client';
-
+import Layout from '@/components/layout/Layout';
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
@@ -143,32 +143,7 @@ export default function LecapsPage() {
     const datosParaTabla = [...datosDeLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
 
     return (
-        <div style={{ display: 'flex' }}>
-            <Sidebar 
-                isOpen={menuAbierto}
-                onClose={() => setMenuAbierto(false)}
-            />
-    
-            <main style={{ 
-                background: '#f3f4f6', 
-                fontFamily: 'Albert Sans, sans-serif', 
-                padding: '10px',
-                width: '100%',
-            }}>
-                <button 
-                    onClick={() => setMenuAbierto(true)}
-                    style={{
-                        position: 'fixed', top: '15px', left: '15px', zIndex: 101,
-                        background: '#fff', border: '1px solid #ddd', borderRadius: '50%',
-                        width: '40px', height: '40px', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-                    }}
-                >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 6H20M4 12H20M4 18H20" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                </button>
+        <Layout>
         
                 <div style={{ maxWidth: '1400px', margin: 'auto' }}>
                     <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: LECAPs y Similares</h1>
@@ -205,7 +180,6 @@ export default function LecapsPage() {
                         <TablaGeneral titulo="LECAPs y Similares" datos={datosParaTabla} />
                     </div>
                 </div>
-            </main>
-      </div>
+        </Layout>
     );
 }
