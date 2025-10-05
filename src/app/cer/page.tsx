@@ -7,7 +7,6 @@ import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import Sidebar from '@/components/ui/Sidebar';
 import Link from 'next/link';
-import Layout from '@/components/layout/Layout';
 
 // PASO 1: ACTUALIZAR LA DEFINICIÓN DE TIPO PARA INCLUIR NUEVOS CAMPOS
 type Bono = {
