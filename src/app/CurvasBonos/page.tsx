@@ -323,18 +323,20 @@ export default function HomePage() {
     const tabla4 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['TAMAR'].includes(b.segmento)));
     const tabla5 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.segmento)));
     const tabla6 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Obligaciones Negociables'].includes(b.segmento)));
-    const enlacesAdicionales = [
-        { label: 'Inversiones Globales', href: 'https://www.inversionesglobales.com' },
-        { label: 'Inicio', href: '/' } 
-        // Podrías agregar un enlace a otra página interna, ej:
-        // { label: 'Acerca de', href: '/acerca-de' }
-    ];
+// --- NUEVO CÓDIGO MANUAL ---
     const menuItems = [
-    ...enlacesAdicionales, // Añadimos los nuevos enlaces al principio del menú
-    ...Object.keys(gruposDeSegmentos).map(titulo => ({
-        label: titulo,
-        href: `#${slugify(titulo)}`
-    }))
+    // Enlace para ir al tope de la página
+    { label: 'Inicio', href: '/' },
+
+    // Enlace a una tabla específica en la misma página (usa #)
+    { label: 'Renta Fija ARS', href: '/RentaFijaArs'},
+    { label: 'CER', href: '/cer'},
+    { label: 'Dollar Linked', href: '/dl'},
+    { label: 'Obligaciones Negociables', href:'/on'},
+    { label: 'TAMAR', href:'/tamar'},
+    { label: 'Bonares y Globales', href:'/soberanosrf'},
+    // Enlace a otra página interna de tu sitio
+    { label: 'Calculadora', href: '/bonos' },
     ];
 
 
