@@ -1,18 +1,19 @@
-// En: components/ui/Sidebar.tsx
-
 'use client';
 
 import React from 'react';
+import Link from 'next/link'; // Importamos el componente Link de Next.js
 
+// 1. Agregamos la prop 'items' para recibir los enlaces del menú
 type SidebarProps = {
   isOpen: boolean;
   onClose: () => void;
+  items?: { label: string; href: string }[]; // 'items' es un array opcional
 };
 
-const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+const Sidebar = ({ isOpen, onClose, items = [] }: SidebarProps) => {
   return (
     <>
-      {/* Fondo oscuro */}
+      {/* Fondo oscuro (sin cambios) */}
       <div 
         onClick={onClose}
         style={{
@@ -25,7 +26,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         }}
       />
       
-      {/* El menú lateral */}
+      {/* El menú lateral (con contenido dinámico) */}
       <aside style={{
         position: 'fixed', top: 0, left: 0,
         height: '100%', width: '250px',
@@ -37,14 +38,57 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         padding: '20px',
         display: 'flex', flexDirection: 'column'
       }}>
+        {/* Título (sin cambios) */}
         <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#021751', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
           Menú
         </h2>
         
-        <p style={{ color: '#6b7280', marginTop: '20px', fontStyle: 'italic' }}>
-          (Contenido del menú próximamente)
-        </p>
+        {/* 2. Reemplazamos el párrafo con la lista de enlaces */}
+        <nav style={{ marginTop: '20px' }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {items.map((item) => {
+              const isExternal = item.href.startsWith('http');
 
+              return (
+                <li key={item.label} style={{ marginBottom: '8px' }}>
+                  {isExternal ? (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={onClose}
+                      style={{
+                        textDecoration: 'none', color: '#374151', display: 'block',
+                        padding: '10px 15px', borderRadius: '6px',
+                        transition: 'background-color 0.2s, color 0.2s',
+                        fontWeight: 500
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; e.currentTarget.style.color = '#1036E2'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#374151'; }}
+                    >
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      onClick={onClose}
+                      style={{
+                        textDecoration: 'none', color: '#374151', display: 'block',
+                        padding: '10px 15px', borderRadius: '6px',
+                        transition: 'background-color 0.2s, color 0.2s',
+                        fontWeight: 500
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; e.currentTarget.style.color = '#1036E2'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#374151'; }}
+                    >
+                      {item.label}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
       </aside>
     </>
   );

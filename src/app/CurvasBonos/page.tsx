@@ -323,12 +323,27 @@ export default function HomePage() {
     const tabla4 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['TAMAR'].includes(b.segmento)));
     const tabla5 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.segmento)));
     const tabla6 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Obligaciones Negociables'].includes(b.segmento)));
+    const enlacesAdicionales = [
+        { label: 'Inversiones Globales', href: 'https://www.inversionesglobales.com' },
+        { label: 'Inicio', href: '/' } 
+        // Podrías agregar un enlace a otra página interna, ej:
+        // { label: 'Acerca de', href: '/acerca-de' }
+    ];
+    const menuItems = [
+    ...enlacesAdicionales, // Añadimos los nuevos enlaces al principio del menú
+    ...Object.keys(gruposDeSegmentos).map(titulo => ({
+        label: titulo,
+        href: `#${slugify(titulo)}`
+    }))
+    ];
+
 
     return (
         <div style={{ display: 'flex' }}>
             <Sidebar 
             isOpen={menuAbierto}
             onClose={() => setMenuAbierto(false)}
+            items={menuItems}
             />
     
             <main style={{ 
