@@ -33,8 +33,20 @@ const supabase = createClient(
 
 // --- FUNCIONES AUXILIARES DE FORMATO ---
 const formatValue = (value: number | null | undefined, unit: string = '%', decimals: number = 2) => {
-  if (value === null || typeof value === 'undefined' || !isFinite(value)) return '-';
-  return `${(value * (unit === '%' ? 100 : 1)).toFixed(decimals)}${unit}`;
+    // 1. Mantenemos la validación inicial
+    if (value === null || typeof value === 'undefined' || !isFinite(value)) return '-';
+
+    // 2. Realizamos el cálculo si es un porcentaje
+    const numeroAFormatear = value * (unit === '%' ? 100 : 1);
+
+    // 3. Usamos toLocaleString para aplicar el formato deseado
+    const numeroFormateado = numeroAFormatear.toLocaleString('es-AR', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+
+    // 4. Devolvemos el número formateado con su unidad
+   return `${numeroFormateado}${unit}`;
 };
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
@@ -69,7 +81,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.precio ?? '-'}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.precio,'',2)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tna)}</td>
                   {/* --- DATO AGREGADO --- */}
