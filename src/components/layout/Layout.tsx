@@ -19,12 +19,12 @@ type LayoutProps = {
     { label: 'Panel Resumen', href: '/CurvasBonos' },
 
     // Enlace a una tabla específica en la misma página (usa #)
-    { label: 'Renta Fija ARS', href: '/CurvasBonos/RentaFijaArs'},
-    { label: 'CER', href: '/CurvasBonos/cer'},
-    { label: 'Dollar Linked', href: '/CurvasBonos/dl'},
-    { label: 'Obligaciones Negociables', href:'/CurvasBonos/on'},
-    { label: 'TAMAR', href:'/CurvasBonos/tamar'},
-    { label: 'Bonares y Globales', href:'/CurvasBonos/soberanosrf'},
+    { label: 'Renta Fija ARS', href: '/RentaFijaArs'},
+    { label: 'CER', href: '/cer'},
+    { label: 'Dollar Linked', href: '/dl'},
+    { label: 'Obligaciones Negociables', href:'/on'},
+    { label: 'TAMAR', href:'/tamar'},
+    { label: 'Bonares y Globales', href:'/soberanosrf'},
     // Enlace a otra página interna de tu sitio
     { label: 'Calculadora', href: '/bonos' },
     ];
