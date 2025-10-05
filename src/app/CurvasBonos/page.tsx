@@ -327,84 +327,129 @@ export default function HomePage() {
 
 
     return (
-        <Layout>        
-                    <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-                        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Bonos en Tiempo Real</h1>
-                        <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
-                            <span>Estado: <strong>{estado}</strong></span>
-                            {datosHistoricos.length > 0 && (
-                                <span style={{ marginLeft: '1rem' }}>Última act: <strong>{new Date(datosHistoricos[0].created_at).toLocaleTimeString()}</strong></span>
-                            )}
-                        </div>
-                        {/* --- NUEVO: CONTENEDOR PARA LAS TARJETAS DE TIPO DE CAMBIO --- */}
-                        <div style={{
+        <Layout>
+            <div style={{ maxWidth: '1400px', margin: 'auto' }}>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>
+                    Bonos en Tiempo Real
+                </h1>
+
+                <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
+                    <span>
+                        Estado: <strong>{estado}</strong>
+                    </span>
+                    {datosHistoricos.length > 0 && (
+                        <span style={{ marginLeft: '1rem' }}>
+                            Última act: <strong>{new Date(datosHistoricos[0].created_at).toLocaleTimeString()}</strong>
+                        </span>
+                    )}
+                </div>
+
+                {/* --- CONTENEDOR PARA LAS TARJETAS DE TIPO DE CAMBIO --- */}
+                <div
+                    style={{
                         display: 'flex',
                         justifyContent: 'center',
                         gap: '20px',
                         margin: '1.5rem 0',
                         flexWrap: 'wrap'
-                        }}>
-                            <InfoCard title="Dólar MEP" value={tipoDeCambio?.valor_mep} />
-                            <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
-                        </div>
-                    
-                        
-                        <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
-                            <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#021751' }}>Curva de Rendimiento (TIR vs Días al Vencimiento)</h2>
-                            
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', marginBottom: '10px', paddingBottom: '20px', borderBottom: '1px solid #eee' }}>
-                                {Object.keys(gruposDeSegmentos).map(grupo => (
-                                    <button key={grupo} onClick={() => setSegmentoSeleccionado(grupo)}
-                                    style={{
-                                        padding: '8px 16px', fontSize: '14px', cursor: 'pointer', borderRadius: '20px',
-                                        border: '1px solid',
-                                        borderColor: segmentoSeleccionado === grupo ? '#3b82f6' : '#d1d5db',
-                                        backgroundColor: segmentoSeleccionado === grupo ? '#3b82f6' : 'white',
-                                        color: segmentoSeleccionado === grupo ? 'white' : '#374151',
-                                        transition: 'all 0.2s'
-                                    }}>
-                                    {grupo}
-                                    </button>
-                                ))}
-                            </div>
-                            
-                            <div style={{ padding: '0 10px', marginBottom: '20px' }}>
-                                {/* La etiqueta ahora es dinámica */}
-                                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>
-                                    {isBonaresSegment ? 'Filtrar por Modified Duration (años):' : 'Filtrar por Días al Vencimiento:'}
-                                </label>
-                                <Slider
-                                    range min={0} max={maxXValue > 0 ? maxXValue : 1}
-                                    value={rangoX} // Usa el nuevo estado
-                                    onChange={(value) => setRangoX(value as [number, number])}
-                                    step={isBonaresSegment ? 0.1 : 1} // Un paso más fino para la duration
-                                />
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
-                                    <span style={{ fontSize: '12px' }}>{rangoX[0]} {isBonaresSegment ? 'años' : 'días'}</span>
-                                    <span style={{ fontSize: '12px' }}>{maxXValue} {isBonaresSegment ? 'años' : 'días'}</span>
-                                </div>
-                            </div>
+                    }}
+                >
+                    <InfoCard title="Dólar MEP" value={tipoDeCambio?.valor_mep} />
+                    <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
+                </div>
 
-                            {/* Pasamos una nueva prop 'xAxisKey' al gráfico */}
-                            <CurvaRendimientoChart 
-                                data={datosParaGrafico} 
-                                segmentoActivo={segmentoSeleccionado}
-                                xAxisKey={isBonaresSegment ? 'modify_duration' : 'dias_vto'}
-                            />
-                        </div>
+                {/* --- CONTENEDOR DEL GRÁFICO --- */}
+                <div
+                    style={{
+                        background: '#fff',
+                        padding: '20px',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+                        marginTop: '1.5rem'
+                    }}
+                >
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#021751' }}>
+                        Curva de Rendimiento (TIR vs Días al Vencimiento)
+                    </h2>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
-                            <TablaGeneral titulo="LECAPs y Similares" datos={tabla1} />
-                            <TablaGeneral titulo="Ajustados por CER" datos={tabla2} />
-                            <TablaGeneral titulo="Dollar Linked" datos={tabla3} />
-                            <TablaGeneral titulo="TAMAR" datos={tabla4} />
-                            <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} />
-                            <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} />
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '10px',
+                            alignItems: 'center',
+                            marginBottom: '10px',
+                            paddingBottom: '20px',
+                            borderBottom: '1px solid #eee'
+                        }}
+                    >
+                        {Object.keys(gruposDeSegmentos).map(grupo => (
+                            <button
+                                key={grupo}
+                                onClick={() => setSegmentoSeleccionado(grupo)}
+                                style={{
+                                    padding: '8px 16px',
+                                    fontSize: '14px',
+                                    cursor: 'pointer',
+                                    borderRadius: '20px',
+                                    border: '1px solid',
+                                    borderColor: segmentoSeleccionado === grupo ? '#3b82f6' : '#d1d5db',
+                                    backgroundColor: segmentoSeleccionado === grupo ? '#3b82f6' : 'white',
+                                    color: segmentoSeleccionado === grupo ? 'white' : '#374151',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                {grupo}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div style={{ padding: '0 10px', marginBottom: '20px' }}>
+                        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>
+                            {isBonaresSegment ? 'Filtrar por Modified Duration (años):' : 'Filtrar por Días al Vencimiento:'}
+                        </label>
+                        <Slider
+                            range
+                            min={0}
+                            max={maxXValue > 0 ? maxXValue : 1}
+                            value={rangoX}
+                            onChange={(value) => setRangoX(value as [number, number])}
+                            step={isBonaresSegment ? 0.1 : 1}
+                        />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
+                            <span style={{ fontSize: '12px' }}>
+                                {rangoX[0]} {isBonaresSegment ? 'años' : 'días'}
+                            </span>
+                            <span style={{ fontSize: '12px' }}>
+                                {maxXValue} {isBonaresSegment ? 'años' : 'días'}
+                            </span>
                         </div>
                     </div>
-                </main>
+
+                    <CurvaRendimientoChart
+                        data={datosParaGrafico}
+                        segmentoActivo={segmentoSeleccionado}
+                        xAxisKey={isBonaresSegment ? 'modify_duration' : 'dias_vto'}
+                    />
+                </div>
+
+                {/* --- CONTENEDOR DE LAS TABLAS --- */}
+                <div
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
+                        gap: '20px',
+                        marginTop: '2rem'
+                    }}
+                >
+                    <TablaGeneral titulo="LECAPs y Similares" datos={tabla1} />
+                    <TablaGeneral titulo="Ajustados por CER" datos={tabla2} />
+                    <TablaGeneral titulo="Dollar Linked" datos={tabla3} />
+                    <TablaGeneral titulo="TAMAR" datos={tabla4} />
+                    <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} />
+                    <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} />
+                </div>
             </div>
         </Layout>
-                                
     );
 }
