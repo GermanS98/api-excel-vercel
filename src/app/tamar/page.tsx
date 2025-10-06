@@ -177,7 +177,7 @@ export default function LecapsPage() {
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
-                        <TablaGeneral titulo="LECAPs y Similares" datos={datosParaTabla} />
+                        <TablaGeneral titulo="Instrumentos TAMAR" datos={datosParaTabla} />
                     </div>
                 </div>
         </Layout>
