@@ -15,6 +15,10 @@ interface TickerItem {
   ticker: string;
   desctasa: string;
 }
+interface SensibilidadItem {
+  precio: number;
+  tir: number;
+}
 interface SimpleResult {
   tir: number;
   valor_tecnico: number;
@@ -27,6 +31,7 @@ interface SimpleResult {
   modify_duration?: number;
   duracion_macaulay?: number;
   base_calculo?: string;
+  sensibilidad_tir?: SensibilidadItem[];
 }
 interface DualResult {
   tipo_dual: true;
@@ -96,12 +101,41 @@ const ResultSummary = ({ result }: { result: SimpleResult }) => {
         </div>
       );
 };
+const SensibilidadTirTable = ({ datos }: { datos?: SensibilidadItem[] }) => {
+  // Si no hay datos, no mostramos nada
+  if (!datos || datos.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={styles.flujosTableContainer} style={{ marginTop: '1.5rem' }}>
+      <h4 className={`${styles.resultTitle} ${styles.fontAlbert}`}>Análisis de Sensibilidad (Precio vs. TIR)</h4>
+      <table className={styles.flujosTable}>
+        <thead>
+          <tr>
+            <th className={styles.fontAlbert}>Precio</th>
+            <th className={`${styles.fontAlbert} ${styles.textRight}`}>TIR (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {datos.map((item, index) => (
+            <tr key={index}>
+              <td>{item.precio.toFixed(4)}</td>
+              <td className={styles.textRight}>{(item.tir * 100).toFixed(2)}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 const ResultDisplay = ({ title, result, titleColorClass = '' }: { title: string, result: SimpleResult, titleColorClass?: string }) => (
   <div className={styles.card}>
     <h3 className={`${styles.resultTitle} ${styles.fontAlbert} ${titleColorClass}`}>{title}</h3>
     <ResultSummary result={result} />
     <FlujosTable flujos={result.flujos_detallados} />
+    <SensibilidadTirTable datos={result.sensibilidad_tir} />
   </div>
 );
 
