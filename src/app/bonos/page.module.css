@@ -25,12 +25,19 @@
 }
 
 /* 4. Estilos de las tarjetas y títulos */
+/* .card { */
+  /*background-color: var(--veta-card);*/
+  /*padding: 1.5rem;*/
+ /* border-radius: 0.5rem;*/
+/*}*/
 .card {
-  background-color: var(--veta-card);
-  padding: 1.5rem;
-  border-radius: 0.5rem;
+  background-color: #ffffff; /* Cambiamos el fondo a blanco */
+  padding: 2rem;
+  border-radius: 12px;       /* Un radio de borde un poco más pronunciado */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* Una sombra más suave y visible */
+  margin-bottom: 2rem;       /* Espacio entre las tarjetas si hay varias */
+  border: 1px solid #e0e0e0; /* Un borde sutil para definirlas mejor */
 }
-
 .title {
   font-size: 1.875rem; /* 30px */
   font-weight: 700;
