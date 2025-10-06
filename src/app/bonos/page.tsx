@@ -57,7 +57,7 @@ const FlujosTable = ({ flujos }: { flujos: FlujoDetallado[] }) => {
         <tbody>
           {flujos.map((flujo, index) => (
             <tr key={index}>
-              <td>{new Date(flujo.fecha).toLocaleDateString()}</td>
+              <td>{new Date(flujo.fecha).toLocaleDateString('es-AR', { timeZone: 'UTC' })}</td>
               <td className={styles.textRight}>{flujo.vno_ajustado?.toFixed(4)}</td>
               <td className={styles.textRight}>{flujo.pago_interes?.toFixed(4)}</td>
               <td className={styles.textRight}>{flujo.pago_amortizacion?.toFixed(4)}</td>
