@@ -13,7 +13,7 @@ type Bono = {
   ticker: string;
   vto: string;
   precio: number | null;
-  var: number | null; // Nuevo campo
+  var: number; // Nuevo campo
   tir: number;
   segmento: string;
   dias_vto: number;

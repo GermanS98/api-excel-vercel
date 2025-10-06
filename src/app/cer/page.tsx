@@ -16,7 +16,7 @@ type Bono = {
   tir: number;
   tna: number | null;
   tem: number | null;
-  var: number | null; // Nuevo campo
+  var: number; // Nuevo campo
   segmento: string;
   dias_vto: number;
   modify_duration: number | null;
