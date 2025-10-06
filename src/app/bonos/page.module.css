@@ -4,7 +4,7 @@
 
 /* 3. Estilo del contenedor principal y fuentes */
 .container {
-  background-color: #f3f4f6; /*var(--veta-azul-respaldo)*/
+  background-color: var(--veta-azul-respaldo); /*var(--veta-azul-respaldo)*/
   color: var(--veta-text-white);
   font-family: 'Roboto', sans-serif; /* Fuente por defecto para todo */
   min-height: 100vh;
@@ -24,20 +24,13 @@
   font-family: 'Albert Sans', sans-serif;
 }
 
-/* 4. Estilos de las tarjetas y títulos */
-/* .card { */
-  /*background-color: var(--veta-card);*/
-  /*padding: 1.5rem;*/
- /* border-radius: 0.5rem;*/
-/*}*/
+ 4. Estilos de las tarjetas y títulos 
 .card {
-  background-color: #ffffff; /* Cambiamos el fondo a blanco */
-  padding: 2rem;
-  border-radius: 12px;       /* Un radio de borde un poco más pronunciado */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* Una sombra más suave y visible */
-  margin-bottom: 2rem;       /* Espacio entre las tarjetas si hay varias */
-  border: 1px solid #e0e0e0; /* Un borde sutil para definirlas mejor */
+  background-color: var(--veta-card);
+  padding: 1.5rem;
+   border-radius: 0.5rem;
 }
+
 .title {
   font-size: 1.875rem; /* 30px */
   font-weight: 700;
