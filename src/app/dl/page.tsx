@@ -13,6 +13,7 @@ type Bono = {
   ticker: string;
   vto: string;
   precio: number | null;
+  var: number | null; // Nuevo campo
   tir: number;
   tna: number | null;
   tem: number | null;
@@ -67,6 +68,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Ticker</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>VTO</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Precio</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Var</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TIR</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TNA</th>
               {/* --- COLUMNA AGREGADA --- */}
@@ -82,6 +84,13 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.precio,'',2)}</td>
+                  <td style={{ 
+                                padding: '0.75rem 1rem', 
+                                color: item.var >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
+                                fontWeight: 500
+                                }}>
+                    {formatValue(item.var)}
+                  </td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tna)}</td>
                   {/* --- DATO AGREGADO --- */}
@@ -146,7 +155,7 @@ export default function LecapsPage() {
         <Layout>
         
                 <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Dólar Linked</h1>
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Dollar Linked</h1>
                     <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                         <span>Estado: <strong>{estado}</strong></span>
                         {datosHistoricos.length > 0 && (
@@ -177,7 +186,7 @@ export default function LecapsPage() {
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
-                        <TablaGeneral titulo="Dólar Linked" datos={datosParaTabla} />
+                        <TablaGeneral titulo="Dollar Linked" datos={datosParaTabla} />
                     </div>
                 </div>
       </Layout>
