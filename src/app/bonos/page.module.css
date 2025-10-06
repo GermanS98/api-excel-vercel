@@ -4,7 +4,7 @@
 
 /* 3. Estilo del contenedor principal y fuentes */
 .container {
-  background-color: var(--veta-azul-respaldo);
+  background-color: #f3f4f6; /*var(--veta-azul-respaldo)*/
   color: var(--veta-text-white);
   font-family: 'Roboto', sans-serif; /* Fuente por defecto para todo */
   min-height: 100vh;
