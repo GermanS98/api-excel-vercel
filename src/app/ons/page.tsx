@@ -21,6 +21,12 @@ type Bono = {
   modify_duration: number | null;
   RD: number | null; // Nuevo campo
   duracion_macaulay: number | null; // Nuevo campo
+  ley: string;
+  monedadepago: string;
+  frec: string;
+  lmin: string;
+  cantnominales: string;
+  tipoamort: string;
 };
 
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
@@ -69,6 +75,12 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TIR</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Paridad</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>MD</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Ley</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Moneda</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Frec.</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>L. Mín</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Nominales</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Amort.</th>            
             </tr>
           </thead>
           <tbody>
@@ -88,11 +100,17 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.paridad, '', 2)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.modify_duration, '', 2)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.ley || '-'}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.monedadepago || '-'}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.frec || '-'}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.lmin || '-'}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.cantnominales || '-'}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.tipoamort || '-'}</td>                
                 </tr>
               ))
             ) : (
               // --- COLSPAN ACTUALIZADO A 8 ---
-              <tr><td colSpan={8} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
+              <tr><td colSpan={13} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
             )}
           </tbody>
         </table>
