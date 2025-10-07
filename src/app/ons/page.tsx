@@ -5,65 +5,40 @@ import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import Sidebar from '@/components/ui/Sidebar';
-import Link from 'next/link';
 
-// PASO 1: ACTUALIZAR LA DEFINICIÓN DE TIPO PARA INCLUIR NUEVOS CAMPOS
+// TIPO BONO
 type Bono = {
-  ticker: string;
-  vto: string;
-  precio: number | null;
-  var: number; // Nuevo campo
-  tir: number;
-  segmento: string;
-  dias_vto: number;
-  paridad: number;
-  modify_duration: number | null;
-  RD: number | null; // Nuevo campo
-  duracion_macaulay: number | null; // Nuevo campo
-  ley: string;
-  monedadepago: string;
-  frec: string;
-  lmin: string;
-  cantnominales: string;
-  tipoamort: string;
+  ticker: string; vto: string; precio: number | null; var: number; tir: number; segmento: string; dias_vto: number; paridad: number; modify_duration: number | null; RD: number | null; duracion_macaulay: number | null; ley: string; monedadepago: string; frec: string; lmin: string; cantnominales: string; tipoamort: string;
 };
 
-// --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
+// CONFIGURACIÓN DE SUPABASE
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_KEY!
 );
 
-// --- FUNCIONES AUXILIARES DE FORMATO ---
+// FUNCIONES AUXILIARES DE FORMATO
 const formatValue = (value: number | null | undefined, unit: string = '%', decimals: number = 2) => {
-    // 1. Mantenemos la validación inicial
     if (value === null || typeof value === 'undefined' || !isFinite(value)) return '-';
-
-    // 2. Realizamos el cálculo si es un porcentaje
     const numeroAFormatear = value * (unit === '%' ? 100 : 1);
-
-    // 3. Usamos toLocaleString para aplicar el formato deseado
-    const numeroFormateado = numeroAFormatear.toLocaleString('es-AR', {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    });
-
-    // 4. Devolvemos el número formateado con su unidad
-   return `${numeroFormateado}${unit}`;
+    return `${numeroAFormatear.toLocaleString('es-AR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${unit}`;
 };
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
   const date = new Date(dateString);
   return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 };
+
+// --- CORRECCIÓN AQUÍ ---
 // NUEVA DEFINICIÓN DE TIPO PARA UN ELEMENTO DE LA CONFIGURACIÓN
 type ColumnConfigItem = {
   label: string;
   type: 'text' | 'date' | 'number';
   isPercentage?: boolean; // La '?' lo hace opcional
 };
-const columnConfig = {
+
+// EL OBJETO DE CONFIGURACIÓN AHORA USA EL TIPO DEFINIDO
+const columnConfig: Record<string, ColumnConfigItem> = {
     ticker: { label: 'Ticker', type: 'text' },
     vto: { label: 'Vto', type: 'date' },
     precio: { label: 'Precio', type: 'number' },
@@ -77,14 +52,18 @@ const columnConfig = {
     lmin: { label: 'L. Mín', type: 'text' },
     cantnominales: { label: 'Nominales', type: 'text' },
     tipoamort: { label: 'Amort.', type: 'text' },
-    
 };
+
+// TIPO PARA LAS COLUMNAS FILTRABLES
 type FilterableColumn = keyof typeof columnConfig;
-const TablaGeneral = ({ 
+
+// ==================================================================
+// COMPONENTE TablaGeneral
+// ==================================================================
+const TablaGeneral = ({
     titulo, datos, filtros, onFiltroChange
-}: { 
+}: {
     titulo: string, datos: Bono[], filtros: { [key: string]: string },
-    // CORRECCIÓN: Usamos nuestro nuevo tipo preciso
     onFiltroChange: (columna: FilterableColumn, valor: string) => void,
 }) => {
     const getPlaceholder = (columna: FilterableColumn) => {
@@ -121,6 +100,7 @@ const TablaGeneral = ({
                                         if (value !== null && value !== undefined) {
                                             const config = columnConfig[key];
                                             if (config.type === 'date') displayValue = formatDate(String(value));
+                                            // ESTA LÍNEA AHORA ES SEGURA GRACIAS A LA CORRECCIÓN DEL TIPO
                                             else if (config.type === 'number') displayValue = formatValue(Number(value), config.isPercentage ? '%' : '', 2);
                                             else displayValue = String(value);
                                         }
@@ -139,8 +119,9 @@ const TablaGeneral = ({
 };
 
 
-// --- COMPONENTE PRINCIPAL DE LA PÁGINA DE LECAPS (sin cambios de lógica) ---
-// --- COMPONENTE PRINCIPAL ---
+// ==================================================================
+// COMPONENTE PRINCIPAL LecapsPage
+// ==================================================================
 export default function LecapsPage() {
     const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
     const [caracteristicasMap, setCaracteristicasMap] = useState<Map<string, any>>(new Map());
@@ -172,7 +153,6 @@ export default function LecapsPage() {
         return () => { supabase.removeChannel(channel) };
     }, []);
     
-    // CORRECCIÓN: Usamos nuestro nuevo tipo preciso
     const handleFiltroChange = (columna: FilterableColumn, valor: string) => {
         setFiltros(prev => ({ ...prev, [columna]: valor }));
     };
@@ -196,19 +176,18 @@ export default function LecapsPage() {
             return (Object.entries(filtros) as [FilterableColumn, string][]).every(([key, filterValue]) => {
                 if (!filterValue) return true;
 
-                // CORRECCIÓN: Ahora `key` es del tipo correcto, por lo que el acceso es seguro.
                 const config = columnConfig[key];
                 const cellValue = bono[key];
                 
                 if (cellValue === null || cellValue === undefined) return false;
                 
                 switch (config.type) {
-                    // ... (la lógica de switch no cambia)
                     case 'number':
                         let numericValue = Number(cellValue);
+                        // ESTA LÍNEA AHORA ES SEGURA GRACIAS A LA CORRECCIÓN DEL TIPO
                         if (config.isPercentage) numericValue *= 100;
                         if (filterValue.includes('-')) {
-                            const [min, max] = filterValue.split('-').map(parseFloat);
+                            const [min, max] = filterValue.split('-').map(s => parseFloat(s.trim()));
                             return numericValue >= (min || -Infinity) && numericValue <= (max || Infinity);
                         }
                         const match = filterValue.match(/^(>=|<=|>|<)?\s*(-?\d+\.?\d*)$/);
@@ -249,16 +228,18 @@ export default function LecapsPage() {
             });
         }).sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
     }, [datosCompletos, filtros]);
-
-const maxDiasDelSegmento = useMemo(() => {
+    
+    const maxDiasDelSegmento = useMemo(() => {
         const datosSinFiltro = datosCompletos.filter(b => b.segmento === 'ON');
         if (datosSinFiltro.length === 0) return 1000;
         const maxDias = Math.max(...datosSinFiltro.map(b => b.dias_vto));
         return isFinite(maxDias) ? maxDias : 1000;
     }, [datosCompletos]);
+
     useEffect(() => {
         if (maxDiasDelSegmento > 0) setRangoDias([0, maxDiasDelSegmento]);
     }, [maxDiasDelSegmento]);
+    
     const datosParaGrafico = datosParaTabla.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
 
     return (
