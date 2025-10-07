@@ -111,10 +111,16 @@ const TablaGeneral = ({
                                             } else if (config.type === 'number') {
                                                 displayValue = formatValue(Number(value), config.isPercentage ? '%' : '', 2);
                                             } else {
-                                                displayValue = String(value);
+                                                if (key === 'cantnominales') {
+                                                    const numero = parseInt(String(value), 10);
+                                                    displayValue = formatValue(numero, '', 0);
+                                                } else {
+                                                    displayValue = String(value);
+                                                }
                                             }
                                         }
-                                        return <td key={key} style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{displayValue}</td>
+                                        // AQUÍ ESTÁ LA MODIFICACIÓN
+                                        return <td key={key} style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{displayValue}</td>
                                     })}
                                 </tr>
                             ))
@@ -187,7 +193,6 @@ export default function LecapsPage() {
                 if (!filterValue) return true;
 
                 const config = columnConfig[key];
-                // CORRECCIÓN FINAL: Se asegura a TypeScript que `key` es una llave válida de `Bono`.
                 const cellValue = bono[key as keyof Bono];
                 
                 if (cellValue === null || cellValue === undefined) return false;
