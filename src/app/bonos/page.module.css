@@ -24,7 +24,7 @@
   font-family: 'Albert Sans', sans-serif;
 }
 
- 4. Estilos de las tarjetas y títulos 
+ /* 4. Estilos de las tarjetas y títulos */
 .card {
   background-color: var(--veta-card);
   padding: 1.5rem;
