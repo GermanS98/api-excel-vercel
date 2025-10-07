@@ -6,38 +6,34 @@ import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 
-// TIPO BONO
+// ==================================================================
+// DEFINICIÓN DE TIPOS
+// ==================================================================
 type Bono = {
   ticker: string; vto: string; precio: number | null; var: number; tir: number; segmento: string; dias_vto: number; paridad: number; modify_duration: number | null; RD: number | null; duracion_macaulay: number | null; ley: string; monedadepago: string; frec: string; lmin: string; cantnominales: string; tipoamort: string;
 };
 
-// CONFIGURACIÓN DE SUPABASE
+// MEJORA: Se crea un tipo para la data que viene de Supabase, eliminando `any`.
+type SupabaseData = {
+  created_at: string;
+  datos: any[]; // Se mantiene any aquí porque el JSON interno puede variar.
+};
+
+// TIPO PARA LA CONFIGURACIÓN DE COLUMNAS
+type ColumnConfigItem = {
+  label: string;
+  type: 'text' | 'date' | 'number';
+  isPercentage?: boolean;
+};
+
+// ==================================================================
+// CONFIGURACIONES GLOBALES
+// ==================================================================
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_KEY!
 );
 
-// FUNCIONES AUXILIARES DE FORMATO
-const formatValue = (value: number | null | undefined, unit: string = '%', decimals: number = 2) => {
-    if (value === null || typeof value === 'undefined' || !isFinite(value)) return '-';
-    const numeroAFormatear = value * (unit === '%' ? 100 : 1);
-    return `${numeroAFormatear.toLocaleString('es-AR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${unit}`;
-};
-const formatDate = (dateString: string) => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
-};
-
-// --- CORRECCIÓN AQUÍ ---
-// NUEVA DEFINICIÓN DE TIPO PARA UN ELEMENTO DE LA CONFIGURACIÓN
-type ColumnConfigItem = {
-  label: string;
-  type: 'text' | 'date' | 'number';
-  isPercentage?: boolean; // La '?' lo hace opcional
-};
-
-// EL OBJETO DE CONFIGURACIÓN AHORA USA EL TIPO DEFINIDO
 const columnConfig: Record<string, ColumnConfigItem> = {
     ticker: { label: 'Ticker', type: 'text' },
     vto: { label: 'Vto', type: 'date' },
@@ -54,8 +50,21 @@ const columnConfig: Record<string, ColumnConfigItem> = {
     tipoamort: { label: 'Amort.', type: 'text' },
 };
 
-// TIPO PARA LAS COLUMNAS FILTRABLES
 type FilterableColumn = keyof typeof columnConfig;
+
+// ==================================================================
+// FUNCIONES AUXILIARES
+// ==================================================================
+const formatValue = (value: number | null | undefined, unit: string = '', decimals: number = 2) => {
+    if (value === null || typeof value === 'undefined' || !isFinite(value)) return '-';
+    const numeroAFormatear = unit === '%' ? value * 100 : value;
+    return `${numeroAFormatear.toLocaleString('es-AR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${unit}`;
+};
+const formatDate = (dateString: string) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+};
 
 // ==================================================================
 // COMPONENTE TablaGeneral
@@ -92,17 +101,24 @@ const TablaGeneral = ({
                     </thead>
                     <tbody>
                         {datos.length > 0 ? (
-                            datos.map((item, index) => (
-                                <tr key={item.ticker + index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                    {(Object.keys(columnConfig) as FilterableColumn[]).map(key => {
+                            datos.map(item => (
+                                // MEJORA: Se usa solo item.ticker para la key, es más estable.
+                                <tr key={item.ticker} style={{ borderTop: '1px solid #e5e7eb' }}>
+                                    {/* MEJORA: Renderizado dinámico de celdas para mantenibilidad */}
+                                    {(Object.keys(columnConfig) as (keyof Bono)[]).map(key => {
+                                        // CORRECCIÓN: `item[key]` ahora es seguro porque `key` es `keyof Bono`.
                                         const value = item[key];
                                         let displayValue: React.ReactNode = '-';
+
                                         if (value !== null && value !== undefined) {
                                             const config = columnConfig[key];
-                                            if (config.type === 'date') displayValue = formatDate(String(value));
-                                            // ESTA LÍNEA AHORA ES SEGURA GRACIAS A LA CORRECCIÓN DEL TIPO
-                                            else if (config.type === 'number') displayValue = formatValue(Number(value), config.isPercentage ? '%' : '', 2);
-                                            else displayValue = String(value);
+                                            if (config.type === 'date') {
+                                                displayValue = formatDate(String(value));
+                                            } else if (config.type === 'number') {
+                                                displayValue = formatValue(Number(value), config.isPercentage ? '%' : '', 2);
+                                            } else {
+                                                displayValue = String(value);
+                                            }
                                         }
                                         return <td key={key} style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{displayValue}</td>
                                     })}
@@ -123,7 +139,8 @@ const TablaGeneral = ({
 // COMPONENTE PRINCIPAL LecapsPage
 // ==================================================================
 export default function LecapsPage() {
-    const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
+    // MEJORA: El estado ahora usa el tipo `SupabaseData`, eliminando `any`.
+    const [datosHistoricos, setDatosHistoricos] = useState<SupabaseData[]>([]);
     const [caracteristicasMap, setCaracteristicasMap] = useState<Map<string, any>>(new Map());
     const [estado, setEstado] = useState('Cargando...');
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
@@ -184,7 +201,6 @@ export default function LecapsPage() {
                 switch (config.type) {
                     case 'number':
                         let numericValue = Number(cellValue);
-                        // ESTA LÍNEA AHORA ES SEGURA GRACIAS A LA CORRECCIÓN DEL TIPO
                         if (config.isPercentage) numericValue *= 100;
                         if (filterValue.includes('-')) {
                             const [min, max] = filterValue.split('-').map(s => parseFloat(s.trim()));
@@ -211,7 +227,7 @@ export default function LecapsPage() {
                             const [startStr, endStr] = filterValue.split('-').map(s => s.trim());
                             const [startDay, startMonth, startYear] = startStr.split('/').map(Number);
                             const [endDay, endMonth, endYear] = endStr.split('/').map(Number);
-                            if (!startDay || !endDay) return false;
+                            if (!startDay || !endDay || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return false; // Check for valid dates
                             const startDate = new Date(startYear, startMonth - 1, startDay);
                             const endDate = new Date(endYear, endMonth - 1, endDay);
                             return cellDate >= startDate && cellDate <= endDate;
@@ -219,6 +235,7 @@ export default function LecapsPage() {
                         const [day, month, year] = filterValue.split('/').map(Number);
                         if (!day || !month || !year) return false;
                         const filterDate = new Date(year, month - 1, day);
+                        if (isNaN(filterDate.getTime())) return false; // Check for valid date
                         return cellDate.getTime() === filterDate.getTime();
 
                     case 'text':
