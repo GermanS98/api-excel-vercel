@@ -125,8 +125,24 @@ export default function LecapsPage() {
     const [estado, setEstado] = useState('Cargando...');
     const [menuAbierto, setMenuAbierto] = useState(false);
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
-
-    const segmentosDeEstaPagina = ['ON'];
+    const [filtros, setFiltros] = useState<{ [key: string]: string }>({});
+    // CAMBIO 1: El "Cerebro" de los filtros. Define el tipo de cada columna.
+    const columnConfig = {
+        ticker: { label: 'Ticker', type: 'text' },
+        vto: { label: 'Vto', type: 'date' },
+        precio: { label: 'Precio', type: 'number' },
+        var: { label: 'Var', type: 'number', isPercentage: true },
+        tir: { label: 'TIR', type: 'number', isPercentage: true },
+        paridad: { label: 'Paridad', type: 'number' },
+        modify_duration: { label: 'MD', type: 'number' },
+        ley: { label: 'Ley', type: 'text' },
+        monedadepago: { label: 'Moneda', type: 'text' },
+        frec: { label: 'Frec.', type: 'text' },
+        lmin: { label: 'L. Mín', type: 'text' },
+        cantnominales: { label: 'Nominales', type: 'text' },
+        tipoamort: { label: 'Amort.', type: 'text' },
+    };
+    #const segmentosDeEstaPagina = ['ON'];
     //Un nuevo useEffect para cargar las características una sola vez.
     useEffect(() => {
         const cargarCaracteristicas = async () => {
@@ -162,28 +178,103 @@ export default function LecapsPage() {
         const channel = supabase.channel('custom-all-channel').on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, () => cargarDatosDelDia()).subscribe();
         return () => { supabase.removeChannel(channel) };
     }, []);
+    const handleFiltroChange = (columna: keyof Bono, valor: string) => {
+        setFiltros(prev => ({ ...prev, [columna]: valor }));
+    };
+    const datosCompletos = useMemo(() => {
+        if (datosHistoricos.length > 0 && datosHistoricos[0].datos && caracteristicasMap.size > 0) {
+            return datosHistoricos[0].datos.map((bono: any) => ({
+                ...bono, ...(caracteristicasMap.get(bono.ticker) || {}),
+            }));
+        }
+        return [];
+    }, [datosHistoricos, caracteristicasMap]);
     
-    const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos && caracteristicasMap.size > 0) 
-        ? datosHistoricos[0].datos.map((bono: any) => {
-            // Buscamos las características del bono actual en nuestro Map.
-            const caracteristicas = caracteristicasMap.get(bono.ticker) || {};
-            // Unimos los datos financieros (bono) con sus características.
-            return { ...bono, ...caracteristicas };
-          })
-        : [];
-    const datosDeLecaps = ultimoLoteDeDatos.filter(b => segmentosDeEstaPagina.includes(b.segmento));
-    const maxDiasDelSegmento = (() => {
-        if (datosDeLecaps.length === 0) return 1000;
-        const maxDias = Math.max(...datosDeLecaps.map(b => b.dias_vto));
+    // CAMBIO 2: La nueva lógica de filtrado avanzado.
+    const datosParaTabla = useMemo(() => {
+        const datosDeSegmento = datosCompletos.filter(b => b.segmento === 'ON');
+
+        if (Object.values(filtros).every(v => !v)) {
+            return datosDeSegmento.sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
+        }
+
+        return datosDeSegmento.filter(bono => {
+            return Object.entries(filtros).every(([key, filterValue]) => {
+                if (!filterValue) return true;
+
+                const config = columnConfig[key as keyof Bono];
+                const cellValue = bono[key as keyof Bono];
+                
+                if (cellValue === null || cellValue === undefined) return false;
+
+                // Lógica para cada tipo de dato
+                switch (config.type) {
+                    case 'number':
+                        let numericValue = cellValue;
+                        // Ajustamos valor si es % (TIR/Var vienen como 0.5, no 50)
+                        if (config.isPercentage) numericValue *= 100;
+
+                        // Rango (ej: "10-20")
+                        if (filterValue.includes('-')) {
+                            const [min, max] = filterValue.split('-').map(parseFloat);
+                            return numericValue >= (min || -Infinity) && numericValue <= (max || Infinity);
+                        }
+                        // Operadores (ej: ">50", "<=10")
+                        const match = filterValue.match(/^(>=|<=|>|<)?\s*(-?\d+\.?\d*)$/);
+                        if (match) {
+                            const [, operator, numStr] = match;
+                            const num = parseFloat(numStr);
+                            switch (operator) {
+                                case '>': return numericValue > num;
+                                case '<': return numericValue < num;
+                                case '>=': return numericValue >= num;
+                                case '<=': return numericValue <= num;
+                                default: return numericValue == num;
+                            }
+                        }
+                        return String(numericValue).toLowerCase().includes(filterValue.toLowerCase());
+
+                    case 'date':
+                        const cellDate = new Date(cellValue);
+                        cellDate.setHours(0, 0, 0, 0); // Normalizar
+                        
+                        // Rango (ej: "10/10/2025 - 20/10/2025")
+                        if (filterValue.includes('-')) {
+                            const [startStr, endStr] = filterValue.split('-').map(s => s.trim());
+                            const [startDay, startMonth, startYear] = startStr.split('/').map(Number);
+                            const [endDay, endMonth, endYear] = endStr.split('/').map(Number);
+                            const startDate = new Date(startYear, startMonth - 1, startDay);
+                            const endDate = new Date(endYear, endMonth - 1, endDay);
+                            return cellDate >= startDate && cellDate <= endDate;
+                        }
+                        
+                        // Fecha exacta
+                        const [day, month, year] = filterValue.split('/').map(Number);
+                        if (!day || !month || !year) return false; // Formato inválido
+                        const filterDate = new Date(year, month - 1, day);
+                        return cellDate.getTime() === filterDate.getTime();
+
+                    case 'text':
+                    default:
+                        return String(cellValue).toLowerCase().includes(filterValue.toLowerCase());
+                }
+            });
+        }).sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
+    }, [datosCompletos, filtros]);
+
+    // Lógica para el gráfico y slider
+    const maxDiasDelSegmento = useMemo(() => {
+        const datosSinFiltro = datosCompletos.filter(b => b.segmento === 'ON');
+        if (datosSinFiltro.length === 0) return 1000;
+        const maxDias = Math.max(...datosSinFiltro.map(b => b.dias_vto));
         return isFinite(maxDias) ? maxDias : 1000;
-    })();
+    }, [datosCompletos]);
 
     useEffect(() => {
-        setRangoDias([0, maxDiasDelSegmento]);
+        if (maxDiasDelSegmento > 0) setRangoDias([0, maxDiasDelSegmento]);
     }, [maxDiasDelSegmento]);
-
-    const datosParaGrafico = datosDeLecaps.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
-    const datosParaTabla = [...datosDeLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
+    
+    const datosParaGrafico = datosParaTabla.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
 
     return (
         <Layout>      
