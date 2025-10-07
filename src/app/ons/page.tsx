@@ -130,65 +130,7 @@ const TablaGeneral = ({
         </div>
     );
 };
-// --- COMPONENTE DE TABLA ACTUALIZADO ---
-const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
-    <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-        <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>
-          {titulo}
-        </h2>
-      <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead style={{ position: 'sticky', top: 0 }}>
-            <tr style={{ background: '#1036E2', color: 'white' }}>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Ticker</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Vto</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Precio</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Var</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TIR</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Paridad</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>MD</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Ley</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Moneda</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Frec.</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>L. Mín</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Nominales</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Amort.</th>            
-            </tr>
-          </thead>
-          <tbody>
-            {datos.length > 0 ? (
-              datos.map((item: Bono, index: number) => (
-                <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.precio,'',2)}</td>
-                  <td style={{ 
-                                padding: '0.75rem 1rem', 
-                                color: item.var >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
-                                fontWeight: 500
-                                }}>
-                    {formatValue(item.var)}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.paridad, '', 2)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.modify_duration, '', 2)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.ley || '-'}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.monedadepago || '-'}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.frec || '-'}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.lmin || '-'}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.cantnominales || '-'}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.tipoamort || '-'}</td>                
-                </tr>
-              ))
-            ) : (
-              // --- COLSPAN ACTUALIZADO A 8 ---
-              <tr><td colSpan={13} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-);
+
 
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA DE LECAPS (sin cambios de lógica) ---
 // --- COMPONENTE PRINCIPAL ---
