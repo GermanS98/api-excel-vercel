@@ -121,12 +121,30 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA DE LECAPS (sin cambios de lógica) ---
 export default function LecapsPage() {
     const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
+    const [caracteristicasMap, setCaracteristicasMap] = useState<Map<string, any>>(new Map());
     const [estado, setEstado] = useState('Cargando...');
     const [menuAbierto, setMenuAbierto] = useState(false);
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
     const segmentosDeEstaPagina = ['ON'];
-    
+    //Un nuevo useEffect para cargar las características una sola vez.
+    useEffect(() => {
+        const cargarCaracteristicas = async () => {
+            const { data, error } = await supabase.from('caracteristicas').select('*');
+            if (error) {
+                console.error("Error cargando características:", error);
+                setEstado(`Error en características: ${error.message}`);
+            } else if (data) {
+                // Convertimos el array en un Map para que la búsqueda por ticker sea instantánea.
+                const nuevoMapa = new Map(data.map(item => [item.ticker, item]));
+                setCaracteristicasMap(nuevoMapa);
+            }
+        };
+        
+        cargarCaracteristicas();
+    }, []);
+
+    // useEffect para datos financieros (en tiempo real)
     useEffect(() => {
         const cargarDatosDelDia = async () => {
           const inicioDelDia = new Date();
@@ -145,7 +163,14 @@ export default function LecapsPage() {
         return () => { supabase.removeChannel(channel) };
     }, []);
     
-    const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
+    const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos && caracteristicasMap.size > 0) 
+        ? datosHistoricos[0].datos.map((bono: any) => {
+            // Buscamos las características del bono actual en nuestro Map.
+            const caracteristicas = caracteristicasMap.get(bono.ticker) || {};
+            // Unimos los datos financieros (bono) con sus características.
+            return { ...bono, ...caracteristicas };
+          })
+        : [];
     const datosDeLecaps = ultimoLoteDeDatos.filter(b => segmentosDeEstaPagina.includes(b.segmento));
     const maxDiasDelSegmento = (() => {
         if (datosDeLecaps.length === 0) return 1000;
