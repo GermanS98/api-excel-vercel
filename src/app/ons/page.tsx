@@ -13,13 +13,11 @@ type Bono = {
   ticker: string; vto: string; precio: number | null; var: number; tir: number; segmento: string; dias_vto: number; paridad: number; modify_duration: number | null; RD: number | null; duracion_macaulay: number | null; ley: string; monedadepago: string; frec: string; lmin: string; cantnominales: string; tipoamort: string;
 };
 
-// MEJORA: Se crea un tipo para la data que viene de Supabase, eliminando `any`.
 type SupabaseData = {
   created_at: string;
-  datos: any[]; // Se mantiene any aquí porque el JSON interno puede variar.
+  datos: any[];
 };
 
-// TIPO PARA LA CONFIGURACIÓN DE COLUMNAS
 type ColumnConfigItem = {
   label: string;
   type: 'text' | 'date' | 'number';
@@ -102,14 +100,10 @@ const TablaGeneral = ({
                     <tbody>
                         {datos.length > 0 ? (
                             datos.map(item => (
-                                // MEJORA: Se usa solo item.ticker para la key, es más estable.
                                 <tr key={item.ticker} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                    {/* MEJORA: Renderizado dinámico de celdas para mantenibilidad */}
                                     {(Object.keys(columnConfig) as (keyof Bono)[]).map(key => {
-                                        // CORRECCIÓN: `item[key]` ahora es seguro porque `key` es `keyof Bono`.
                                         const value = item[key];
                                         let displayValue: React.ReactNode = '-';
-
                                         if (value !== null && value !== undefined) {
                                             const config = columnConfig[key];
                                             if (config.type === 'date') {
@@ -139,7 +133,6 @@ const TablaGeneral = ({
 // COMPONENTE PRINCIPAL LecapsPage
 // ==================================================================
 export default function LecapsPage() {
-    // MEJORA: El estado ahora usa el tipo `SupabaseData`, eliminando `any`.
     const [datosHistoricos, setDatosHistoricos] = useState<SupabaseData[]>([]);
     const [caracteristicasMap, setCaracteristicasMap] = useState<Map<string, any>>(new Map());
     const [estado, setEstado] = useState('Cargando...');
@@ -194,7 +187,8 @@ export default function LecapsPage() {
                 if (!filterValue) return true;
 
                 const config = columnConfig[key];
-                const cellValue = bono[key];
+                // CORRECCIÓN FINAL: Se asegura a TypeScript que `key` es una llave válida de `Bono`.
+                const cellValue = bono[key as keyof Bono];
                 
                 if (cellValue === null || cellValue === undefined) return false;
                 
@@ -227,15 +221,15 @@ export default function LecapsPage() {
                             const [startStr, endStr] = filterValue.split('-').map(s => s.trim());
                             const [startDay, startMonth, startYear] = startStr.split('/').map(Number);
                             const [endDay, endMonth, endYear] = endStr.split('/').map(Number);
-                            if (!startDay || !endDay || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return false; // Check for valid dates
                             const startDate = new Date(startYear, startMonth - 1, startDay);
                             const endDate = new Date(endYear, endMonth - 1, endDay);
+                            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return false;
                             return cellDate >= startDate && cellDate <= endDate;
                         }
                         const [day, month, year] = filterValue.split('/').map(Number);
                         if (!day || !month || !year) return false;
                         const filterDate = new Date(year, month - 1, day);
-                        if (isNaN(filterDate.getTime())) return false; // Check for valid date
+                        if (isNaN(filterDate.getTime())) return false;
                         return cellDate.getTime() === filterDate.getTime();
 
                     case 'text':
