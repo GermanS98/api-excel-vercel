@@ -57,6 +57,12 @@ const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 };
+// NUEVA DEFINICIÓN DE TIPO PARA UN ELEMENTO DE LA CONFIGURACIÓN
+type ColumnConfigItem = {
+  label: string;
+  type: 'text' | 'date' | 'number';
+  isPercentage?: boolean; // La '?' lo hace opcional
+};
 const columnConfig = {
     ticker: { label: 'Ticker', type: 'text' },
     vto: { label: 'Vto', type: 'date' },
@@ -71,6 +77,7 @@ const columnConfig = {
     lmin: { label: 'L. Mín', type: 'text' },
     cantnominales: { label: 'Nominales', type: 'text' },
     tipoamort: { label: 'Amort.', type: 'text' },
+    
 };
 type FilterableColumn = keyof typeof columnConfig;
 const TablaGeneral = ({ 
