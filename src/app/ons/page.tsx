@@ -142,7 +142,7 @@ export default function LecapsPage() {
         cantnominales: { label: 'Nominales', type: 'text' },
         tipoamort: { label: 'Amort.', type: 'text' },
     };
-    #const segmentosDeEstaPagina = ['ON'];
+    //const segmentosDeEstaPagina = ['ON'];
     //Un nuevo useEffect para cargar las características una sola vez.
     useEffect(() => {
         const cargarCaracteristicas = async () => {
