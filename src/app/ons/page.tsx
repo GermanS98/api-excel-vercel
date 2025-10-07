@@ -1,7 +1,6 @@
 'use client';
 import Layout from '@/components/layout/Layout';
 import { useState, useEffect, useMemo } from 'react';
-import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import Slider from 'rc-slider';
