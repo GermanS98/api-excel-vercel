@@ -181,7 +181,7 @@ export default function LecapsPage() {
     const handleFiltroChange = (columna: keyof Bono, valor: string) => {
         setFiltros(prev => ({ ...prev, [columna]: valor }));
     };
-    const datosCompletos = useMemo(() => {
+    const datosCompletos: Bono[] = useMemo(() => {
         if (datosHistoricos.length > 0 && datosHistoricos[0].datos && caracteristicasMap.size > 0) {
             return datosHistoricos[0].datos.map((bono: any) => ({
                 ...bono, ...(caracteristicasMap.get(bono.ticker) || {}),
