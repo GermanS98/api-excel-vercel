@@ -8,7 +8,7 @@ import 'rc-slider/assets/index.css';
 import Sidebar from '@/components/ui/Sidebar';
 import Link from 'next/link';
 import ReportePDFGenerator from '@/components/ui/ReportePDFGenerator'; 
-import html2pdf from 'html2pdf.js';
+
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
 type Bono = {
   ticker: string; vto: string; precio: number | null; var: number; tir: number;
@@ -287,18 +287,23 @@ export default function HomePage() {
         setEstado('Generando reporte completo...');
         setIsGeneratingPDF(true); // Esto hará que ReportePDFGenerator se renderice
     };
-    const generatePDFFromElement = (element: HTMLElement) => {
+    const generatePDFFromElement = async (element: HTMLElement) => { // 1. Haz la función async
+        
+        // 2. Importa la librería dinámicamente DENTRO de la función
+        const html2pdf = (await import('html2pdf.js')).default;
+
         const options = {
             margin:       0.5,
             filename:     'reporte_completo_bonos.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, logging: false },
             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-        }as const;
+        } as const;
 
+        // El resto de la función no cambia
         html2pdf().from(element).set(options).save().then(() => {
             setEstado('Datos actualizados');
-            setIsGeneratingPDF(false); // Ocultamos el generador después de terminar
+            setIsGeneratingPDF(false);
         });
     };
 
