@@ -7,7 +7,8 @@ import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import Sidebar from '@/components/ui/Sidebar';
 import Link from 'next/link';
-
+import ReportePDFGenerator from '@/components/ui/ReportePDFGenerator'; 
+import html2pdf from 'html2pdf.js';
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
 type Bono = {
   ticker: string; vto: string; precio: number | null; var: number; tir: number;
@@ -99,7 +100,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                     <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, cursor: 'pointer' }}>{titulo}</h2>
                 </Link>
             )}
-            <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
+            <div style={{ overflowX: 'auto', maxHeight: 'none' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead style={{ position: 'sticky', top: 0 }}>
                         <tr style={{ background: '#1036E2', color: 'white' }}>
@@ -165,7 +166,7 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                     </h2>
                 </Link>
             )}
-            <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
+            <div style={{ overflowX: 'auto', maxHeight: 'none' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead style={{ position: 'sticky', top: 0 }}>
                         <tr style={{ background: '#1036E2', color: 'white' }}>
@@ -209,6 +210,7 @@ export default function HomePage() {
     const [menuAbierto, setMenuAbierto] = useState(false);
     // --- NUEVO: ESTADO PARA LOS DATOS DEL TIPO DE CAMBIO ---
     const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const gruposDeSegmentos: { [key: string]: string[] } = {
       'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
       'Ajustados por CER': ['CER', 'ON CER'],
@@ -281,7 +283,25 @@ export default function HomePage() {
     };
   }, []); // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
     const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
-    
+    const handleDownloadFullReport = () => {
+        setEstado('Generando reporte completo...');
+        setIsGeneratingPDF(true); // Esto hará que ReportePDFGenerator se renderice
+    };
+    const generatePDFFromElement = (element: HTMLElement) => {
+        const options = {
+            margin:       0.5,
+            filename:     'reporte_completo_bonos.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, logging: false },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        html2pdf().from(element).set(options).save().then(() => {
+            setEstado('Datos actualizados');
+            setIsGeneratingPDF(false); // Ocultamos el generador después de terminar
+        });
+    };
+
     const datosDelSegmentoSeleccionado = (() => {
         const segmentosActivos = gruposDeSegmentos[segmentoSeleccionado] || [];
         return ultimoLoteDeDatos.filter(b => segmentosActivos.includes(b.segmento));
@@ -327,7 +347,7 @@ export default function HomePage() {
 
 
     return (
-        <Layout>
+        <Layout onDownloadPDF={handleDownloadFullReport}>
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
                 <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>
                     Bonos en Tiempo Real
@@ -449,6 +469,16 @@ export default function HomePage() {
                     <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} />
                     <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} />
                 </div>
+                {isGeneratingPDF && (
+                    <ReportePDFGenerator
+                        gruposDeSegmentos={gruposDeSegmentos}
+                        ultimoLoteDeDatos={ultimoLoteDeDatos}
+                        CurvaRendimientoChart={CurvaRendimientoChart}
+                        TablaGeneral={TablaGeneral}
+                        TablaSoberanosYONs={TablaSoberanosYONs}
+                        onRendered={generatePDFFromElement}
+                    />
+                )}
             </div>
         </Layout>
     );

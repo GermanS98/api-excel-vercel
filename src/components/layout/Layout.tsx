@@ -1,45 +1,41 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, a part from { useState } from 'react';
 import Sidebar from '@/components/ui/Sidebar'; // Asegúrate que la ruta sea correcta
 
-// La función 'slugify' también debería estar aquí o en un archivo de utilidades
-const slugify = (text: string) => {
-  return text.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
-};
-
-// Definimos el tipo para las props del Layout
+// --- CORREGIDO: Definimos el tipo para las props en un solo lugar ---
+// Añadimos 'onDownloadPDF' y la hacemos opcional por si algún layout no la necesita.
 type LayoutProps = {
-  children: React.ReactNode; // 'children' es el contenido específico de cada página
+  children: React.ReactNode;
+  onDownloadPDF?: () => void; // La función que viene de HomePage
 };
 
-// Aquí definimos la lista de enlaces UNA SOLA VEZ
-    const menuItems = [
-    // Enlace para ir al tope de la página
-    { label: 'Panel Resumen', href: '/CurvasBonos' },
+const Layout = ({ children, onDownloadPDF }: LayoutProps) => {
+  // --- CORREGIDO: Usamos un solo nombre para el estado ---
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
-    // Enlace a una tabla específica en la misma página (usa #)
-    { label: 'Renta Fija ARS', href: '/RentaFijaArs'},
+  // --- CORREGIDO: Definimos la lista de enlaces una sola vez ---
+  // Usé la lista más completa que tenías.
+  const menuItems = [
+    { label: 'Panel Resumen', href: '/' },
+    { label: 'Renta Fija ARS', href: '/rentafijaars'},
     { label: 'CER', href: '/cer'},
     { label: 'Dollar Linked', href: '/dl'},
     { label: 'Obligaciones Negociables', href:'/ons'},
     { label: 'TAMAR', href:'/tamar'},
     { label: 'Bonares y Globales', href:'/soberanosrf'},
-    // Enlace a otra página interna de tu sitio
     { label: 'Calculadora', href: '/bonos' },
-    ];
-
-const Layout = ({ children }: LayoutProps) => {
-  const [menuAbierto, setMenuAbierto] = useState(false);
+  ];
 
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar 
-        isOpen={menuAbierto}
-        onClose={() => setMenuAbierto(false)}
+        isOpen={isSidebarOpen} // Usamos la variable de estado correcta
+        onClose={() => setSidebarOpen(false)} // Usamos la función correcta
         items={menuItems}
+        onDownloadPDF={onDownloadPDF} // Pasamos la prop correctamente
       />
-  
+ 
       <main style={{ 
         background: '#f3f4f6', 
         fontFamily: 'Albert Sans, sans-serif', 
@@ -48,7 +44,7 @@ const Layout = ({ children }: LayoutProps) => {
       }}>
         {/* Botón para abrir el menú */}
         <button 
-          onClick={() => setMenuAbierto(true)}
+          onClick={() => setSidebarOpen(true)} // Usamos la función correcta
           style={{
             position: 'fixed', top: '15px', left: '15px', zIndex: 101,
             background: '#fff', border: '1px solid #ddd', borderRadius: '50%',

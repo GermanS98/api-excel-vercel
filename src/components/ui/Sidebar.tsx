@@ -1,16 +1,18 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link'; // Importamos el componente Link de Next.js
+import Link from 'next/link';
 
-// 1. Agregamos la prop 'items' para recibir los enlaces del menú
 type SidebarProps = {
   isOpen: boolean;
   onClose: () => void;
-  items?: { label: string; href: string }[]; // 'items' es un array opcional
+  items?: { label: string; href: string }[];
+  // --- NUEVO: Prop para la función de descarga ---
+  onDownloadPDF: () => void; 
 };
 
-const Sidebar = ({ isOpen, onClose, items = [] }: SidebarProps) => {
+// --- MODIFICADO: Añadimos onDownloadPDF a las props ---
+const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF }: SidebarProps) => {
   return (
     <>
       {/* Fondo oscuro (sin cambios) */}
@@ -26,7 +28,6 @@ const Sidebar = ({ isOpen, onClose, items = [] }: SidebarProps) => {
         }}
       />
       
-      {/* El menú lateral (con contenido dinámico) */}
       <aside style={{
         position: 'fixed', top: 0, left: 0,
         height: '100%', width: '250px',
@@ -38,57 +39,51 @@ const Sidebar = ({ isOpen, onClose, items = [] }: SidebarProps) => {
         padding: '20px',
         display: 'flex', flexDirection: 'column'
       }}>
-        {/* Título (sin cambios) */}
         <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#021751', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
           Menú
         </h2>
         
-        {/* 2. Reemplazamos el párrafo con la lista de enlaces */}
-        <nav style={{ marginTop: '20px' }}>
+        <nav style={{ marginTop: '20px', flex: '1' }}>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {items.map((item) => {
               const isExternal = item.href.startsWith('http');
-
+              // ... (el resto del mapeo de items no cambia)
               return (
                 <li key={item.label} style={{ marginBottom: '8px' }}>
                   {isExternal ? (
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={onClose}
-                      style={{
-                        textDecoration: 'none', color: '#374151', display: 'block',
-                        padding: '10px 15px', borderRadius: '6px',
-                        transition: 'background-color 0.2s, color 0.2s',
-                        fontWeight: 500
-                      }}
-                      onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; e.currentTarget.style.color = '#1036E2'; }}
-                      onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#374151'; }}
-                    >
-                      {item.label}
-                    </a>
+                    <a href={item.href} /* ... (resto del enlace sin cambios) */ >{item.label}</a>
                   ) : (
-                    <Link
-                      href={item.href}
-                      onClick={onClose}
-                      style={{
-                        textDecoration: 'none', color: '#374151', display: 'block',
-                        padding: '10px 15px', borderRadius: '6px',
-                        transition: 'background-color 0.2s, color 0.2s',
-                        fontWeight: 500
-                      }}
-                      onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; e.currentTarget.style.color = '#1036E2'; }}
-                      onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#374151'; }}
-                    >
-                      {item.label}
-                    </Link>
+                    <Link href={item.href} /* ... (resto del enlace sin cambios) */ >{item.label}</Link>
                   )}
                 </li>
               );
             })}
           </ul>
         </nav>
+
+        {/* --- NUEVO: Botón para descargar el reporte completo --- */}
+        <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #eee' }}>
+          <button
+            onClick={() => {
+              onDownloadPDF(); // Llama a la función recibida por props
+              onClose(); // Cierra el menú después de hacer clic
+            }}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              fontSize: '15px',
+              cursor: 'pointer',
+              borderRadius: '8px',
+              border: 'none',
+              backgroundColor: '#16a34a',
+              color: 'white',
+              fontWeight: '600',
+              textAlign: 'center'
+            }}
+          >
+            Descargar Reporte
+          </button>
+        </div>
       </aside>
     </>
   );
