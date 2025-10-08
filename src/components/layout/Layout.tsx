@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState } from 'react';  
 import Sidebar from '@/components/ui/Sidebar'; // Asegúrate que la ruta sea correcta
 
 // --- CORREGIDO: Definimos el tipo para las props en un solo lugar ---
@@ -33,7 +33,7 @@ const Layout = ({ children, onDownloadPDF }: LayoutProps) => {
         isOpen={isSidebarOpen} // Usamos la variable de estado correcta
         onClose={() => setSidebarOpen(false)} // Usamos la función correcta
         items={menuItems}
-        onDownloadPDF={onDownloadPDF} // Pasamos la prop correctamente
+        onDownloadPDF={onDownloadPDF || (() => {})} // Pasamos la prop correctamente
       />
  
       <main style={{ 
