@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef } from 'react';
 
-// Este componente ahora se mostrará temporalmente para forzar el renderizado.
 const ReportePDFGenerator = ({
     gruposDeSegmentos,
     ultimoLoteDeDatos,
@@ -13,31 +12,28 @@ const ReportePDFGenerator = ({
 }) => {
     const contentRef = useRef(null);
 
-    // El useEffect con el temporizador sigue siendo crucial.
     useEffect(() => {
         if (contentRef.current) {
-            // Damos una pausa para asegurar que TODO esté dibujado.
             const timer = setTimeout(() => {
-                // Le pasamos solo el contenedor del contenido, no la pantalla de carga.
                 onRendered(contentRef.current);
-            }, 500); // Aumentamos un poco el tiempo a 0.5s para estar seguros.
+            }, 500);
 
             return () => clearTimeout(timer);
         }
     }, [onRendered]);
 
     const ordenarPorVencimiento = (datos) => {
+        if (!datos) return [];
         return [...datos].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
     };
     
-    // --- ESTILOS PARA LA PANTALLA DE CARGA VISIBLE ---
     const overlayStyle = {
         position: 'fixed',
         top: 0,
         left: 0,
         width: '100%',
         height: '100vh',
-        background: 'rgba(255, 255, 255, 0.9)', // Fondo blanco semitransparente
+        background: 'rgba(255, 255, 255, 0.9)',
         zIndex: 9998,
         display: 'flex',
         flexDirection: 'column',
@@ -47,14 +43,13 @@ const ReportePDFGenerator = ({
     };
     
     const reportContainerStyle = {
-        width: '1100px', // Ancho fijo para el contenido del PDF
-        background: 'white', // Fondo blanco sólido para el contenido
+        width: '1100px',
+        background: 'white',
         padding: '1rem',
-        border: '1px solid #ccc' // Un borde para verlo mientras se genera
+        border: '1px solid #ccc'
     };
 
-return (
-        // Contenedor principal que cubre toda la pantalla.
+    return (
         <div style={overlayStyle}>
             <h2 style={{ color: '#021751', marginBottom: '20px' }}>
                 Generando reporte, por favor espere...
@@ -67,23 +62,21 @@ return (
                     const isBonares = titulo === 'Bonares y Globales';
                     const isSoberanos = titulo === 'Bonares y Globales' || titulo === 'Obligaciones Negociables';
 
-                    if (datosDelGrupo.length === 0) return null;
+                    if (datosDelGrupo.length === 0) {
+                        return null;
+                    }
 
                     return (
-                        // Contenedor de cada sección (LECAPs, CER, etc.)
                         <div key={titulo} style={{ pageBreakAfter: 'always', padding: '20px', borderBottom: '1px solid #eee' }}>
                             <h1 style={{ textAlign: 'center', fontSize: '1.5rem', color: '#021751' }}>{titulo}</h1>
                             
-                            {/* --- CAMBIO PRINCIPAL AQUÍ --- */}
-                            {/* Este div ahora apila los elementos verticalmente */}
                             <div style={{ 
                                 display: 'flex', 
-                                flexDirection: 'column', // Apila verticalmente
-                                alignItems: 'center',  // Centra los elementos
+                                flexDirection: 'column',
+                                alignItems: 'center',
                                 gap: '20px', 
                                 marginTop: '1rem' 
                             }}>
-                                {/* 1. La Tabla (ahora va primero) */}
                                 <div style={{ width: '100%' }}>
                                     {isSoberanos ? (
                                         <TablaSoberanosYONs titulo={""} datos={datosDelGrupo} />
@@ -92,7 +85,6 @@ return (
                                     )}
                                 </div>
                                 
-                                {/* 2. El Gráfico (ahora va segundo) */}
                                 <div style={{ width: '80%', marginTop: '20px' }}>
                                     <CurvaRendimientoChart
                                         data={datosDelGrupo}
@@ -107,5 +99,6 @@ return (
             </div>
         </div>
     );
+};
 
 export default ReportePDFGenerator;
