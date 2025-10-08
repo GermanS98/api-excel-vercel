@@ -297,7 +297,7 @@ export default function HomePage() {
             filename:     'reporte_completo_bonos.pdf',
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, logging: false },
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
         } as const;
 
         // El resto de la función no cambia

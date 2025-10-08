@@ -53,16 +53,13 @@ const ReportePDFGenerator = ({
         border: '1px solid #ccc' // Un borde para verlo mientras se genera
     };
 
-    return (
+return (
         // Contenedor principal que cubre toda la pantalla.
         <div style={overlayStyle}>
             <h2 style={{ color: '#021751', marginBottom: '20px' }}>
                 Generando reporte, por favor espere...
             </h2>
             
-            {/* Este es el contenedor que realmente se convertirá en PDF.
-              Lo metemos dentro del overlay para que el navegador lo renderice.
-            */}
             <div ref={contentRef} style={reportContainerStyle}>
                 {Object.keys(gruposDeSegmentos).map(titulo => {
                     const segmentos = gruposDeSegmentos[titulo];
@@ -73,22 +70,35 @@ const ReportePDFGenerator = ({
                     if (datosDelGrupo.length === 0) return null;
 
                     return (
+                        // Contenedor de cada sección (LECAPs, CER, etc.)
                         <div key={titulo} style={{ pageBreakAfter: 'always', padding: '20px', borderBottom: '1px solid #eee' }}>
                             <h1 style={{ textAlign: 'center', fontSize: '1.5rem', color: '#021751' }}>{titulo}</h1>
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginTop: '1rem' }}>
-                                <div style={{ flex: 1 }}>
-                                    <CurvaRendimientoChart
-                                        data={datosDelGrupo}
-                                        segmentoActivo={titulo}
-                                        xAxisKey={isBonares ? 'modify_duration' : 'dias_vto'}
-                                    />
-                                </div>
-                                <div style={{ flex: 1 }}>
+                            
+                            {/* --- CAMBIO PRINCIPAL AQUÍ --- */}
+                            {/* Este div ahora apila los elementos verticalmente */}
+                            <div style={{ 
+                                display: 'flex', 
+                                flexDirection: 'column', // Apila verticalmente
+                                alignItems: 'center',  // Centra los elementos
+                                gap: '20px', 
+                                marginTop: '1rem' 
+                            }}>
+                                {/* 1. La Tabla (ahora va primero) */}
+                                <div style={{ width: '100%' }}>
                                     {isSoberanos ? (
                                         <TablaSoberanosYONs titulo={""} datos={datosDelGrupo} />
                                     ) : (
                                         <TablaGeneral titulo={""} datos={datosDelGrupo} />
                                     )}
+                                </div>
+                                
+                                {/* 2. El Gráfico (ahora va segundo) */}
+                                <div style={{ width: '80%', marginTop: '20px' }}>
+                                    <CurvaRendimientoChart
+                                        data={datosDelGrupo}
+                                        segmentoActivo={titulo}
+                                        xAxisKey={isBonares ? 'modify_duration' : 'dias_vto'}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -97,6 +107,5 @@ const ReportePDFGenerator = ({
             </div>
         </div>
     );
-};
 
 export default ReportePDFGenerator;
