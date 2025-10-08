@@ -2,28 +2,26 @@
 
 import React, { useEffect, useRef } from 'react';
 
-// Este componente renderizará todo el contenido del reporte de forma oculta.
-// Recibe todos los datos y componentes necesarios como props.
+// Este componente ahora se mostrará temporalmente para forzar el renderizado.
 const ReportePDFGenerator = ({
     gruposDeSegmentos,
     ultimoLoteDeDatos,
     CurvaRendimientoChart,
     TablaGeneral,
     TablaSoberanosYONs,
-    onRendered // Función a llamar cuando el componente esté listo
+    onRendered
 }) => {
     const contentRef = useRef(null);
 
-    // useEffect se ejecuta cuando el componente se monta en el DOM.
-    // En ese momento, todo el contenido ya está renderizado y listo para ser capturado.
+    // El useEffect con el temporizador sigue siendo crucial.
     useEffect(() => {
         if (contentRef.current) {
-            // Introducimos una pausa de 300 milisegundos (0.3 segundos)
+            // Damos una pausa para asegurar que TODO esté dibujado.
             const timer = setTimeout(() => {
+                // Le pasamos solo el contenedor del contenido, no la pantalla de carga.
                 onRendered(contentRef.current);
-            }, 300); // Puedes ajustar este tiempo si es necesario (ej: 500)
+            }, 500); // Aumentamos un poco el tiempo a 0.5s para estar seguros.
 
-            // Buena práctica: limpiar el temporizador si el componente se desmonta antes de tiempo
             return () => clearTimeout(timer);
         }
     }, [onRendered]);
@@ -32,43 +30,71 @@ const ReportePDFGenerator = ({
         return [...datos].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
     };
     
+    // --- ESTILOS PARA LA PANTALLA DE CARGA VISIBLE ---
+    const overlayStyle = {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100vh',
+        background: 'rgba(255, 255, 255, 0.9)', // Fondo blanco semitransparente
+        zIndex: 9998,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center'
+    };
+    
+    const reportContainerStyle = {
+        width: '1100px', // Ancho fijo para el contenido del PDF
+        background: 'white', // Fondo blanco sólido para el contenido
+        padding: '1rem',
+        border: '1px solid #ccc' // Un borde para verlo mientras se genera
+    };
+
     return (
-        // Este div está posicionado fuera de la pantalla para que el usuario no lo vea.
-        <div ref={contentRef} style={{ position: 'absolute', left: '-9999px', width: '1100px' }}>
-            {Object.keys(gruposDeSegmentos).map(titulo => {
-                const segmentos = gruposDeSegmentos[titulo];
-                const datosDelGrupo = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => segmentos.includes(b.segmento)));
-                const isBonares = titulo === 'Bonares y Globales';
-                const isSoberanos = titulo === 'Bonares y Globales' || titulo === 'Obligaciones Negociables';
+        // Contenedor principal que cubre toda la pantalla.
+        <div style={overlayStyle}>
+            <h2 style={{ color: '#021751', marginBottom: '20px' }}>
+                Generando reporte, por favor espere...
+            </h2>
+            
+            {/* Este es el contenedor que realmente se convertirá en PDF.
+              Lo metemos dentro del overlay para que el navegador lo renderice.
+            */}
+            <div ref={contentRef} style={reportContainerStyle}>
+                {Object.keys(gruposDeSegmentos).map(titulo => {
+                    const segmentos = gruposDeSegmentos[titulo];
+                    const datosDelGrupo = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => segmentos.includes(b.segmento)));
+                    const isBonares = titulo === 'Bonares y Globales';
+                    const isSoberanos = titulo === 'Bonares y Globales' || titulo === 'Obligaciones Negociables';
 
-                // Si no hay datos para un grupo, no lo incluimos en el PDF.
-                if (datosDelGrupo.length === 0) return null;
+                    if (datosDelGrupo.length === 0) return null;
 
-                return (
-                    // Cada sección tendrá su propio contenedor con un salto de página después.
-                    <div key={titulo} style={{ pageBreakAfter: 'always', padding: '20px' }}>
-                        <h1 style={{ textAlign: 'center' }}>{titulo}</h1>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-                            {/* Columna del Gráfico */}
-                            <div style={{ flex: 1 }}>
-                                <CurvaRendimientoChart
-                                    data={datosDelGrupo}
-                                    segmentoActivo={titulo}
-                                    xAxisKey={isBonares ? 'modify_duration' : 'dias_vto'}
-                                />
-                            </div>
-                            {/* Columna de la Tabla */}
-                            <div style={{ flex: 1 }}>
-                                {isSoberanos ? (
-                                    <TablaSoberanosYONs titulo={titulo} datos={datosDelGrupo} />
-                                ) : (
-                                    <TablaGeneral titulo={titulo} datos={datosDelGrupo} />
-                                )}
+                    return (
+                        <div key={titulo} style={{ pageBreakAfter: 'always', padding: '20px', borderBottom: '1px solid #eee' }}>
+                            <h1 style={{ textAlign: 'center', fontSize: '1.5rem', color: '#021751' }}>{titulo}</h1>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', marginTop: '1rem' }}>
+                                <div style={{ flex: 1 }}>
+                                    <CurvaRendimientoChart
+                                        data={datosDelGrupo}
+                                        segmentoActivo={titulo}
+                                        xAxisKey={isBonares ? 'modify_duration' : 'dias_vto'}
+                                    />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    {isSoberanos ? (
+                                        <TablaSoberanosYONs titulo={""} datos={datosDelGrupo} />
+                                    ) : (
+                                        <TablaGeneral titulo={""} datos={datosDelGrupo} />
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                );
-            })}
+                    );
+                })}
+            </div>
         </div>
     );
 };
