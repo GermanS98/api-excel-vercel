@@ -18,7 +18,13 @@ const ReportePDFGenerator = ({
     // En ese momento, todo el contenido ya está renderizado y listo para ser capturado.
     useEffect(() => {
         if (contentRef.current) {
-            onRendered(contentRef.current); // Llama a la función de la página principal
+            // Introducimos una pausa de 300 milisegundos (0.3 segundos)
+            const timer = setTimeout(() => {
+                onRendered(contentRef.current);
+            }, 300); // Puedes ajustar este tiempo si es necesario (ej: 500)
+
+            // Buena práctica: limpiar el temporizador si el componente se desmonta antes de tiempo
+            return () => clearTimeout(timer);
         }
     }, [onRendered]);
 
