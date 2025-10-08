@@ -27,17 +27,20 @@ const ReportePDFGenerator = ({
         return [...datos].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
     };
     
-    // Estilos del overlay (sin cambios)
     const overlayStyle = {
         position: 'fixed', top: 0, left: 0, width: '100%', height: '100vh',
         background: 'rgba(255, 255, 255, 0.9)', zIndex: 9998, display: 'flex',
         flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        textAlign: 'center'
+        textAlign: 'center',
+        overflow: 'auto'
     };
     
-    // Estilos del contenedor del reporte (sin cambios)
+    // Ajustamos el ancho para que coincida mejor con el formato 'legal'
     const reportContainerStyle = {
-        width: '1100px', background: 'white', padding: '1rem', border: '1px solid #ccc'
+        width: '1200px', 
+        background: 'white', 
+        padding: '1rem', 
+        border: '1px solid #ccc'
     };
 
     return (
@@ -47,7 +50,7 @@ const ReportePDFGenerator = ({
             </h2>
             
             <div ref={contentRef} style={reportContainerStyle}>
-                {Object.keys(gruposDeSegmentos).map(titulo => {
+                {Object.keys(gruposDeSegmentos).map((titulo, index) => {
                     const segmentos = gruposDeSegmentos[titulo];
                     const datosDelGrupo = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => segmentos.includes(b.segmento)));
                     const isBonares = titulo === 'Bonares y Globales';
@@ -58,34 +61,34 @@ const ReportePDFGenerator = ({
                     }
 
                     return (
-                        // --- CAMBIO 1: Evitamos que esta sección se corte entre páginas ---
-                        <div key={titulo} style={{ 
-                            pageBreakInside: 'avoid', // Le dice al PDF que no corte este div
-                            padding: '20px', 
-                            borderBottom: '1px solid #eee' 
-                        }}>
-                            <h1 style={{ textAlign: 'center', fontSize: '1.5rem', color: '#021751' }}>{titulo}</h1>
+                        // El contenedor de sección ya no necesita controlar el salto
+                        <div key={titulo} style={{ padding: '20px' }}>
+                            <h1 style={{ textAlign: 'center', fontSize: '1.5rem', color: '#021751', pageBreakBefore: index > 0 ? 'always' : 'auto' }}>
+                                {titulo}
+                            </h1>
                             
+                            {/* La tabla se renderiza normalmente */}
+                            <div style={{ width: '100%', marginTop: '1rem' }}>
+                                {isSoberanos ? (
+                                    <TablaSoberanosYONs titulo={""} datos={datosDelGrupo} />
+                                ) : (
+                                    <TablaGeneral titulo={""} datos={datosDelGrupo} />
+                                )}
+                            </div>
+                            
+                            {/* --- CAMBIO CLAVE AQUÍ --- */}
+                            {/* Forzamos un salto de página ANTES del gráfico */}
                             <div style={{ 
-                                display: 'flex', flexDirection: 'column',
-                                alignItems: 'center', gap: '20px', marginTop: '1rem' 
+                                width: '80%', 
+                                margin: '20px auto 0 auto', 
+                                height: '400px',
+                                pageBreakBefore: 'always' // Inicia una nueva página para el gráfico
                             }}>
-                                <div style={{ width: '100%' }}>
-                                    {isSoberanos ? (
-                                        <TablaSoberanosYONs titulo={""} datos={datosDelGrupo} />
-                                    ) : (
-                                        <TablaGeneral titulo={""} datos={datosDelGrupo} />
-                                    )}
-                                </div>
-                                
-                                {/* --- CAMBIO 2: Le damos una altura fija al contenedor del gráfico --- */}
-                                <div style={{ width: '80%', marginTop: '20px', height: '400px' }}>
-                                    <CurvaRendimientoChart
-                                        data={datosDelGrupo}
-                                        segmentoActivo={titulo}
-                                        xAxisKey={isBonares ? 'modify_duration' : 'dias_vto'}
-                                    />
-                                </div>
+                                <CurvaRendimientoChart
+                                    data={datosDelGrupo}
+                                    segmentoActivo={titulo}
+                                    xAxisKey={isBonares ? 'modify_duration' : 'dias_vto'}
+                                />
                             </div>
                         </div>
                     );
