@@ -294,7 +294,7 @@ export default function HomePage() {
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, logging: false },
             jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
+        }as const;
 
         html2pdf().from(element).set(options).save().then(() => {
             setEstado('Datos actualizados');
