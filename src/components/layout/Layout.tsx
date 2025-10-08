@@ -1,6 +1,6 @@
 'use client';
 
-import React, a part from { useState } from 'react';
+import React, { useState } from 'react';
 import Sidebar from '@/components/ui/Sidebar'; // Asegúrate que la ruta sea correcta
 
 // --- CORREGIDO: Definimos el tipo para las props en un solo lugar ---
