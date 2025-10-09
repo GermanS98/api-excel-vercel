@@ -7,15 +7,13 @@ type SidebarProps = {
   isOpen: boolean;
   onClose: () => void;
   items?: { label: string; href: string }[];
-  // --- NUEVO: Prop para la función de descarga ---
   onDownloadPDF: () => void; 
 };
 
-// --- MODIFICADO: Añadimos onDownloadPDF a las props ---
 const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF }: SidebarProps) => {
   return (
     <>
-      {/* Fondo oscuro (sin cambios) */}
+      {/* Fondo oscuro */}
       <div 
         onClick={onClose}
         style={{
@@ -47,13 +45,44 @@ const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF }: SidebarProps) =
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {items.map((item) => {
               const isExternal = item.href.startsWith('http');
-              // ... (el resto del mapeo de items no cambia)
               return (
                 <li key={item.label} style={{ marginBottom: '8px' }}>
                   {isExternal ? (
-                    <a href={item.href} /* ... (resto del enlace sin cambios) */ >{item.label}</a>
+                    <a
+                      href={item.href}
+                      // --- ESTE ES EL CÓDIGO QUE FALTABA ---
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={onClose}
+                      style={{
+                        textDecoration: 'none', color: '#374151', display: 'block',
+                        padding: '10px 15px', borderRadius: '6px',
+                        transition: 'background-color 0.2s, color 0.2s',
+                        fontWeight: 500
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; e.currentTarget.style.color = '#1036E2'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#374151'; }}
+                      // --- FIN DEL CÓDIGO ---
+                    >
+                      {item.label}
+                    </a>
                   ) : (
-                    <Link href={item.href} /* ... (resto del enlace sin cambios) */ >{item.label}</Link>
+                    <Link
+                      href={item.href}
+                      // --- ESTE ES EL CÓDIGO QUE FALTABA ---
+                      onClick={onClose}
+                      style={{
+                        textDecoration: 'none', color: '#374151', display: 'block',
+                        padding: '10px 15px', borderRadius: '6px',
+                        transition: 'background-color 0.2s, color 0.2s',
+                        fontWeight: 500
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; e.currentTarget.style.color = '#1036E2'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#374151'; }}
+                      // --- FIN DEL CÓDIGO ---
+                    >
+                      {item.label}
+                    </Link>
                   )}
                 </li>
               );
@@ -61,23 +90,17 @@ const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF }: SidebarProps) =
           </ul>
         </nav>
 
-        {/* --- NUEVO: Botón para descargar el reporte completo --- */}
+        {/* Botón para descargar el reporte completo */}
         <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #eee' }}>
           <button
             onClick={() => {
-              onDownloadPDF(); // Llama a la función recibida por props
-              onClose(); // Cierra el menú después de hacer clic
+              onDownloadPDF();
+              onClose();
             }}
             style={{
-              width: '100%',
-              padding: '12px 16px',
-              fontSize: '15px',
-              cursor: 'pointer',
-              borderRadius: '8px',
-              border: 'none',
-              backgroundColor: '#16a34a',
-              color: 'white',
-              fontWeight: '600',
+              width: '100%', padding: '12px 16px', fontSize: '15px',
+              cursor: 'pointer', borderRadius: '8px', border: 'none',
+              backgroundColor: '#16a34a', color: 'white', fontWeight: '600',
               textAlign: 'center'
             }}
           >
