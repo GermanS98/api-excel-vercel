@@ -1,27 +1,34 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react'; // 1. Importa FormEvent aquí
+import { useState, type FormEvent } from 'react';
 import { supabase } from '../../supabaseClient';
-import styles from './login.module.css'; // 1. Importa los estilos
+import styles from './login.module.css';
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false); // <-- 1. Añade esta línea
+
   const router = useRouter();
 
-  // 2. Añade el tipo al parámetro 'e'
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error) {
-      router.push('/dashboard'); // O a tu página principal
-    } else {
-      alert(error.message);
+    setLoading(true); // 2. Usa setLoading para gestionar el estado
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      router.push('/dashboard');
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(error.message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
- return (
-    // 2. Aplica las clases de CSS a tus elementos
+  return (
     <form onSubmit={handleLogin} className={styles.formContainer}>
       <h1 className={styles.title}>Iniciar Sesión</h1>
       
@@ -30,7 +37,9 @@ export default function LoginPage() {
         id="email"
         type="email"
         className={styles.inputField}
-        // ... (resto de props)
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
       />
       
       <label htmlFor="password" className={styles.label}>Contraseña</label>
@@ -38,7 +47,9 @@ export default function LoginPage() {
         id="password"
         type="password"
         className={styles.inputField}
-        // ... (resto de props)
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
       />
       
       <button type="submit" className={styles.submitButton} disabled={loading}>
