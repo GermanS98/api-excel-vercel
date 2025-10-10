@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // --- 1. IMPORTACIONES NECESARIAS ---
+import { useRouter } from 'next/navigation';
 import { supabase } from '../../supabaseClient'; // Asegúrate que la ruta sea correcta
 
 type SidebarProps = {
@@ -13,13 +13,10 @@ type SidebarProps = {
 };
 
 const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF }: SidebarProps) => {
-  // --- 2. INICIALIZA EL ROUTER Y CREA LA FUNCIÓN DE LOGOUT ---
   const router = useRouter();
 
   const handleLogout = async () => {
-    // Cierra la sesión en Supabase
     await supabase.auth.signOut();
-    // Redirige al usuario a la página de login
     router.push('/login');
   };
 
@@ -54,12 +51,52 @@ const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF }: SidebarProps) =
         </h2>
         
         <nav style={{ marginTop: '20px', flex: '1' }}>
+          {/* --- SECCIÓN DE ENLACES RESTAURADA --- */}
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {/* ... (tu código de items del menú se mantiene igual) ... */}
+            {items.map((item) => {
+              const isExternal = item.href.startsWith('http');
+              return (
+                <li key={item.label} style={{ marginBottom: '8px' }}>
+                  {isExternal ? (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={onClose}
+                      style={{
+                        textDecoration: 'none', color: '#374151', display: 'block',
+                        padding: '10px 15px', borderRadius: '6px',
+                        transition: 'background-color 0.2s, color 0.2s',
+                        fontWeight: 500
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; e.currentTarget.style.color = '#1036E2'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#374151'; }}
+                    >
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      onClick={onClose}
+                      style={{
+                        textDecoration: 'none', color: '#374151', display: 'block',
+                        padding: '10px 15px', borderRadius: '6px',
+                        transition: 'background-color 0.2s, color 0.2s',
+                        fontWeight: 500
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f3f4f6'; e.currentTarget.style.color = '#1036E2'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#374151'; }}
+                    >
+                      {item.label}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
-        {/* --- 3. AÑADE EL BOTÓN DE CERRAR SESIÓN --- */}
+        {/* Botones de acción al final */}
         <div style={{ marginTop: 'auto', paddingTop: '20px', borderTop: '1px solid #eee' }}>
           <button
             onClick={() => {
@@ -76,7 +113,6 @@ const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF }: SidebarProps) =
             Descargar Reporte
           </button>
           
-          {/* Botón para cerrar sesión */}
           <button
             onClick={handleLogout}
             style={{
@@ -84,7 +120,7 @@ const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF }: SidebarProps) =
               cursor: 'pointer', borderRadius: '8px', border: '1px solid #d1d5db',
               backgroundColor: '#f9fafb', color: '#374151', fontWeight: '600',
               textAlign: 'center',
-              marginTop: '10px' // Espacio entre los botones
+              marginTop: '10px'
             }}
           >
             Cerrar Sesión
