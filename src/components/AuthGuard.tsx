@@ -29,7 +29,7 @@ const AuthGuard: FC<AuthGuardProps> = ({ children }) => {
       router.push('/login');
     }
     if (session && publicRoutes.includes(pathname)) {
-      router.push('/dashboard');
+      router.push('/CurvasBonos');
     }
   }, [session, pathname, router]);
 
