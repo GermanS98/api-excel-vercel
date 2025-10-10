@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, type FC, type ReactNode } from 'react';
 
-const publicRoutes = ['/login'];
+const publicRoutes = ['/login', '/signup'];
 
 interface AuthGuardProps {
   children: ReactNode;
