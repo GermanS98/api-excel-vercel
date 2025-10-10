@@ -18,7 +18,7 @@ export default function LoginPage() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      router.push('/dashboard');
+      router.push('/CurvasBonos');
     } catch (error) {
       if (error instanceof Error) {
         alert(error.message);
