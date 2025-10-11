@@ -85,10 +85,10 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.p,'',2)}</td>
                   <td style={{ 
                                 padding: '0.75rem 1rem', 
-                                color: item.var >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
+                                color: item.v >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
                                 fontWeight: 500
                                 }}>
-                    {formatValue(item.var)}
+                    {formatValue(item.v)}
                   </td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tna)}</td>
