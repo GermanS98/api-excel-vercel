@@ -108,47 +108,72 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
     </div>
 );
 
-// --- COMPONENTE PRINCIPAL DE LA PÁGINA DE LECAPS (sin cambios de lógica) ---
+// --- COMPONENTE PRINCIPAL DE LA PÁGINA DE CER ---
 export default function LecapsPage() {
-    const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
+     const [bonosCER, setBonosCER] = useState<Bono[]>([])
     const [estado, setEstado] = useState('Cargando...');
     const [menuAbierto, setMenuAbierto] = useState(false);
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
     const segmentosDeEstaPagina = ['CER'];
     
-    useEffect(() => {
-        const cargarDatosDelDia = async () => {
-          const inicioDelDia = new Date();
-          inicioDelDia.setHours(0, 0, 0, 0);
-          const { data, error } = await supabase.from('datos_financieros').select('*').gte('created_at', inicioDelDia.toISOString()).order('created_at', { ascending: false });
-          if (error) setEstado(`Error: ${error.message}`);
-          else if (data && data.length > 0) {
-            setDatosHistoricos(data);
-            setEstado('Datos actualizados');
-          } else {
-            setEstado('Esperando los primeros datos del día...');
-          }
-        };
-        cargarDatosDelDia();
-        const channel = supabase.channel('custom-all-channel').on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, () => cargarDatosDelDia()).subscribe();
-        return () => { supabase.removeChannel(channel) };
-    }, []);
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setEstado('Cargando instrumentos CER...');
+      const { data, error } = await supabase
+        .from('datosbonos')
+        .select('*')
+        .in('s', segmentosDeEstaPagina); // 
+
+      if (error) {
+        setEstado(`Error al cargar datos: ${error.message}`);
+      } else if (data) {
+        setBonosCER(data as Bono[]);
+        setEstado('Datos cargados. Escuchando actualizaciones...');
+      }
+    };
+
+    fetchInitialData();
+
+    const channel = supabase
+      .channel('realtime-cer-page')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'datosbonos', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
+        (payload) => {
+          const bonoActualizado = payload.new as Bono;
+          
+          setBonosCER(bonosActuales => {
+            const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
+            if (existe) {
+              return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
+            } else {
+              return [...bonosActuales, bonoActualizado];
+            }
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
     
-    const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
-    const datosDeLecaps = ultimoLoteDeDatos.filter(b => segmentosDeEstaPagina.includes(b.s));
+    
+    
     const maxDiasDelSegmento = (() => {
-        if (datosDeLecaps.length === 0) return 1000;
-        const maxDias = Math.max(...datosDeLecaps.map(b => b.dv));
-        return isFinite(maxDias) ? maxDias : 1000;
+      if (bonosCER.length === 0) return 1000;
+      const maxDias = Math.max(...bonosCER.map(b => b.dv));
+      return isFinite(maxDias) ? maxDias : 1000;
     })();
 
-    useEffect(() => {
-        setRangoDias([0, maxDiasDelSegmento]);
+  useEffect(() => {
+      setRangoDias([0, maxDiasDelSegmento]);
     }, [maxDiasDelSegmento]);
 
-    const datosParaGrafico = datosDeLecaps.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
-    const datosParaTabla = [...datosDeLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
+    const datosParaGrafico = bonosCER.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
+    const datosParaTabla = [...bonosCER].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
 
     return (
         <Layout>        
@@ -156,9 +181,7 @@ export default function LecapsPage() {
                     <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Instrumentos CER </h1>
                     <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                         <span>Estado: <strong>{estado}</strong></span>
-                        {datosHistoricos.length > 0 && (
-                            <span style={{ marginLeft: '1rem' }}>Última act: <strong>{new Date(datosHistoricos[0].created_at).toLocaleTimeString()}</strong></span>
-                        )}
+
                     </div>
                     
                     <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
@@ -179,7 +202,7 @@ export default function LecapsPage() {
                           <CurvaRendimientoChart 
                           data={datosParaGrafico} 
                           segmentoActivo="CER" 
-                          xAxisKey="dias_vto" // <-- Añadir esta línea
+                          xAxisKey="dv" // <-- Añadir esta línea
                         />                        
                     </div>
 
