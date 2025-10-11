@@ -10,20 +10,19 @@ import Link from 'next/link';
 
 // PASO 1: ACTUALIZAR LA DEFINICIÓN DE TIPO PARA INCLUIR NUEVOS CAMPOS
 type Bono = {
-  ticker: string;
+  t: string;      // ticker
   vto: string;
-  precio: number | null;
-  var: number; // Nuevo campo
+  p: number | null; // precio
   tir: number;
   tna: number | null;
   tem: number | null;
-  segmento: string;
-  dias_vto: number;
-  modify_duration: number | null;
-  RD: number | null; // Nuevo campo
-  duracion_macaulay: number | null; // Nuevo campo
-  mep_breakeven: number | null; // Nuevo campo
-  tipo_bono: string; // Nuevo campo
+  v: number;      // var
+  s: string;      // segmento
+  dv: number;     // dias_vto
+  md: number | null; // modify_duration
+  RD: number | null;
+  dm: number | null; // duracion_macaulay
+  mb: number | null; // mep_breakeven
 };
 
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
@@ -81,9 +80,9 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
             {datos.length > 0 ? (
               datos.map((item: Bono, index: number) => (
                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
+                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.precio,'',2)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.p,'',2)}</td>
                   <td style={{ 
                                 padding: '0.75rem 1rem', 
                                 color: item.var >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
@@ -96,7 +95,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   {/* --- DATO AGREGADO --- */}
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tem)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.RD)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.mep_breakeven ? `$${item.mep_breakeven.toFixed(2)}` : '-'}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.mb ? `$${item.mb.toFixed(2)}` : '-'}</td>
                 </tr>
               ))
             ) : (
@@ -110,46 +109,83 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
 );
 
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA DE LECAPS (sin cambios de lógica) ---
-export default function LecapsPage() {
-    const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
+export default function DollarLinkedPage() { // Renombrado para mayor claridad
+    const [bonosDL, setBonosDL] = useState<Bono[]>([]);
     const [estado, setEstado] = useState('Cargando...');
     const [menuAbierto, setMenuAbierto] = useState(false);
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
-    const segmentosDeEstaPagina = ['DL'];
+    const segmentosDeEstaPagina = ['DL', 'ON DL'];
     
-    useEffect(() => {
-        const cargarDatosDelDia = async () => {
-          const inicioDelDia = new Date();
-          inicioDelDia.setHours(0, 0, 0, 0);
-          const { data, error } = await supabase.from('datos_financieros').select('*').gte('created_at', inicioDelDia.toISOString()).order('created_at', { ascending: false });
-          if (error) setEstado(`Error: ${error.message}`);
-          else if (data && data.length > 0) {
-            setDatosHistoricos(data);
-            setEstado('Datos actualizados');
-          } else {
-            setEstado('Esperando los primeros datos del día...');
-          }
-        };
-        cargarDatosDelDia();
-        const channel = supabase.channel('custom-all-channel').on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, () => cargarDatosDelDia()).subscribe();
-        return () => { supabase.removeChannel(channel) };
-    }, []);
+  useEffect(() => {
+    // 1. Carga inicial SOLO de los bonos Dollar Linked y vigentes
+    const fetchInitialData = async () => {
+      setEstado('Cargando instrumentos Dollar Linked...');
+      const manana = new Date();
+      manana.setDate(manana.getDate() + 1);
+
+      const { data, error } = await supabase
+        .from('datosbonos')
+        .select('*')
+        .in('s', segmentosDeEstaPagina) // Filtra por segmento
+        .gte('vto', manana.toISOString()); // Filtra por fecha de vencimiento
+
+      if (error) {
+        setEstado(`Error al cargar datos: ${error.message}`);
+      } else if (data) {
+        setBonosDL(data as Bono[]);
+        setEstado('Datos cargados. Escuchando actualizaciones...');
+      }
+    };
+
+    fetchInitialData();
+
+    // 2. Suscripción a Realtime para recibir actualizaciones filtradas
+    const channel = supabase
+      .channel('realtime-dl-page')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'datosbonos', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
+        (payload) => {
+          const bonoActualizado = payload.new as Bono;
+          
+          setBonosDL(bonosActuales => {
+            // No agregues bonos vencidos que puedan llegar por Realtime
+            if (new Date(bonoActualizado.vto) < new Date()) {
+                // Si el bono está vencido, lo filtramos y lo eliminamos de la vista
+                return bonosActuales.filter(b => b.t !== bonoActualizado.t);
+            }
+
+            const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
+            if (existe) {
+              return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
+            } else {
+              return [...bonosActuales, bonoActualizado];
+            }
+          });
+        }
+      )
+      .subscribe();
+
+    // 3. Limpieza al salir de la página
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
     
-    const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
-    const datosDeLecaps = ultimoLoteDeDatos.filter(b => segmentosDeEstaPagina.includes(b.segmento));
-    const maxDiasDelSegmento = (() => {
-        if (datosDeLecaps.length === 0) return 1000;
-        const maxDias = Math.max(...datosDeLecaps.map(b => b.dias_vto));
-        return isFinite(maxDias) ? maxDias : 1000;
-    })();
+
+  const maxDiasDelSegmento = (() => {
+    if (bonosDL.length === 0) return 1000;
+    const maxDias = Math.max(...bonosDL.map(b => b.dv));
+    return isFinite(maxDias) ? maxDias : 1000;
+  })();
 
     useEffect(() => {
         setRangoDias([0, maxDiasDelSegmento]);
     }, [maxDiasDelSegmento]);
 
-    const datosParaGrafico = datosDeLecaps.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
-    const datosParaTabla = [...datosDeLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
+    const datosParaGrafico = bonosDL.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
+    const datosParaTabla = [...bonosDL].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
 
     return (
         <Layout>
@@ -158,9 +194,6 @@ export default function LecapsPage() {
                     <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Dollar Linked</h1>
                     <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                         <span>Estado: <strong>{estado}</strong></span>
-                        {datosHistoricos.length > 0 && (
-                            <span style={{ marginLeft: '1rem' }}>Última act: <strong>{new Date(datosHistoricos[0].created_at).toLocaleTimeString()}</strong></span>
-                        )}
                     </div>
                     
                     <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>

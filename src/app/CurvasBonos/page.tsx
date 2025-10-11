@@ -233,12 +233,16 @@ export default function HomePage() {
     const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>(Object.keys(gruposDeSegmentos)[0]);
     
     
-  
+    const manana = new Date();
+    manana.setDate(manana.getDate() + 1);
   useEffect(() => {
     // 1. Carga inicial de todos los bonos
     const fetchInitialBonos = async () => {
       setEstado('Cargando datos iniciales...');
-      const { data, error } = await supabase.from('datosbonos').select('*'); // Apunta a tu nueva tabla
+      const { data, error } = await supabase
+      .from('datosbonos')
+      .select('*')
+      .gte('vto', manana.toISOString()); // Apunta a tu nueva tabla
 
       if (error) {
         setEstado(`Error al cargar datos: ${error.message}`);
