@@ -10,19 +10,44 @@ import 'rc-slider/assets/index.css';
 // DEFINICIÓN DE TIPOS
 // ==================================================================
 type Bono = {
-  ticker: string; vto: string; precio: number | null; var: number; tir: number; segmento: string; dias_vto: number; paridad: number; modify_duration: number | null; RD: number | null; duracion_macaulay: number | null; ley: string; monedadepago: string; frec: string; lmin: string; cantnominales: string; tipoamort: string;
+  t: string;       // ticker
+  vto: string;
+  p: number | null;  // precio
+  v: number;       // var
+  tir: number;
+  s: string;       // segmento
+  dv: number;      // dias_vto
+  pa: number;      // paridad
+  md: number | null; // modify_duration
+  RD: number | null;
+  dm: number | null; // duracion_macaulay
+  // --- Campos de 'caracteristicas' (opcionales) ---
+  ley?: string;
+  mpago?: string;   // monedadepago
+  frec?: string;
+  lmin?: string;
+  nom?: string;     // cantnominales
+  amort?: string;   // tipoamort
 };
 
-type SupabaseData = {
-  created_at: string;
-  datos: any[];
+// Objeto de configuración para la tabla dinámica (CORREGIDO con nombres cortos)
+const columnConfig: Record<string, { label: string, type: 'text' | 'date' | 'number', isPercentage?: boolean }> = {
+    t: { label: 'Ticker', type: 'text' },
+    vto: { label: 'Vto', type: 'date' },
+    p: { label: 'Precio', type: 'number' },
+    v: { label: 'Var', type: 'number', isPercentage: true },
+    tir: { label: 'TIR', type: 'number', isPercentage: true },
+    pa: { label: 'Paridad', type: 'number' },
+    md: { label: 'MD', type: 'number' },
+    ley: { label: 'Ley', type: 'text' },
+    mpago: { label: 'Moneda', type: 'text' },
+    frec: { label: 'Frec.', type: 'text' },
+    lmin: { label: 'L. Mín', type: 'text' },
+    nom: { label: 'Nominales', type: 'text' },
+    amort: { label: 'Amort.', type: 'text' },
 };
 
-type ColumnConfigItem = {
-  label: string;
-  type: 'text' | 'date' | 'number';
-  isPercentage?: boolean;
-};
+type FilterableColumn = keyof typeof columnConfig;
 
 // ==================================================================
 // CONFIGURACIONES GLOBALES
@@ -31,24 +56,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_KEY!
 );
-
-const columnConfig: Record<string, ColumnConfigItem> = {
-    ticker: { label: 'Ticker', type: 'text' },
-    vto: { label: 'Vto', type: 'date' },
-    precio: { label: 'Precio', type: 'number' },
-    var: { label: 'Var', type: 'number', isPercentage: true },
-    tir: { label: 'TIR', type: 'number', isPercentage: true },
-    paridad: { label: 'Paridad', type: 'number' },
-    modify_duration: { label: 'MD', type: 'number' },
-    ley: { label: 'Ley', type: 'text' },
-    monedadepago: { label: 'Moneda', type: 'text' },
-    frec: { label: 'Frec.', type: 'text' },
-    lmin: { label: 'L. Mín', type: 'text' },
-    cantnominales: { label: 'Nominales', type: 'text' },
-    tipoamort: { label: 'Amort.', type: 'text' },
-};
-
-type FilterableColumn = keyof typeof columnConfig;
 
 // ==================================================================
 // FUNCIONES AUXILIARES
@@ -59,13 +66,13 @@ const formatValue = (value: number | null | undefined, unit: string = '', decima
     return `${numeroAFormatear.toLocaleString('es-AR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${unit}`;
 };
 const formatDate = (dateString: string) => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 };
 
 // ==================================================================
-// COMPONENTE TablaGeneral
+// COMPONENTE TablaGeneral (Actualizado para nombres cortos)
 // ==================================================================
 const TablaGeneral = ({
     titulo, datos, filtros, onFiltroChange
@@ -100,7 +107,7 @@ const TablaGeneral = ({
                     <tbody>
                         {datos.length > 0 ? (
                             datos.map(item => (
-                                <tr key={item.ticker} style={{ borderTop: '1px solid #e5e7eb' }}>
+                                <tr key={item.t} style={{ borderTop: '1px solid #e5e7eb' }}>
                                     {(Object.keys(columnConfig) as (keyof Bono)[]).map(key => {
                                         const value = item[key];
                                         let displayValue: React.ReactNode = '-';
@@ -111,7 +118,7 @@ const TablaGeneral = ({
                                             } else if (config.type === 'number') {
                                                 displayValue = formatValue(Number(value), config.isPercentage ? '%' : '', 2);
                                             } else {
-                                                if (key === 'cantnominales') {
+                                                if (key === 'nom') {
                                                     const numero = parseInt(String(value), 10);
                                                     displayValue = formatValue(numero, '', 0);
                                                 } else {
@@ -119,7 +126,6 @@ const TablaGeneral = ({
                                                 }
                                             }
                                         }
-                                        // AQUÍ ESTÁ LA MODIFICACIÓN
                                         return <td key={key} style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{displayValue}</td>
                                     })}
                                 </tr>
@@ -134,121 +140,160 @@ const TablaGeneral = ({
     );
 };
 
-
 // ==================================================================
-// COMPONENTE PRINCIPAL LecapsPage
+// COMPONENTE PRINCIPAL onspage
 // ==================================================================
-export default function LecapsPage() {
-    const [datosHistoricos, setDatosHistoricos] = useState<SupabaseData[]>([]);
+export default function Onspage() {
+    const [bonos, setBonos] = useState<Bono[]>([]);
     const [caracteristicasMap, setCaracteristicasMap] = useState<Map<string, any>>(new Map());
     const [estado, setEstado] = useState('Cargando...');
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
     const [filtros, setFiltros] = useState<{ [key: string]: string }>({});
+    
+    const segmentosDeEstaPagina = ['ON', 'ON HD']; // Ajusta según necesites
 
     useEffect(() => {
         const cargarCaracteristicas = async () => {
-            const { data } = await supabase.from('caracteristicas').select('*');
-            if (data) setCaracteristicasMap(new Map(data.map(item => [item.ticker, item])));
+            const { data, error } = await supabase
+                .from('caracteristicas')
+                .select('t, ley, mpago, frec, lmin, nom, amort')
+                .in('s', segmentosDeEstaPagina); // Carga solo las características de los segmentos de esta página
+
+            if (error) {
+                console.error("Error al cargar características:", error);
+            } else if (data) {
+                setCaracteristicasMap(new Map(data.map(item => [item.t, item])));
+            }
         };
         cargarCaracteristicas();
     }, []);
 
     useEffect(() => {
-        const cargarDatosDelDia = async () => {
-          const inicioDelDia = new Date();
-          inicioDelDia.setHours(0, 0, 0, 0);
-          const { data, error } = await supabase.from('datos_financieros').select('*').gte('created_at', inicioDelDia.toISOString()).order('created_at', { ascending: false });
-          if (error) setEstado(`Error: ${error.message}`);
-          else if (data && data.length > 0) {
-            setDatosHistoricos(data);
-            setEstado('Datos actualizados');
-          } else setEstado('Esperando los primeros datos del día...');
+        const fetchInitialData = async () => {
+            setEstado('Cargando instrumentos...');
+            const manana = new Date();
+            manana.setDate(manana.getDate() + 1);
+
+            const { data, error } = await supabase
+                .from('datosbonos')
+                .select('*')
+                .in('s', segmentosDeEstaPagina)
+                .gte('vto', manana.toISOString());
+
+            if (error) {
+                setEstado(`Error al cargar datos: ${error.message}`);
+            } else if (data) {
+                setBonos(data as Bono[]);
+                setEstado('Datos cargados. Escuchando actualizaciones...');
+            }
         };
-        cargarDatosDelDia();
-        const channel = supabase.channel('custom-all-channel').on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, () => cargarDatosDelDia()).subscribe();
-        return () => { supabase.removeChannel(channel) };
+
+        fetchInitialData();
+
+        const channel = supabase
+            .channel('realtime-ons-page')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'datosbonos', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
+                (payload) => {
+                    const bonoActualizado = payload.new as Bono;
+                    setBonos(bonosActuales => {
+                        if (new Date(bonoActualizado.vto) < new Date()) {
+                            return bonosActuales.filter(b => b.t !== bonoActualizado.t);
+                        }
+                        const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
+                        if (existe) {
+                            return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
+                        } else {
+                            return [...bonosActuales, bonoActualizado];
+                        }
+                    });
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
-    
+
+    const datosCompletos = useMemo(() => {
+        if (caracteristicasMap.size === 0) return bonos;
+        return bonos.map(bono => ({
+            ...bono,
+            ...(caracteristicasMap.get(bono.t) || {})
+        }));
+    }, [bonos, caracteristicasMap]);
+
     const handleFiltroChange = (columna: FilterableColumn, valor: string) => {
         setFiltros(prev => ({ ...prev, [columna]: valor }));
     };
 
-    const datosCompletos: Bono[] = useMemo(() => {
-        if (datosHistoricos.length > 0 && datosHistoricos[0].datos && caracteristicasMap.size > 0) {
-            return datosHistoricos[0].datos.map((bono: any) => ({
-                ...bono, ...(caracteristicasMap.get(bono.ticker) || {}),
-            }));
-        }
-        return [];
-    }, [datosHistoricos, caracteristicasMap]);
-
     const datosParaTabla = useMemo(() => {
-        const datosDeSegmento = datosCompletos.filter(b => b.segmento === 'ON');
-        if (Object.values(filtros).every(v => !v)) {
-            return datosDeSegmento.sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
+        let datosFiltrados = datosCompletos;
+
+        if (Object.values(filtros).some(v => v)) {
+            datosFiltrados = datosCompletos.filter(bono => {
+                return (Object.entries(filtros) as [FilterableColumn, string][]).every(([key, filterValue]) => {
+                    if (!filterValue) return true;
+                    const config = columnConfig[key];
+                    const cellValue = bono[key as keyof Bono];
+                    if (cellValue === null || cellValue === undefined) return false;
+                    
+                    switch (config.type) {
+                        case 'number':
+                            let numericValue = Number(cellValue);
+                            if (config.isPercentage) numericValue *= 100;
+                            if (filterValue.includes('-')) {
+                                const [min, max] = filterValue.split('-').map(s => parseFloat(s.trim()));
+                                return numericValue >= (min || -Infinity) && numericValue <= (max || Infinity);
+                            }
+                            const match = filterValue.match(/^(>=|<=|>|<)?\s*(-?\d+\.?\d*)$/);
+                            if (match) {
+                                const [, operator, numStr] = match;
+                                const num = parseFloat(numStr);
+                                switch (operator) {
+                                    case '>': return numericValue > num;
+                                    case '<': return numericValue < num;
+                                    case '>=': return numericValue >= num;
+                                    case '<=': return numericValue <= num;
+                                    default: return numericValue === num;
+                                }
+                            }
+                            return String(numericValue).toLowerCase().includes(filterValue.toLowerCase());
+
+                        case 'date':
+                            const cellDate = new Date(cellValue as string);
+                            cellDate.setHours(0, 0, 0, 0);
+                            if (filterValue.includes('-')) {
+                                const [startStr, endStr] = filterValue.split('-').map(s => s.trim());
+                                const [startDay, startMonth, startYear] = startStr.split('/').map(Number);
+                                const [endDay, endMonth, endYear] = endStr.split('/').map(Number);
+                                const startDate = new Date(startYear, startMonth - 1, startDay);
+                                const endDate = new Date(endYear, endMonth - 1, endDay);
+                                if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return false;
+                                return cellDate >= startDate && cellDate <= endDate;
+                            }
+                            const [day, month, year] = filterValue.split('/').map(Number);
+                            if (!day || !month || !year) return false;
+                            const filterDate = new Date(year, month - 1, day);
+                            if (isNaN(filterDate.getTime())) return false;
+                            return cellDate.getTime() === filterDate.getTime();
+
+                        case 'text':
+                        default:
+                            return String(cellValue).toLowerCase().includes(filterValue.toLowerCase());
+                    }
+                });
+            });
         }
 
-        return datosDeSegmento.filter(bono => {
-            return (Object.entries(filtros) as [FilterableColumn, string][]).every(([key, filterValue]) => {
-                if (!filterValue) return true;
-
-                const config = columnConfig[key];
-                const cellValue = bono[key as keyof Bono];
-                
-                if (cellValue === null || cellValue === undefined) return false;
-                
-                switch (config.type) {
-                    case 'number':
-                        let numericValue = Number(cellValue);
-                        if (config.isPercentage) numericValue *= 100;
-                        if (filterValue.includes('-')) {
-                            const [min, max] = filterValue.split('-').map(s => parseFloat(s.trim()));
-                            return numericValue >= (min || -Infinity) && numericValue <= (max || Infinity);
-                        }
-                        const match = filterValue.match(/^(>=|<=|>|<)?\s*(-?\d+\.?\d*)$/);
-                        if (match) {
-                            const [, operator, numStr] = match;
-                            const num = parseFloat(numStr);
-                            switch (operator) {
-                                case '>': return numericValue > num;
-                                case '<': return numericValue < num;
-                                case '>=': return numericValue >= num;
-                                case '<=': return numericValue <= num;
-                                default: return numericValue === num;
-                            }
-                        }
-                        return String(numericValue).toLowerCase().includes(filterValue.toLowerCase());
-
-                    case 'date':
-                        const cellDate = new Date(cellValue as string);
-                        cellDate.setHours(0, 0, 0, 0);
-                        if (filterValue.includes('-')) {
-                            const [startStr, endStr] = filterValue.split('-').map(s => s.trim());
-                            const [startDay, startMonth, startYear] = startStr.split('/').map(Number);
-                            const [endDay, endMonth, endYear] = endStr.split('/').map(Number);
-                            const startDate = new Date(startYear, startMonth - 1, startDay);
-                            const endDate = new Date(endYear, endMonth - 1, endDay);
-                            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return false;
-                            return cellDate >= startDate && cellDate <= endDate;
-                        }
-                        const [day, month, year] = filterValue.split('/').map(Number);
-                        if (!day || !month || !year) return false;
-                        const filterDate = new Date(year, month - 1, day);
-                        if (isNaN(filterDate.getTime())) return false;
-                        return cellDate.getTime() === filterDate.getTime();
-
-                    case 'text':
-                    default:
-                        return String(cellValue).toLowerCase().includes(filterValue.toLowerCase());
-                }
-            });
-        }).sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
+        return datosFiltrados.sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
     }, [datosCompletos, filtros]);
     
     const maxDiasDelSegmento = useMemo(() => {
-        const datosSinFiltro = datosCompletos.filter(b => b.segmento === 'ON');
-        if (datosSinFiltro.length === 0) return 1000;
-        const maxDias = Math.max(...datosSinFiltro.map(b => b.dias_vto));
+        if (datosCompletos.length === 0) return 1000;
+        const maxDias = Math.max(...datosCompletos.map(b => b.dv));
         return isFinite(maxDias) ? maxDias : 1000;
     }, [datosCompletos]);
 
@@ -256,15 +301,14 @@ export default function LecapsPage() {
         if (maxDiasDelSegmento > 0) setRangoDias([0, maxDiasDelSegmento]);
     }, [maxDiasDelSegmento]);
     
-    const datosParaGrafico = datosParaTabla.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
+    const datosParaGrafico = datosParaTabla.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
 
     return (
         <Layout>
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Obligaciones negociables HD</h1>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Obligaciones Negociables</h1>
                 <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                     <span>Estado: <strong>{estado}</strong></span>
-                    {datosHistoricos.length > 0 && ( <span style={{ marginLeft: '1rem' }}>Última act: <strong>{new Date(datosHistoricos[0].created_at).toLocaleTimeString()}</strong></span> )}
                 </div>
                 <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
                     <div style={{ padding: '0 10px', marginBottom: '20px' }}>
@@ -275,11 +319,11 @@ export default function LecapsPage() {
                             <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
                         </div>
                     </div>
-                      <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="ON" xAxisKey="dv" /> 
+                    <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="ON" xAxisKey="dv" />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
                     <TablaGeneral 
-                        titulo="ONs HD" 
+                        titulo="Obligaciones Negociables" 
                         datos={datosParaTabla}
                         filtros={filtros}
                         onFiltroChange={handleFiltroChange}
