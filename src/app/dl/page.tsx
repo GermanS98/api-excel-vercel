@@ -181,7 +181,7 @@ export default function LecapsPage() {
                         <CurvaRendimientoChart 
                         data={datosParaGrafico} 
                         segmentoActivo="DL" 
-                        xAxisKey="dias_vto" // <-- Añadir esta línea
+                        xAxisKey="dv" // <-- Añadir esta línea
                         />
                     </div>
 

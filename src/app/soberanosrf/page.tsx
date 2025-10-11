@@ -219,7 +219,7 @@ export default function LecapsPage() {
                           <CurvaRendimientoChart 
                           data={datosParaGrafico} 
                           segmentoActivo="Bonares y Globales" 
-                          xAxisKey="modify_duration" // <-- Añadir esta línea
+                          xAxisKey="md" // <-- Añadir esta línea
                         />                        
                     </div>
 

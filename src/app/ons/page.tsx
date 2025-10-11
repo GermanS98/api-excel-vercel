@@ -275,7 +275,7 @@ export default function LecapsPage() {
                             <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
                         </div>
                     </div>
-                      <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="ON" xAxisKey="dias_vto" /> 
+                      <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="ON" xAxisKey="dv" /> 
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
                     <TablaGeneral 
