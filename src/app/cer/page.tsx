@@ -80,22 +80,22 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
             {datos.length > 0 ? (
               datos.map((item: Bono, index: number) => (
                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
+                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.precio,'',2)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.p,'',2)}</td>
                   <td style={{ 
                                 padding: '0.75rem 1rem', 
-                                color: item.var >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
+                                color: item.v >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
                                 fontWeight: 500
                                 }}>
-                    {formatValue(item.var)}
+                    {formatValue(item.v)}
                   </td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tna)}</td>
                   {/* --- DATO AGREGADO --- */}
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tem)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.RD)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.mep_breakeven ? `$${item.mep_breakeven.toFixed(2)}` : '-'}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.mb? `$${item.mb.toFixed(2)}` : '-'}</td>
                 </tr>
               ))
             ) : (
@@ -136,7 +136,7 @@ export default function LecapsPage() {
     }, []);
     
     const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
-    const datosDeLecaps = ultimoLoteDeDatos.filter(b => segmentosDeEstaPagina.includes(b.segmento));
+    const datosDeLecaps = ultimoLoteDeDatos.filter(b => segmentosDeEstaPagina.includes(b.s));
     const maxDiasDelSegmento = (() => {
         if (datosDeLecaps.length === 0) return 1000;
         const maxDias = Math.max(...datosDeLecaps.map(b => b.dias_vto));

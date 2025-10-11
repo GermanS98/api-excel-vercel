@@ -126,15 +126,15 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                         {datos.length > 0 ? (
                             datos.map((item: Bono, index: number) => (
                                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                    <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
+                                    <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.precio,'',2)}</td>
+                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.p,'',2)}</td>
                                     <td style={{ 
                                         padding: '0.75rem 1rem', 
-                                        color: item.var >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
+                                        color: item.v >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
                                         fontWeight: 500
                                     }}>
-                                        {formatValue(item.var)}
+                                        {formatValue(item.v)}
                                     </td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tna)}</td>
@@ -191,14 +191,14 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                         {datos.length > 0 ? (
                             datos.map((item: Bono, index: number) => (
                                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                    <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
+                                    <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.precio,'',2)}</td>
-                                    <td style={{ padding: '0.75rem 1rem', color: item.var >= 0 ? '#22c55e' : '#ef4444', fontWeight: 500 }}>
-                                        {formatValue(item.var)}
+                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.p,'',2)}</td>
+                                    <td style={{ padding: '0.75rem 1rem', color: item.v >= 0 ? '#22c55e' : '#ef4444', fontWeight: 500 }}>
+                                        {formatValue(item.v)}
                                     </td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
-                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.paridad, '', 2)}</td>
+                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.pd, '', 2)}</td>
                                 </tr>
                             ))
                         ) : (
@@ -259,11 +259,11 @@ export default function HomePage() {
           const bonoActualizado = payload.new as Bono;
           
           setBonos(bonosActuales => {
-            const existe = bonosActuales.some(b => b.ticker === bonoActualizado.ticker);
+            const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
             if (existe) {
               // Si el bono ya existe, lo reemplazamos
               return bonosActuales.map(b => 
-                b.ticker === bonoActualizado.ticker ? bonoActualizado : b
+                b.t === bonoActualizado.t ? bonoActualizado : b
               );
             } else {
               // Si es un bono nuevo, lo agregamos
@@ -350,7 +350,7 @@ export default function HomePage() {
 
     const datosDelSegmentoSeleccionado = (() => {
         const segmentosActivos = gruposDeSegmentos[segmentoSeleccionado] || [];
-        return ultimoLoteDeDatos.filter(b => segmentosActivos.includes(b.segmento));
+        return ultimoLoteDeDatos.filter(b => segmentosActivos.includes(b.s));
     })();
     const isBonaresSegment = segmentoSeleccionado === 'Bonares y Globales';
     const [rangoX, setRangoX] = useState<[number, number]>([0, 0]);
@@ -359,12 +359,12 @@ export default function HomePage() {
         
         // Si es Bonares, calculamos el máximo de la duration
         if (isBonaresSegment) {
-            const maxDuration = Math.max(...datosDelSegmentoSeleccionado.map(b => b.modify_duration ?? 0));
+            const maxDuration = Math.max(...datosDelSegmentoSeleccionado.map(b => b.md ?? 0));
             return isFinite(maxDuration) ? Math.ceil(maxDuration) : 10;
         } 
         // Para el resto, usamos los días al vencimiento
         else {
-            const maxDias = Math.max(...datosDelSegmentoSeleccionado.map(b => b.dias_vto));
+            const maxDias = Math.max(...datosDelSegmentoSeleccionado.map(b => b.dv));
             return isFinite(maxDias) ? maxDias : 1000;
         }
     })();
@@ -374,7 +374,7 @@ export default function HomePage() {
     }, [maxXValue]);
 
     const datosParaGrafico = datosDelSegmentoSeleccionado.filter(b => {
-        const value = isBonaresSegment ? b.modify_duration : b.dias_vto;
+        const value = isBonaresSegment ? b.md : b.dv;
         if (value === null || typeof value === 'undefined') return false;
         return value >= rangoX[0] && value <= rangoX[1];
     });
@@ -383,12 +383,12 @@ export default function HomePage() {
         return [...datos].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
     };
 
-    const tabla1 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['LECAPs y Similares'].includes(b.segmento)));
-    const tabla2 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Ajustados por CER'].includes(b.segmento)));
-    const tabla3 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Dollar Linked'].includes(b.segmento)));
-    const tabla4 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['TAMAR'].includes(b.segmento)));
-    const tabla5 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.segmento)));
-    const tabla6 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Obligaciones Negociables'].includes(b.segmento)));
+    const tabla1 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['LECAPs y Similares'].includes(b.s)));
+    const tabla2 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Ajustados por CER'].includes(b.s)));
+    const tabla3 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Dollar Linked'].includes(b.s)));
+    const tabla4 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['TAMAR'].includes(b.s)));
+    const tabla5 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.s)));
+    const tabla6 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Obligaciones Negociables'].includes(b.s)));
 
 
 
