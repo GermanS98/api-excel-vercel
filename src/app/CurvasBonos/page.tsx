@@ -23,6 +23,7 @@ type Bono = {
   md: number | null;
   RD: number | null; // Nuevo campo
   mb: number | null; // Nuevo campo
+  pd: number | null; // Nuevo campo para Paridad
 };
 // --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
 type TipoDeCambio = {
