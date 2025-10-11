@@ -19,7 +19,7 @@ const PALETA_SEGMENTOS: { [key: string]: string } = {
 };
 
 const calcularTendencia = (datos: any[], xAxisKey: 'dv' | 'md', segmento?: string) => {
-  const datosParaRegresion = segmento ? datos.filter(p => p.segmento === segmento) : datos;
+  const datosParaRegresion = segmento ? datos.filter(p => p.s === segmento) : datos;
   if (datosParaRegresion.length < 2) return [];
 
   const regressionPoints = datosParaRegresion
@@ -99,17 +99,17 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
               <Scatter
                 key={segmento}
                 name={segmento}
-                data={data.filter(p => p.segmento === segmento)}
+                data={data.filter(p => p.s === segmento)}
                 fill={PALETA_SEGMENTOS[segmento]}
               >
-                <LabelList dataKey="ticker" position="top" style={{ fontSize: 10, fill: '#666' }} />
+                <LabelList dataKey="t" position="top" style={{ fontSize: 10, fill: '#666' }} />
               </Scatter>
             ))
           ) : (
             <Scatter name={segmentoActivo} data={data}>
-              <LabelList dataKey="ticker" position="top" style={{ fontSize: 10, fill: '#666' }} />
+              <LabelList dataKey="t" position="top" style={{ fontSize: 10, fill: '#666' }} />
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={PALETA_SEGMENTOS[entry.segmento] || PALETA_SEGMENTOS.default} />
+                <Cell key={`cell-${index}`} fill={PALETA_SEGMENTOS[entry.s] || PALETA_SEGMENTOS.default} />
               ))}
             </Scatter>
           )}
