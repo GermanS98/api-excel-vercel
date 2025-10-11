@@ -205,7 +205,7 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
 
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA ---
 export default function HomePage() {
-    const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
+    const [bonos, setBonos] = useState<Bono[]>([]);
     const [estado, setEstado] = useState('Cargando...');
     const [menuAbierto, setMenuAbierto] = useState(false);
     // --- NUEVO: ESTADO PARA LOS DATOS DEL TIPO DE CAMBIO ---
@@ -224,23 +224,55 @@ export default function HomePage() {
     
     
   
-    useEffect(() => {
-        const cargarDatosDelDia = async () => {
-          const inicioDelDia = new Date();
-          inicioDelDia.setHours(0, 0, 0, 0);
-          const { data, error } = await supabase.from('datos_financieros').select('*').gte('created_at', inicioDelDia.toISOString()).order('created_at', { ascending: false });
-          if (error) setEstado(`Error: ${error.message}`);
-          else if (data && data.length > 0) {
-            setDatosHistoricos(data);
-            setEstado('Datos actualizados');
-          } else {
-            setEstado('Esperando los primeros datos del día...');
-          }
-        };
-        cargarDatosDelDia();
-        const channel = supabase.channel('custom-all-channel').on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, () => cargarDatosDelDia()).subscribe();
-        return () => { supabase.removeChannel(channel) };
-    }, []);
+  useEffect(() => {
+    // 1. Carga inicial de todos los bonos
+    const fetchInitialBonos = async () => {
+      setEstado('Cargando datos iniciales...');
+      const { data, error } = await supabase.from('datosbonos').select('*'); // Apunta a tu nueva tabla
+
+      if (error) {
+        setEstado(`Error al cargar datos: ${error.message}`);
+      } else if (data) {
+        setBonos(data);
+        setEstado('Datos cargados. Escuchando actualizaciones...');
+      }
+    };
+
+    fetchInitialBonos();
+
+    // 2. Suscripción a Realtime para recibir actualizaciones
+    const channel = supabase
+      .channel('realtime-datosbonos')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'datosbonos' },
+        (payload) => {
+          const bonoActualizado = payload.new as Bono;
+          
+          setBonos(bonosActuales => {
+            const existe = bonosActuales.some(b => b.ticker === bonoActualizado.ticker);
+            if (existe) {
+              // Si el bono ya existe, lo reemplazamos
+              return bonosActuales.map(b => 
+                b.ticker === bonoActualizado.ticker ? bonoActualizado : b
+              );
+            } else {
+              // Si es un bono nuevo, lo agregamos
+              return [...bonosActuales, bonoActualizado];
+            }
+          });
+          
+          // Opcional: Actualizar el estado para mostrar feedback visual
+          // setEstado(`Actualizado: ${bonoActualizado.ticker}`);
+        }
+      )
+      .subscribe();
+
+    // 3. Limpieza al salir de la página
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
       // --- NUEVO: EFECTO PARA CARGAR LOS DATOS DEL TIPO DE CAMBIO ---
   useEffect(() => {
     const fetchTipoDeCambio = async () => {
@@ -282,7 +314,7 @@ export default function HomePage() {
       supabase.removeChannel(channel);
     };
   }, []); // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
-    const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
+    const ultimoLoteDeDatos: Bono[] = bonos;
     const handleDownloadFullReport = () => {
         setEstado('Generando reporte completo...');
         setIsGeneratingPDF(true); // Esto hará que ReportePDFGenerator se renderice
@@ -362,11 +394,6 @@ export default function HomePage() {
                     <span>
                         Estado: <strong>{estado}</strong>
                     </span>
-                    {datosHistoricos.length > 0 && (
-                        <span style={{ marginLeft: '1rem' }}>
-                            Última act: <strong>{new Date(datosHistoricos[0].created_at).toLocaleTimeString()}</strong>
-                        </span>
-                    )}
                 </div>
 
                 {/* --- CONTENEDOR PARA LAS TARJETAS DE TIPO DE CAMBIO --- */}
