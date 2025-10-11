@@ -491,7 +491,7 @@ export default function HomePage() {
                     <CurvaRendimientoChart
                         data={datosParaGrafico}
                         segmentoActivo={segmentoSeleccionado}
-                        xAxisKey={isBonaresSegment ? 'modify_duration' : 'dias_vto'}
+                        xAxisKey={isBonaresSegment ? 'md' : 'dv'}
                     />
                 </div>
 
