@@ -10,20 +10,19 @@ import Link from 'next/link';
 
 // PASO 1: ACTUALIZAR LA DEFINICIÓN DE TIPO PARA INCLUIR NUEVOS CAMPOS
 type Bono = {
-  ticker: string;
+  t: string;
   vto: string;
-  precio: number | null;
+  p: number | null;
   tir: number;
   tna: number | null;
   tem: number | null;
-  var: number; // Nuevo campo
-  segmento: string;
-  dias_vto: number;
-  modify_duration: number | null;
+  v: number; // Nuevo campo
+  s: string;
+  dv: number;
+  md: number | null;
   RD: number | null; // Nuevo campo
-  duracion_macaulay: number | null; // Nuevo campo
-  mep_breakeven: number | null; // Nuevo campo
-  tipo_bono: string; // Nuevo campo
+  dm: number | null; // Nuevo campo
+  mb: number | null; // Nuevo campo
 };
 
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---

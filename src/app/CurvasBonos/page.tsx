@@ -11,9 +11,18 @@ import ReportePDFGenerator from '@/components/ui/ReportePDFGenerator';
 
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
 type Bono = {
-  ticker: string; vto: string; precio: number | null; var: number; tir: number;
-  tna: number | null; tem: number | null; segmento: string; 
-  dias_vto: number; paridad: number | null; modify_duration: number | null;
+  t: string;
+  vto: string;
+  p: number | null;
+  tir: number;
+  tna: number | null;
+  tem: number | null;
+  v: number; // Nuevo campo
+  s: string;
+  dv: number;
+  md: number | null;
+  RD: number | null; // Nuevo campo
+  mb: number | null; // Nuevo campo
 };
 // --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
 type TipoDeCambio = {
