@@ -18,7 +18,7 @@ const PALETA_SEGMENTOS: { [key: string]: string } = {
   'default': '#d1d5db'
 };
 
-const calcularTendencia = (datos: any[], xAxisKey: 'dias_vto' | 'modify_duration', segmento?: string) => {
+const calcularTendencia = (datos: any[], xAxisKey: 'dv' | 'md', segmento?: string) => {
   const datosParaRegresion = segmento ? datos.filter(p => p.segmento === segmento) : datos;
   if (datosParaRegresion.length < 2) return [];
 
@@ -38,7 +38,7 @@ const calcularTendencia = (datos: any[], xAxisKey: 'dias_vto' | 'modify_duration
 type ChartProps = {
   data: any[];
   segmentoActivo: string;
-  xAxisKey: 'dias_vto' | 'modify_duration';
+  xAxisKey: 'dv' | 'md';
 };
 
 export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }: ChartProps) {
@@ -50,10 +50,10 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
       const data = payload[0].payload;
       if (!data.ticker) return null;
       
-      const xValueLabel = xAxisKey === 'modify_duration' ? 'Mod. Duration' : 'Días al Vto';
+      const xValueLabel = xAxisKey === 'md' ? 'Mod. Duration' : 'Días al Vto';
       const xValue = data[xAxisKey];
       const formattedXValue = typeof xValue === 'number' 
-        ? xValue.toFixed(xAxisKey === 'modify_duration' ? 2 : 0) 
+        ? xValue.toFixed(xAxisKey === 'md' ? 2 : 0) 
         : '-';
 
       return (
@@ -83,11 +83,11 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
           <XAxis 
             type="number" 
             dataKey={xAxisKey}
-            name={xAxisKey === 'modify_duration' ? 'Modified Duration' : 'Días al Vencimiento'}
+            name={xAxisKey === 'md' ? 'Modified Duration' : 'Días al Vencimiento'}
             tick={{ fontSize: 12 }} 
             domain={['dataMin', 'dataMax']}
             allowDuplicatedCategory={false}
-            tickFormatter={(tick) => tick.toFixed(xAxisKey === 'modify_duration' ? 2 : 0)}
+            tickFormatter={(tick) => tick.toFixed(xAxisKey === 'md' ? 2 : 0)}
           />
           <YAxis type="number" dataKey="tir" name="TIR" tickFormatter={(tick) => `${(tick * 100).toFixed(0)}%`} domain={['auto', 'auto']} tick={{ fontSize: 12 }} width={80} />
           <Tooltip content={<CustomTooltip />} />
