@@ -139,7 +139,7 @@ export default function LecapsPage() {
     const datosDeLecaps = ultimoLoteDeDatos.filter(b => segmentosDeEstaPagina.includes(b.s));
     const maxDiasDelSegmento = (() => {
         if (datosDeLecaps.length === 0) return 1000;
-        const maxDias = Math.max(...datosDeLecaps.map(b => b.dias_vto));
+        const maxDias = Math.max(...datosDeLecaps.map(b => b.dv));
         return isFinite(maxDias) ? maxDias : 1000;
     })();
 
@@ -147,7 +147,7 @@ export default function LecapsPage() {
         setRangoDias([0, maxDiasDelSegmento]);
     }, [maxDiasDelSegmento]);
 
-    const datosParaGrafico = datosDeLecaps.filter(b => b.dias_vto >= rangoDias[0] && b.dias_vto <= rangoDias[1]);
+    const datosParaGrafico = datosDeLecaps.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
     const datosParaTabla = [...datosDeLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
 
     return (
@@ -179,7 +179,7 @@ export default function LecapsPage() {
                           <CurvaRendimientoChart 
                           data={datosParaGrafico} 
                           segmentoActivo="CER" 
-                          xAxisKey="dias_vto" // <-- Añadir esta línea
+                          xAxisKey="dv" // <-- Añadir esta línea
                         />                        
                     </div>
 
