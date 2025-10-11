@@ -48,7 +48,7 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
-      if (!data.ticker) return null;
+      if (!data.t) return null;
       
       const xValueLabel = xAxisKey === 'md' ? 'Mod. Duration' : 'Días al Vto';
       const xValue = data[xAxisKey];
@@ -61,7 +61,7 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
           backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #ccc',
           padding: '10px', borderRadius: '5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
         }}>
-          <p style={{ margin: 0, fontWeight: 'bold', color: '#333' }}>{`Ticker: ${data.ticker}`}</p>
+          <p style={{ margin: 0, fontWeight: 'bold', color: '#333' }}>{`Ticker: ${data.t}`}</p>
           <p style={{ margin: 0, color: '#666' }}>{`TIR: ${(data.tir * 100).toFixed(2)}%`}</p>
           <p style={{ margin: 0, color: '#666' }}>{`${xValueLabel}: ${formattedXValue}`}</p>
         </div>
