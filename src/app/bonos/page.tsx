@@ -98,16 +98,16 @@ const FlujosTable = ({ flujos }: { flujos: FlujoDetallado[] }) => {
 };
 
 const ResultSummary = ({ result }: { result: SimpleResult }) => {
-  const summaryData = [
-    { label: 'TIR %', value: formatNumberAR(result.tir * 100, 2) },
-    { label: 'Paridad %', value: result.paridad ? formatNumberAR(result.paridad * 100, 2) : undefined },
-    { label: 'Valor Técnico', value: formatNumberAR(result.valor_tecnico, 4) },
-    { label: 'Exit Yield (RD) %', value: result.RD ? formatNumberAR(result.RD * 100, 2) : undefined },
-    { label: 'Modified Duration', value: formatNumberAR(result.modify_duration, 2) },
-    { label: 'Macaulay Duration', value: formatNumberAR(result.duracion_macaulay, 2) : undefined },
-    { label: 'TNA %', value: result.tna ? formatNumberAR(result.tna * 100, 2) : undefined },
-    { label: 'TEM %', value: result.tem ? formatNumberAR(result.tem * 100, 2) : undefined },
-    { label: 'Días al Vto.', value: result.dias_vto },
+const summaryData = [
+  { label: 'TIR %', value: formatNumberAR(result.tir * 100, 2) },
+  { label: 'Paridad %', value: result.paridad ? formatNumberAR(result.paridad * 100, 2) : undefined },
+  { label: 'Valor Técnico', value: formatNumberAR(result.valor_tecnico, 4) },
+  { label: 'Exit Yield (RD) %', value: result.RD ? formatNumberAR(result.RD * 100, 2) : undefined },
+  { label: 'Modified Duration', value: formatNumberAR(result.modify_duration, 2) },
+  { label: 'Macaulay Duration', value: result.duracion_macaulay !== undefined ? formatNumberAR(result.duracion_macaulay, 2) : undefined },
+  { label: 'TNA %', value: result.tna ? formatNumberAR(result.tna * 100, 2) : undefined },
+  { label: 'TEM %', value: result.tem ? formatNumberAR(result.tem * 100, 2) : undefined },
+  { label: 'Días al Vto.', value: result.dias_vto },
   ].filter(item => item.value !== undefined && item.value !== null);
 
   return (
