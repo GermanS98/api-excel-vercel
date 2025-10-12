@@ -361,7 +361,33 @@ export default function BonosPage() {
 
                         <div>
                             <label htmlFor="precio-input" className={styles.formLabel}>Precio</label>
-                            <input id="precio-input" type="number" value={precio} onChange={e => setPrecio(parseFloat(e.target.value))} className={styles.formInput} disabled={isLoading} />
+                            <input
+  id="precio-input"
+  type="text"
+  value={precio}
+  onChange={e => {
+    // Permite solo números, comas y puntos
+    let valor = e.target.value.replace(/[^0-9.,]/g, '');
+    // Reemplaza todos los puntos por comas
+    valor = valor.replace(/\./g, ',');
+    setPrecio(valor);
+  }}
+  onKeyDown={e => {
+    if (e.key === '.') {
+      e.preventDefault();
+      const target = e.target as HTMLInputElement;
+      const start = target.selectionStart ?? 0;
+      const end = target.selectionEnd ?? 0;
+      const newValue = precio.slice(0, start) + ',' + precio.slice(end);
+      setPrecio(newValue);
+      setTimeout(() => {
+        target.selectionStart = target.selectionEnd = start + 1;
+      }, 0);
+    }
+  }}
+  className={styles.formInput}
+  disabled={isLoading}
+/>
                         </div>
                         <div>
                             <label htmlFor="nominales-input" className={styles.formLabel}>Nominales</label>
