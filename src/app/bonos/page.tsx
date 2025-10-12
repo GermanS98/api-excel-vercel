@@ -225,8 +225,8 @@ export default function BonosPage() {
     if (!ticker) return;
     const fetchMonedaBono = async () => {
       try {
-        const res = await fetch(`/api/caracteristicas?ticker=${ticker}`);
-        const caracteristicas = await res.json();
+          const caracRes = await fetch(`/api/caracteristicas?ticker=${ticker}`);
+          const caracteristicas = await caracRes.json();
         if (caracteristicas && caracteristicas.moneda) {
           setMonedaBono(caracteristicas.moneda === 'USD' ? 'USD' : 'ARS');
         }
