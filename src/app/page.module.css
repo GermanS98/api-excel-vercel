@@ -166,3 +166,6 @@ a.secondary {
     filter: invert();
   }
 }
+.page {
+  background: #fff !important;
+}

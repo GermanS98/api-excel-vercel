@@ -37,7 +37,7 @@ const Layout = ({ children, onDownloadPDF }: LayoutProps) => {
       />
  
       <main style={{ 
-        background: '#f3f4f6', 
+        background: '#fff', 
         fontFamily: 'Albert Sans, sans-serif', 
         padding: '10px',
         width: '100%',
