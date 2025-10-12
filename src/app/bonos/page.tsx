@@ -104,7 +104,7 @@ const ResultSummary = ({ result }: { result: SimpleResult }) => {
     { label: 'Valor Técnico', value: formatNumberAR(result.valor_tecnico, 4) },
     { label: 'Exit Yield (RD) %', value: result.RD ? formatNumberAR(result.RD * 100, 2) : undefined },
     { label: 'Modified Duration', value: formatNumberAR(result.modify_duration, 2) },
-    { label: 'Macaulay Duration', value: formatNumberAR(result.duracion_macaulay, 2) },
+    { label: 'Macaulay Duration', value: formatNumberAR(result.duracion_macaulay, 2) : undefined },
     { label: 'TNA %', value: result.tna ? formatNumberAR(result.tna * 100, 2) : undefined },
     { label: 'TEM %', value: result.tem ? formatNumberAR(result.tem * 100, 2) : undefined },
     { label: 'Días al Vto.', value: result.dias_vto },
@@ -174,10 +174,10 @@ export default function BonosPage() {
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // --- NUEVO: Estados para moneda y tipo de cambio ---
-  const [moneda, setMoneda] = useState<'ARS' | 'USD'>('ARS');
+  const [moneda, setMoneda] = useState<'ARS' | 'USD'>('USD'); // Por defecto USD
   const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
   const [mostrarTipoCambio, setMostrarTipoCambio] = useState(false);
-  const [tipoCambioInput, setTipoCambioInput] = useState<number | ''>('');
+  const [tipoCambioInput, setTipoCambioInput] = useState<string>(''); // string para permitir vacío
   const [monedaBono, setMonedaBono] = useState<'ARS' | 'USD'>('ARS');
 
   useEffect(() => {
@@ -220,45 +220,6 @@ export default function BonosPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [searchContainerRef]);
 
-  // --- NUEVO: Efecto para cargar el tipo de cambio más reciente ---
-  useEffect(() => {
-    const fetchTipoDeCambio = async () => {
-      const { data, error } = await supabase
-        .from('tipodecambio')
-        .select('datos')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error) {
-        console.error('Error al obtener tipo de cambio:', error);
-      } else if (data) {
-        setTipoDeCambio(data.datos);
-        setTipoCambioInput(data.datos.valor_mep);
-      }
-    };
-
-    fetchTipoDeCambio();
-
-    const channel = supabase
-      .channel('tipodecambio-changes')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'tipodecambio' },
-        (payload) => {
-          if (payload.new && payload.new.datos) {
-            setTipoDeCambio(payload.new.datos);
-            setTipoCambioInput(payload.new.datos.valor_mep);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
   // --- NUEVO: Traer moneda del bono al seleccionar ticker ---
   useEffect(() => {
     if (!ticker) return;
@@ -276,12 +237,33 @@ export default function BonosPage() {
     fetchMonedaBono();
   }, [ticker]);
 
-  // --- Mostrar input de tipo de cambio si corresponde ---
+  // --- Mostrar input de tipo de cambio si corresponde y traer valor MEP ---
   useEffect(() => {
-    setMostrarTipoCambio(
-      (moneda === 'ARS' && monedaBono === 'USD') ||
-      (moneda === 'USD' && monedaBono === 'ARS')
-    );
+    const necesitaTC = (moneda === 'ARS' && monedaBono === 'USD') || (moneda === 'USD' && monedaBono === 'ARS');
+    setMostrarTipoCambio(necesitaTC);
+
+    if (necesitaTC) {
+      // Traer el tipo de cambio solo cuando se necesita
+      const fetchTipoDeCambio = async () => {
+        const { data, error } = await supabase
+          .from('tipodecambio')
+          .select('datos')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (!error && data && data.datos && typeof data.datos.valor_mep !== 'undefined') {
+          setTipoDeCambio(data.datos);
+          setTipoCambioInput(String(data.datos.valor_mep));
+        } else {
+          setTipoDeCambio(null);
+          setTipoCambioInput('');
+        }
+      };
+      fetchTipoDeCambio();
+    } else {
+      setTipoCambioInput('');
+    }
   }, [moneda, monedaBono]);
 
   const calcular = async () => {
@@ -289,7 +271,7 @@ export default function BonosPage() {
     setResultados(null);
     try {
       const caracRes = await fetch(`/api/caracteristicas?ticker=${ticker}`);
-      const caracteristicas = await caracRes.json();
+      const caracteristicas = await res.json();
 
       if (!caracteristicas || !caracteristicas.basemes || !caracteristicas.base) {
         alert('Error: No se pudo obtener la información de base de cálculo del bono.');
@@ -329,7 +311,7 @@ export default function BonosPage() {
       const feriadosRes = await fetch(`/api/feriados`);
       const feriados = await feriadosRes.json();
 
-      // --- NUEVO: Ajuste de precio según moneda seleccionada y moneda del bono ---
+      // --- Ajuste de precio según moneda seleccionada y moneda del bono ---
       let precioFinal = parseFloat(precio.replace(/\./g, '').replace(',', '.'));
       const tc = Number(tipoCambioInput) || (tipoDeCambio?.valor_mep ?? 1);
 
@@ -490,10 +472,17 @@ export default function BonosPage() {
                   id="tipo-cambio-input"
                   type="number"
                   value={tipoCambioInput}
-                  onChange={e => setTipoCambioInput(Number(e.target.value))}
+                  onChange={e => {
+                    // Permite borrar el campo completamente
+                    const val = e.target.value;
+                    if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) {
+                      setTipoCambioInput(val);
+                    }
+                  }}
                   className={styles.formInput}
                   disabled={isLoading}
                   placeholder="Tipo de cambio MEP"
+                  inputMode="decimal"
                 />
               </div>
             )}
