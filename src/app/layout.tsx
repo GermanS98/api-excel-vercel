@@ -27,8 +27,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-        <AuthProvider> {/* 3. Envuelve todo con el AuthProvider */}
-          <AuthGuard>  {/* 4. Dentro, envuelve los children con AuthGuard */}
+      <body>
+        <AuthProvider>
+          <AuthGuard>
             {children}
           </AuthGuard>
         </AuthProvider>
