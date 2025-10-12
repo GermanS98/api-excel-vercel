@@ -26,8 +26,8 @@
 
  /* 4. Estilos de las tarjetas y títulos */
 .card {
-  background-color: #fff !important;
-  color: #171717 !important;
+  background-color: #111 !important; /* Fondo negro */
+  color: #fff !important;            /* Letras blancas */
   padding: 1.5rem;
   border-radius: 0.5rem;
 }

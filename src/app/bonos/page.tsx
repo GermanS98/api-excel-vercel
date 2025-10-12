@@ -149,7 +149,7 @@ const ResultDisplay = ({ title, result, titleColorClass = '' }: { title: string,
 
 // --- COMPONENTE PRINCIPAL ---
 export default function BonosPage() {
-  const [ticker, setTicker] = useState('TX25');
+  const [ticker, setTicker] = useState('');
   const [precio, setPrecio] = useState('');
   const [nominales, setNominales] = useState(100);
   const [fecha, setFecha] = useState('');
