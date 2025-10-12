@@ -91,10 +91,10 @@ const InfoCard = ({ title, value }: { title: string, value: number | null | unde
 // --- COMPONENTES DE TABLA CON TÍTULOS CLICKEABLES Y CUERPO COMPLETO ---
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
     const enlacesExternos: { [key: string]: string } = {
-        'LECAPs y Similares': 'https://api-excel-vercel.vercel.app/RentaFijaArs',
-        'Ajustados por CER': 'https://api-excel-vercel.vercel.app/cer',
-        'Dollar Linked': 'https://api-excel-vercel.vercel.app/dl',
-        'TAMAR': 'https://api-excel-vercel.vercel.app/tamar',
+        'LECAPs y Similares': 'https://researchcap.vercel.app/RentaFijaArs',
+        'Ajustados por CER': 'https://researchcap.vercel.app/cer',
+        'Dollar Linked': 'https://researchcap.vercel.app/dl',
+        'TAMAR': 'https://researchcap.vercel.app/tamar',
         
     };
     const urlExterna = enlacesExternos[titulo];
