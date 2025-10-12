@@ -152,15 +152,15 @@ export default function Onspage() {
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
     const [filtros, setFiltros] = useState<{ [key: string]: string }>({});
     
-    const segmentosDeEstaPagina = ['ON']; // CORREGIDO
+    const segmentosDeEstaPagina = ['ON'];
 
     useEffect(() => {
         const cargarCaracteristicas = async () => {
             const { data, error } = await supabase
                 .from('caracteristicas')
-                // CORRECCIÓN: Se renombra 'ticker' a 't' para que coincida con 'datosbonos'
+                // CORRECCIÓN: Renombrar 'ticker' a 't' y usar 'segmento' para el filtro
                 .select('t:ticker, ley, mpago, frec, lmin, nom, amort')
-                .eq('s', 'ON'); // CORRECCIÓN: Filtra por el segmento correcto
+                .in('segmento', segmentosDeEstaPagina); 
 
             if (error) {
                 console.error("Error al cargar características:", error);
@@ -221,7 +221,6 @@ export default function Onspage() {
     }, []);
 
     const datosCompletos = useMemo(() => {
-        // No combina hasta que ambas fuentes de datos estén listas
         if (bonos.length === 0 || caracteristicasMap.size === 0) {
             return bonos;
         }
@@ -243,7 +242,6 @@ export default function Onspage() {
                 return (Object.entries(filtros) as [FilterableColumn, string][]).every(([key, filterValue]) => {
                     if (!filterValue) return true;
                     const config = columnConfig[key];
-                    // Si la config no existe para la key, no se puede filtrar por ella
                     if (!config) return true; 
 
                     const cellValue = bono[key as keyof Bono];
@@ -342,4 +340,6 @@ export default function Onspage() {
         </Layout>
     );
 }
+
+
 
