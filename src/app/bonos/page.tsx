@@ -124,6 +124,36 @@ const ResultSummary = ({ result }: { result: SimpleResult }) => {
     </div>
   );
 };
+  const WhatIfCalculator = ({ tirInput, setTirInput, onCalculate, isLoading }: { 
+    tirInput: string;
+    setTirInput: (value: string) => void;
+    onCalculate: () => void;
+    isLoading: boolean;
+  }) => {
+    return (
+      <div className={styles.card} style={{ marginTop: '2rem' }}>
+        <div className={styles.whatIfContainer}>
+          <h4 className={`${styles.resultTitle} ${styles.fontAlbert}`}>Análisis de Sensibilidad Inverso</h4>
+          <p className={styles.subtitle} style={{marginTop: 0, marginBottom: '1rem'}}>
+            Ingresá una TIR objetivo para ver a qué precio de mercado corresponde.
+          </p>
+          <div className={styles.whatIfGrid}>
+            <input
+              type="text"
+              value={tirInput}
+              onChange={e => setTirInput(e.target.value.replace(/[^0-9.,-]/g, ''))}
+              className={styles.formInput}
+              placeholder="TIR deseada (%) Ej: 50,5"
+              disabled={isLoading}
+            />
+            <button onClick={onCalculate} className={styles.secondaryButton} disabled={isLoading || !tirInput}>
+              {isLoading ? '...' : 'CALCULAR PRECIO'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
 const SensibilidadTirTable = ({ datos }: { datos?: SensibilidadItem[] }) => {
   if (!datos || datos.length === 0) {
@@ -587,6 +617,14 @@ useEffect(() => {
         {resultados && (
           <div style={{ marginTop: '2rem' }}>
             {renderResults(resultados)}
+
+            {/* --- AQUÍ MOSTRAMOS LA NUEVA HERRAMIENTA --- */}
+            <WhatIfCalculator
+              tirInput={tirInput}
+              setTirInput={setTirInput}
+              onCalculate={calcularPrecioDesdeFlujos}
+              isLoading={isLoading}
+            />
           </div>
         )}
       </div>
