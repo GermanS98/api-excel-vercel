@@ -164,8 +164,13 @@
 
 .flujosTable td {
   padding: 0.5rem 1rem;
+  text-align: center;
+  vertical-align: middle;
 }
-
+.flujosTable th:first-child,
+.flujosTable td:first-child {
+  text-align: left;
+}
 .flujosTable tbody tr {
   border-bottom: 1px solid #d1d5db;
 }

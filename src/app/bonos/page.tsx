@@ -5,7 +5,16 @@
         import { createClient } from '@supabase/supabase-js'
 
         // --- FUNCIÓN DE UTILIDAD PARA FORMATEAR NÚMEROS ---
-        const formatNumberAR = (value: number | undefined | null, decimales: number = 2): string => {
+        const formatNumberAR = (
+        value: number | undefined | null, 
+        decimales: number = 2,
+        showDashForZero: boolean = false // <--- Nuevo parámetro
+        ): string => {
+        // Si se pide mostrar guion y el valor es 0, lo retornamos.
+        if (showDashForZero && value === 0) {
+        return '-';
+        }
+        // La lógica existente para null/undefined se mantiene.
         if (typeof value !== 'number' || isNaN(value)) {
         return '-';
         }
@@ -75,21 +84,29 @@
         <table className={styles.flujosTable}>
                 <thead>
                 <tr>
+                {/* La primera columna se alineará a la izquierda por el CSS */}
                 <th className={styles.fontAlbert}>Fecha de pago</th>
-                <th className={`${styles.fontAlbert} ${styles.textRight}`}>VNO Ajustado</th>
-                <th className={`${styles.fontAlbert} ${styles.textRight}`}>Intereses</th>
-                <th className={`${styles.fontAlbert} ${styles.textRight}`}>Amortización</th>
-                <th className={`${styles.fontAlbert} ${styles.textRight}`}>Flujo Total</th>
+                
+                {/* El resto de las columnas se centrarán por el CSS */}
+                <th className={styles.fontAlbert}>VNO Ajustado</th>
+                <th className={styles.fontAlbert}>Intereses</th>
+                <th className={styles.fontAlbert}>Amortización</th>
+                <th className={styles.fontAlbert}>Flujo Total</th>
                 </tr>
                 </thead>
                 <tbody>
                 {flujos.map((flujo, index) => (
                 <tr key={index}>
+                {/* La primera columna se alineará a la izquierda */}
                 <td>{new Date(flujo.fecha).toLocaleDateString('es-AR', { timeZone: 'UTC' })}</td>
-                <td className={styles.textRight}>{formatNumberAR(flujo.vno_ajustado, 4)}</td>
-                <td className={styles.textRight}>{formatNumberAR(flujo.pago_interes, 4)}</td>
-                <td className={styles.textRight}>{formatNumberAR(flujo.pago_amortizacion, 4)}</td>
-                <td className={`${styles.textRight} ${flujo.flujo_total < 0 ? styles.pagoInicialMonto : ''}`}>{formatNumberAR(flujo.flujo_total, 4)}</td>
+                
+                {/* El resto de las columnas se centrarán */}
+                <td>{formatNumberAR(flujo.vno_ajustado, 4)}</td>
+                <td>{formatNumberAR(flujo.pago_interes, 4)}</td>
+                <td>{formatNumberAR(flujo.pago_amortizacion, 4)}</td>
+                <td className={flujo.flujo_total < 0 ? styles.pagoInicialMonto : ''}>
+                        {formatNumberAR(flujo.flujo_total, 4)}
+                </td>
                 </tr>
                 ))}
                 </tbody>
@@ -100,14 +117,14 @@
 
         const ResultSummary = ({ result }: { result: SimpleResult }) => {
         const summaryData = [
-        { label: 'TIR %', value: formatNumberAR(result.tir * 100, 2) },
-        { label: 'Paridad %', value: result.paridad ? formatNumberAR(result.paridad * 100, 2) : undefined },
-        { label: 'Valor Técnico', value: formatNumberAR(result.valor_tecnico, 4) },
-        { label: 'Exit Yield (RD) %', value: result.RD ? formatNumberAR(result.RD * 100, 2) : undefined },
+        { label: 'TIR %', value: formatNumberAR(result.tir * 100, 4) },
+        { label: 'Paridad %', value: result.paridad ? formatNumberAR(result.paridad * 100, 2,true) : undefined },
+        { label: 'Valor Técnico', value: formatNumberAR(result.valor_tecnico, 4,true) },
+        { label: 'Exit Yield (RD) %', value: result.RD ? formatNumberAR(result.RD * 100, 2,true) : undefined },
         { label: 'Modified Duration', value: formatNumberAR(result.modify_duration, 2) },
         { label: 'Macaulay Duration', value: result.duracion_macaulay !== undefined ? formatNumberAR(result.duracion_macaulay, 2) : undefined },
-        { label: 'TNA %', value: result.tna ? formatNumberAR(result.tna * 100, 2) : undefined },
-        { label: 'TEM %', value: result.tem ? formatNumberAR(result.tem * 100, 2) : undefined },
+        { label: 'TNA %', value: result.tna ? formatNumberAR(result.tna * 100, 2, true) : undefined },
+        { label: 'TEM %', value: result.tem ? formatNumberAR(result.tem * 100, 2,true) : undefined },
         { label: 'Días al Vto.', value: result.dias_vto },
         ].filter(item => item.value !== undefined && item.value !== null);
 
@@ -116,7 +133,7 @@
         {summaryData.map(item => (
                 <div key={item.label}>
                 <span className={styles.summaryItemLabel}>{item.label}:</span>
-                <strong className={`${styles.summaryItemValue} ${item.label === 'TIR %' ? styles.tirValue : ''}`}>
+                <strong className={styles.summaryItemValue}>
                 {item.value}
                 </strong>
                 </div>
