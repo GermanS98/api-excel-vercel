@@ -172,6 +172,7 @@ export default function BonosPage() {
   const [filtroTicker, setFiltroTicker] = useState('');
   const [mostrarLista, setMostrarLista] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [tirInput, setTirInput] = useState('');
 
   // --- NUEVO: Estados para moneda y tipo de cambio ---
   const [moneda, setMoneda] = useState<'ARS' | 'USD'>('USD'); // Por defecto USD
@@ -364,6 +365,80 @@ useEffect(() => {
       setIsLoading(false);
     }
   }
+    const calcularPrecioDesdeFlujos = async () => {
+    // 1. Validar que tengamos resultados y una TIR válida
+    if (!resultados || ('tipo_dual' in resultados ? !resultados.resultado_tamar : !resultados.flujos_detallados)) {
+        alert("Primero debes calcular la TIR para obtener los flujos.");
+        return;
+    }
+    const tirDecimal = parseFloat(tirInput.replace(',', '.')) / 100;
+    if (isNaN(tirDecimal)) {
+        alert('Por favor, ingresa una TIR válida.');
+        return;
+    }
+
+    setIsLoading(true);
+
+    try {
+        // 2. Determinar qué flujos y base usar (especialmente para bonos DUALES)
+        let flujosParaCalcular;
+        let baseCalculo; // <-- Cambiamos el nombre de la variable para que sea más claro
+
+        if ('tipo_dual' in resultados) {
+            // Para un bono DUAL, usamos los flujos de la pata que tenga mayor TIR (la que "gana")
+             if (resultados.resultado_tamar.tir > resultados.resultado_fija.tir) {
+                 flujosParaCalcular = resultados.resultado_tamar.flujos_detallados;
+                 baseCalculo = resultados.resultado_tamar.baseanual2; // Usamos la nueva clave 'baseanual2'
+             } else {
+                 flujosParaCalcular = resultados.resultado_fija.flujos_detallados;
+                 baseCalculo = resultados.resultado_fija.baseanual2; // Usamos la nueva clave 'baseanual2'
+             }
+        } else {
+             flujosParaCalcular = resultados.flujos_detallados;
+             baseCalculo = resultados.baseanual2; // Usamos la nueva clave 'baseanual2'
+        }
+        
+        if (!baseCalculo) {
+            alert("Error: No se encontró la base de cálculo (baseanual2) en los resultados. Asegúrate que el backend la esté enviando.");
+            setIsLoading(false);
+            return;
+        }
+
+        // 3. Llamar al nuevo y simple endpoint
+        const res = await fetch('https://tir-backend-iop7.onrender.com/precio_desde_flujos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                flujos: flujosParaCalcular,
+                fecha_valor: fecha,
+                tir: tirDecimal,
+                baseanual: baseCalculo // Enviamos la base numérica correcta
+            })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Cálculo fallido');
+
+        // 4. Actualizar el input de precio (lógica de conversión de moneda)
+        let precioRecibido = data.precio_calculado;
+        const tc = Number(tipoCambioInput) || (tipoDeCambio?.valor_mep ?? 1);
+
+        if (mostrarTipoCambio && tc) {
+            if (moneda === 'ARS' && monedaBono === 'USD') {
+                precioRecibido *= tc;
+            } else if (moneda === 'USD' && monedaBono === 'ARS') {
+                precioRecibido /= tc;
+            }
+        }
+        
+        setPrecio(precioRecibido.toFixed(4).replace('.', ','));
+        
+    } catch (err: any) {
+        alert(`Error: ${err.message}`);
+    } finally {
+        setIsLoading(false);
+    }
+  };
 
   const renderResults = (data: ResultData) => {
     if (!data) return null;

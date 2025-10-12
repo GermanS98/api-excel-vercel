@@ -224,3 +224,39 @@
   font-size: 0.875rem;
   margin-left: 0.5rem;
 }
+.whatIfContainer {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.whatIfGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Reutiliza el estilo del botón secundario que te di en la respuesta anterior */
+.secondaryButton {
+  width: 100%;
+  padding: 0.625rem 1.5rem;
+  color: #00C600;
+  font-weight: 700;
+  border-radius: 0.375rem;
+  border: 1px solid #00C600;
+  background-color: #fff;
+  transition: all 0.2s;
+  cursor: pointer;
+  /* Importante para que se alinee con el input */
+  height: calc(0.625rem * 2 + 1.5rem); 
+}
+.secondaryButton:hover {
+  background-color: #f0fff0;
+}
+.secondaryButton:disabled {
+  background-color: #f5f5f5;
+  border-color: #d1d5db;
+  color: #a3a3a3;
+  cursor: not-allowed;
+}
