@@ -4,9 +4,9 @@
 
 /* 3. Estilo del contenedor principal y fuentes */
 .container {
-  background-color: var(--veta-azul-respaldo); /*var(--veta-azul-respaldo)*/
-  color: var(--veta-text-white);
-  font-family: 'Roboto', sans-serif; /* Fuente por defecto para todo */
+  background-color: #fff !important; /* Fondo blanco */
+  color: #171717 !important;         /* Letras negras */
+  font-family: 'Roboto', sans-serif;
   min-height: 100vh;
   padding: 2rem;
 }
@@ -26,7 +26,8 @@
 
  /* 4. Estilos de las tarjetas y títulos */
 .card {
-  background-color: var(--veta-card);
+  background-color: #fff !important;
+  color: #171717 !important;
   padding: 1.5rem;
   border-radius: 0.5rem;
 }
@@ -34,7 +35,7 @@
 .title {
   font-size: 1.875rem; /* 30px */
   font-weight: 700;
-  color: var(--veta-text-white);
+  color: var(--veta-azul-impulso);
 }
 
 .subtitle {
