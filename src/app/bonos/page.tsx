@@ -50,6 +50,7 @@ interface SimpleResult {
   duracion_macaulay?: number;
   base_calculo?: string;
   sensibilidad_tir?: SensibilidadItem[];
+  baseanual2?: number;
 }
 interface DualResult {
   tipo_dual: true;
