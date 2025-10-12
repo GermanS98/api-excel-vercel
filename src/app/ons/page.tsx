@@ -113,6 +113,8 @@ const TablaGeneral = ({
                                         let displayValue: React.ReactNode = '-';
                                         if (value !== null && value !== undefined) {
                                             const config = columnConfig[key];
+                                            if(!config) return <td key={`${item.t}-${key}`}>-</td>; // Safety check
+
                                             if (config.type === 'date') {
                                                 displayValue = formatDate(String(value));
                                             } else if (config.type === 'number') {
@@ -150,20 +152,21 @@ export default function Onspage() {
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
     const [filtros, setFiltros] = useState<{ [key: string]: string }>({});
     
-    const segmentosDeEstaPagina = ['ON']; // Ajusta según necesites
+    const segmentosDeEstaPagina = ['ON', 'ON HD']; // Ajusta según necesites
 
     useEffect(() => {
         const cargarCaracteristicas = async () => {
+            // --- CAMBIO: Construir un filtro .or() para manejar espacios en los nombres ---
+            const orFilter = segmentosDeEstaPagina.map(s => `s.eq.${s}`).join(',');
+            
             const { data, error } = await supabase
                 .from('caracteristicas')
-                // --- CAMBIO CLAVE: Renombrar 'ticker' a 't' en la consulta ---
                 .select('t:ticker, ley, mpago, frec, lmin, nom, amort')
-                .in('s', segmentosDeEstaPagina); // Carga solo las características de los segmentos de esta página
+                .or(orFilter); // Carga solo las características de los segmentos de esta página
 
             if (error) {
                 console.error("Error al cargar características:", error);
             } else if (data) {
-                // Ahora 'data' ya tiene la propiedad 't', por lo que el map funciona
                 setCaracteristicasMap(new Map(data.map(item => [item.t, item])));
             }
         };
@@ -176,10 +179,13 @@ export default function Onspage() {
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
 
+            // --- CAMBIO: Construir un filtro .or() aquí también ---
+            const orFilter = segmentosDeEstaPagina.map(s => `s.eq.${s}`).join(',');
+
             const { data, error } = await supabase
                 .from('datosbonos')
                 .select('*')
-                .in('s', segmentosDeEstaPagina)
+                .or(orFilter) // <-- Filtra por segmento usando OR
                 .gte('vto', manana.toISOString());
 
             if (error) {
@@ -192,11 +198,14 @@ export default function Onspage() {
 
         fetchInitialData();
 
+        // --- CAMBIO: Construir filtro Realtime con sintaxis OR ---
+        const realtimeOrFilter = segmentosDeEstaPagina.map(s => `s.eq.${s}`).join(',');
+
         const channel = supabase
             .channel('realtime-ons-page')
             .on(
                 'postgres_changes',
-                { event: '*', schema: 'public', table: 'datosbonos', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
+                { event: '*', schema: 'public', table: 'datosbonos', filter: `or(${realtimeOrFilter})` },
                 (payload) => {
                     const bonoActualizado = payload.new as Bono;
                     setBonos(bonosActuales => {
@@ -335,3 +344,4 @@ export default function Onspage() {
         </Layout>
     );
 }
+
