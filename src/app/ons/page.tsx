@@ -158,7 +158,7 @@ export default function Onspage() {
         const cargarCaracteristicas = async () => {
             const { data, error } = await supabase
                 .from('caracteristicas')
-                // CORRECCIÓN: Renombrar 'ticker' a 't' y usar 'segmento' para el filtro
+
                 .select('t:ticker, ley, mpago, frec, lmin, nom, amort')
                 .in('segmento', segmentosDeEstaPagina); 
 
