@@ -148,15 +148,19 @@
                 Ingresá una TIR objetivo para ver a qué precio de mercado corresponde.
         </p>
         <div className={styles.whatIfGrid}>
-                <input
+        <input
                 type="text"
                 value={tirInput}
-                onChange={e => setTirInput(e.target.value.replace(/[^0-9.,-]/g, ''))}
+                // LÍNEA ACTUALIZADA CON LA LÓGICA CORRECTA
+                onChange={e => {
+                const valor = e.target.value.replace(/\./g, ',').replace(/[^0-9,]/g, '');
+                setTirInput(valor);
+                }}
                 className={styles.formInput}
                 placeholder="TIR deseada (%) Ej: 50,5"
                 disabled={isLoading}
-                />
-                <button onClick={onCalculate} className={styles.secondaryButton} disabled={isLoading || !tirInput}>
+        />
+                        <button onClick={onCalculate} className={styles.secondaryButton} disabled={isLoading || !tirInput}>
                 {isLoading ? '...' : 'CALCULAR PRECIO'}
                 </button>
         </div>
