@@ -221,21 +221,27 @@ export default function BonosPage() {
   }, [searchContainerRef]);
 
   // --- NUEVO: Traer moneda del bono al seleccionar ticker ---
-  useEffect(() => {
-    if (!ticker) return;
-    const fetchMonedaBono = async () => {
-      try {
-        const res = await fetch(`/api/caracteristicas?ticker=${ticker}`);
-        const caracteristicas = await res.json();
-        if (caracteristicas && caracteristicas.moneda) {
-          setMonedaBono(caracteristicas.moneda === 'USD' ? 'USD' : 'ARS');
-        }
-      } catch (err) {
-        setMonedaBono('ARS');
+// Agrega este estado:
+const [monedaBonoCargada, setMonedaBonoCargada] = useState(false);
+
+// En el useEffect que trae la moneda del bono:
+useEffect(() => {
+  if (!ticker) return;
+  const fetchMonedaBono = async () => {
+    try {
+      const res = await fetch(`/api/caracteristicas?ticker=${ticker}`);
+      const caracteristicas = await res.json();
+      if (caracteristicas && caracteristicas.moneda) {
+        setMonedaBono(caracteristicas.moneda === 'USD' ? 'USD' : 'ARS');
       }
-    };
-    fetchMonedaBono();
-  }, [ticker]);
+      setMonedaBonoCargada(true); // <- Marca como cargada
+    } catch (err) {
+      setMonedaBono('ARS');
+      setMonedaBonoCargada(true); // <- Marca como cargada aunque haya error
+    }
+  };
+  fetchMonedaBono();
+}, [ticker]);
 
   // --- Mostrar input de tipo de cambio si corresponde y traer valor MEP ---
   useEffect(() => {
@@ -465,27 +471,26 @@ export default function BonosPage() {
             </div>
 
             {/* NUEVO: Input de tipo de cambio si corresponde */}
-            {mostrarTipoCambio && (
-              <div>
-                <label htmlFor="tipo-cambio-input" className={styles.formLabel}>Tipo de cambio (MEP)</label>
-                <input
-                  id="tipo-cambio-input"
-                  type="number"
-                  value={tipoCambioInput}
-                  onChange={e => {
-                    // Permite borrar el campo completamente
-                    const val = e.target.value;
-                    if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) {
-                      setTipoCambioInput(val);
-                    }
-                  }}
-                  className={styles.formInput}
-                  disabled={isLoading}
-                  placeholder="Tipo de cambio MEP"
-                  inputMode="decimal"
-                />
-              </div>
-            )}
+            {monedaBonoCargada && mostrarTipoCambio && (
+            <div>
+              <label htmlFor="tipo-cambio-input" className={styles.formLabel}>Tipo de cambio (MEP)</label>
+              <input
+                id="tipo-cambio-input"
+                type="number"
+                value={tipoCambioInput}
+                onChange={e => {
+                  const val = e.target.value;
+                  if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) {
+                    setTipoCambioInput(val);
+                  }
+                }}
+                className={styles.formInput}
+                disabled={isLoading}
+                placeholder="Tipo de cambio MEP"
+                inputMode="decimal"
+              />
+            </div>
+          )}
 
             <div>
               <label htmlFor="nominales-input" className={styles.formLabel}>Nominales</label>
