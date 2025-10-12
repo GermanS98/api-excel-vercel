@@ -4,7 +4,7 @@
 
 /* 3. Estilo del contenedor principal y fuentes */
 .container {
-  background-color: #fff !important; /* Fondo blanco */
+  background-color: var(--veta-azul-impulso); /* Fondo blanco */
   color: #171717 !important;         /* Letras negras */
   font-family: 'Roboto', sans-serif;
   min-height: 100vh;
@@ -35,7 +35,7 @@
 .title {
   font-size: 1.875rem; /* 30px */
   font-weight: 700;
-  color: var(--veta-azul-impulso);
+  color: var(--veta-verde-activo);
 }
 
 .subtitle {
