@@ -124,36 +124,57 @@ const ResultSummary = ({ result }: { result: SimpleResult }) => {
     </div>
   );
 };
-  const WhatIfCalculator = ({ tirInput, setTirInput, onCalculate, isLoading }: { 
-    tirInput: string;
-    setTirInput: (value: string) => void;
-    onCalculate: () => void;
-    isLoading: boolean;
-  }) => {
-    return (
-      <div className={styles.card} style={{ marginTop: '2rem' }}>
-        <div className={styles.whatIfContainer}>
-          <h4 className={`${styles.resultTitle} ${styles.fontAlbert}`}>Análisis de Sensibilidad Inverso</h4>
-          <p className={styles.subtitle} style={{marginTop: 0, marginBottom: '1rem'}}>
-            Ingresá una TIR objetivo para ver a qué precio de mercado corresponde.
-          </p>
-          <div className={styles.whatIfGrid}>
-            <input
-              type="text"
-              value={tirInput}
-              onChange={e => setTirInput(e.target.value.replace(/[^0-9.,-]/g, ''))}
-              className={styles.formInput}
-              placeholder="TIR deseada (%) Ej: 50,5"
-              disabled={isLoading}
-            />
-            <button onClick={onCalculate} className={styles.secondaryButton} disabled={isLoading || !tirInput}>
-              {isLoading ? '...' : 'CALCULAR PRECIO'}
-            </button>
-          </div>
-        </div>
+
+// **PASO 2: MEJORAMOS EL COMPONENTE WhatIfCalculator**
+const WhatIfCalculator = ({ 
+  tirInput, 
+  setTirInput, 
+  onCalculate, 
+  isLoading,
+  precioObjetivo,
+  error
+}: { 
+  tirInput: string;
+  setTirInput: (value: string) => void;
+  onCalculate: () => void;
+  isLoading: boolean;
+  precioObjetivo: number | null;
+  error: string;
+}) => {
+  return (
+    <div className={styles.whatIfContainer}>
+      <h4 className={`${styles.resultTitle} ${styles.fontAlbert}`}>Análisis de Sensibilidad Inverso</h4>
+      <p className={styles.subtitle} style={{marginTop: 0, marginBottom: '1rem'}}>
+        Ingresá una TIR objetivo para ver a qué precio de mercado corresponde.
+      </p>
+      <div className={styles.whatIfGrid}>
+        <input
+          type="text"
+          value={tirInput}
+          onChange={e => setTirInput(e.target.value.replace(/[^0-9.,-]/g, ''))}
+          className={styles.formInput}
+          placeholder="TIR deseada (%) Ej: 50,5"
+          disabled={isLoading}
+        />
+        <button onClick={onCalculate} className={styles.secondaryButton} disabled={isLoading || !tirInput}>
+          {isLoading ? '...' : 'CALCULAR PRECIO'}
+        </button>
       </div>
-    );
-  };
+      
+      {/* --- AQUÍ MOSTRAMOS EL RESULTADO O EL ERROR --- */}
+      {precioObjetivo !== null && (
+        <div className={styles.whatIfResult}>
+          <strong>Precio Objetivo:</strong> {formatNumberAR(precioObjetivo, 4)}
+        </div>
+      )}
+      {error && (
+        <div className={styles.whatIfError}>
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SensibilidadTirTable = ({ datos }: { datos?: SensibilidadItem[] }) => {
   if (!datos || datos.length === 0) {
@@ -182,11 +203,33 @@ const SensibilidadTirTable = ({ datos }: { datos?: SensibilidadItem[] }) => {
   );
 };
 
-const ResultDisplay = ({ title, result, titleColorClass = '' }: { title: string, result: SimpleResult, titleColorClass?: string }) => (
+// **PASO 4: INTEGRAMOS LA CALCULADORA EN ResultDisplay**
+const ResultDisplay = ({ 
+  title, 
+  result, 
+  titleColorClass = '',
+  whatIfProps // Agrupamos las props para la calculadora
+}: { 
+  title: string;
+  result: SimpleResult; 
+  titleColorClass?: string;
+  whatIfProps: {
+    tirInput: string;
+    setTirInput: (value: string) => void;
+    onCalculate: () => void;
+    isLoading: boolean;
+    precioObjetivo: number | null;
+    error: string;
+  }
+}) => (
   <div className={styles.card}>
     <h3 className={`${styles.resultTitle} ${styles.fontAlbert} ${titleColorClass}`}>{title}</h3>
     <ResultSummary result={result} />
     <FlujosTable flujos={result.flujos_detallados} />
+    
+    {/* --- AQUÍ ES LA NUEVA UBICACIÓN --- */}
+    <WhatIfCalculator {...whatIfProps} />
+
     <SensibilidadTirTable datos={result.sensibilidad_tir} />
   </div>
 );
@@ -203,14 +246,19 @@ export default function BonosPage() {
   const [filtroTicker, setFiltroTicker] = useState('');
   const [mostrarLista, setMostrarLista] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Estados para la calculadora inversa
   const [tirInput, setTirInput] = useState('');
+  // **PASO 1: NUEVO ESTADO PARA EL RESULTADO**
+  const [precioObjetivo, setPrecioObjetivo] = useState<number | null>(null);
+  const [whatIfError, setWhatIfError] = useState('');
 
-  // --- NUEVO: Estados para moneda y tipo de cambio ---
-  const [moneda, setMoneda] = useState<'ARS' | 'USD'>('USD'); // Por defecto USD
+  const [moneda, setMoneda] = useState<'ARS' | 'USD'>('USD');
   const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
   const [mostrarTipoCambio, setMostrarTipoCambio] = useState(false);
-  const [tipoCambioInput, setTipoCambioInput] = useState<string>(''); // string para permitir vacío
+  const [tipoCambioInput, setTipoCambioInput] = useState<string>('');
   const [monedaBono, setMonedaBono] = useState<'ARS' | 'USD'>('ARS');
+  const [monedaBonoCargada, setMonedaBonoCargada] = useState(false);
 
   useEffect(() => {
     const getCurrentDate = () => {
@@ -251,37 +299,30 @@ export default function BonosPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [searchContainerRef]);
-
-  // --- NUEVO: Traer moneda del bono al seleccionar ticker ---
-// Agrega este estado:
-const [monedaBonoCargada, setMonedaBonoCargada] = useState(false);
-
-// En el useEffect que trae la moneda del bono:
-useEffect(() => {
-  if (!ticker) return;
-  const fetchMonedaBono = async () => {
-    try {
-      const res = await fetch(`/api/caracteristicas?ticker=${ticker}`);
-      const caracteristicas = await res.json();
-      if (caracteristicas && caracteristicas.moneda) {
-        setMonedaBono(caracteristicas.moneda === 'USD' ? 'USD' : 'ARS');
+  
+  useEffect(() => {
+    if (!ticker) return;
+    const fetchMonedaBono = async () => {
+      try {
+        const res = await fetch(`/api/caracteristicas?ticker=${ticker}`);
+        const caracteristicas = await res.json();
+        if (caracteristicas && caracteristicas.moneda) {
+          setMonedaBono(caracteristicas.moneda === 'USD' ? 'USD' : 'ARS');
+        }
+        setMonedaBonoCargada(true);
+      } catch (err) {
+        setMonedaBono('ARS');
+        setMonedaBonoCargada(true);
       }
-      setMonedaBonoCargada(true); // <- Marca como cargada
-    } catch (err) {
-      setMonedaBono('ARS');
-      setMonedaBonoCargada(true); // <- Marca como cargada aunque haya error
-    }
-  };
-  fetchMonedaBono();
-}, [ticker]);
+    };
+    fetchMonedaBono();
+  }, [ticker]);
 
-  // --- Mostrar input de tipo de cambio si corresponde y traer valor MEP ---
   useEffect(() => {
     const necesitaTC = (moneda === 'ARS' && monedaBono === 'USD') || (moneda === 'USD' && monedaBono === 'ARS');
     setMostrarTipoCambio(necesitaTC);
 
     if (necesitaTC) {
-      // Traer el tipo de cambio solo cuando se necesita
       const fetchTipoDeCambio = async () => {
         const { data, error } = await supabase
           .from('tipodecambio')
@@ -307,6 +348,8 @@ useEffect(() => {
   const calcular = async () => {
     setIsLoading(true);
     setResultados(null);
+    setPrecioObjetivo(null); // Limpiamos el resultado anterior
+    setWhatIfError('');
     try {
         const caracRes = await fetch(`/api/caracteristicas?ticker=${ticker}`);
         const caracteristicas = await caracRes.json();
@@ -348,8 +391,7 @@ useEffect(() => {
 
       const feriadosRes = await fetch(`/api/feriados`);
       const feriados = await feriadosRes.json();
-
-      // --- Ajuste de precio según moneda seleccionada y moneda del bono ---
+      
       let precioFinal = parseFloat(precio.replace(/\./g, '').replace(',', '.'));
       const tc = Number(tipoCambioInput) || (tipoDeCambio?.valor_mep ?? 1);
 
@@ -396,61 +438,59 @@ useEffect(() => {
       setIsLoading(false);
     }
   }
-    const calcularPrecioDesdeFlujos = async () => {
-    // 1. Validar que tengamos resultados y una TIR válida
+  
+  // **PASO 3: ACTUALIZAMOS LA FUNCIÓN DE CÁLCULO INVERSO**
+  const calcularPrecioDesdeFlujos = async () => {
+    setPrecioObjetivo(null);
+    setWhatIfError('');
     if (!resultados || ('tipo_dual' in resultados ? !resultados.resultado_tamar : !resultados.flujos_detallados)) {
-        alert("Primero debes calcular la TIR para obtener los flujos.");
+        setWhatIfError("Primero debes calcular la TIR para obtener los flujos.");
         return;
     }
-    const tirDecimal = parseFloat(tirInput.replace(',', '.')) / 100;
-    if (isNaN(tirDecimal)) {
-        alert('Por favor, ingresa una TIR válida.');
+    const tirNumero = parseFloat(tirInput.replace(',', '.'));
+    if (isNaN(tirNumero)) {
+        setWhatIfError('Por favor, ingresa una TIR válida.');
         return;
     }
+    const tirDecimal = tirNumero / 100.0;
 
     setIsLoading(true);
 
     try {
-        // 2. Determinar qué flujos y base usar (especialmente para bonos DUALES)
         let flujosParaCalcular;
-        let baseCalculo; // <-- Cambiamos el nombre de la variable para que sea más claro
+        let baseCalculo;
 
         if ('tipo_dual' in resultados) {
-            // Para un bono DUAL, usamos los flujos de la pata que tenga mayor TIR (la que "gana")
-             if (resultados.resultado_tamar.tir > resultados.resultado_fija.tir) {
-                 flujosParaCalcular = resultados.resultado_tamar.flujos_detallados;
-                 baseCalculo = resultados.resultado_tamar.baseanual2; // Usamos la nueva clave 'baseanual2'
-             } else {
-                 flujosParaCalcular = resultados.resultado_fija.flujos_detallados;
-                 baseCalculo = resultados.resultado_fija.baseanual2; // Usamos la nueva clave 'baseanual2'
-             }
+            if (resultados.resultado_tamar.tir > resultados.resultado_fija.tir) {
+                flujosParaCalcular = resultados.resultado_tamar.flujos_detallados;
+                baseCalculo = resultados.resultado_tamar.baseanual2;
+            } else {
+                flujosParaCalcular = resultados.resultado_fija.flujos_detallados;
+                baseCalculo = resultados.resultado_fija.baseanual2;
+            }
         } else {
-             flujosParaCalcular = resultados.flujos_detallados;
-             baseCalculo = resultados.baseanual2; // Usamos la nueva clave 'baseanual2'
+            flujosParaCalcular = resultados.flujos_detallados;
+            baseCalculo = resultados.baseanual2;
         }
         
         if (!baseCalculo) {
-            alert("Error: No se encontró la base de cálculo (baseanual2) en los resultados. Asegúrate que el backend la esté enviando.");
-            setIsLoading(false);
-            return;
+            throw new Error("No se encontró la base de cálculo (baseanual2) en los resultados.");
         }
 
-        // 3. Llamar al nuevo y simple endpoint
         const res = await fetch('https://tir-backend-iop7.onrender.com/precio_desde_flujos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 flujos: flujosParaCalcular,
                 fecha_valor: fecha,
-                tir: tirDecimal,
-                baseanual: baseCalculo // Enviamos la base numérica correcta
+                tir: tirDecimal, // Enviamos como decimal
+                baseanual: baseCalculo
             })
         });
 
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Cálculo fallido');
 
-        // 4. Actualizar el input de precio (lógica de conversión de moneda)
         let precioRecibido = data.precio_calculado;
         const tc = Number(tipoCambioInput) || (tipoDeCambio?.valor_mep ?? 1);
 
@@ -462,10 +502,11 @@ useEffect(() => {
             }
         }
         
-        setPrecio(precioRecibido.toFixed(4).replace('.', ','));
+        // ¡Aquí está el cambio! Actualizamos el nuevo estado.
+        setPrecioObjetivo(precioRecibido);
         
     } catch (err: any) {
-        alert(`Error: ${err.message}`);
+        setWhatIfError(`Error: ${err.message}`);
     } finally {
         setIsLoading(false);
     }
@@ -473,15 +514,31 @@ useEffect(() => {
 
   const renderResults = (data: ResultData) => {
     if (!data) return null;
+
+    // Agrupamos las props para pasarlas más fácil
+    const whatIfProps = {
+      tirInput,
+      setTirInput,
+      onCalculate: calcularPrecioDesdeFlujos,
+      isLoading,
+      precioObjetivo,
+      error: whatIfError
+    };
+
     if ('tipo_dual' in data) {
+      // Para bonos duales, mostramos ambas patas y la calculadora una sola vez
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <ResultDisplay title="Resultado Pata TAMAR" result={data.resultado_tamar} titleColorClass={styles.titleBlue} />
-          <ResultDisplay title="Resultado Pata Fija" result={data.resultado_fija} titleColorClass={styles.titleGreen} />
-        </div>
+        <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                <ResultDisplay title="Resultado Pata TAMAR" result={data.resultado_tamar} titleColorClass={styles.titleBlue} whatIfProps={whatIfProps} />
+                <ResultDisplay title="Resultado Pata Fija" result={data.resultado_fija} titleColorClass={styles.titleGreen} whatIfProps={whatIfProps} />
+            </div>
+            {/* Si quieres la calculadora fuera de las tarjetas para duales, iría aquí */}
+        </>
       );
     }
-    return <ResultDisplay title="Resultados del Bono" result={data} />;
+    // Para bonos simples, la calculadora se renderiza dentro de la tarjeta
+    return <ResultDisplay title="Resultados del Bono" result={data} whatIfProps={whatIfProps} />;
   };
 
   const tickersFiltrados = tickers.filter(t =>
@@ -539,7 +596,6 @@ useEffect(() => {
                 type="text"
                 value={precio}
                 onChange={e => {
-                  // Permite solo números, comas y puntos
                   let valor = e.target.value.replace(/[^0-9.,]/g, '');
                   setPrecio(valor);
                 }}
@@ -560,8 +616,7 @@ useEffect(() => {
                 disabled={isLoading}
               />
             </div>
-
-            {/* NUEVO: Selector de moneda */}
+            
             <div>
               <label htmlFor="moneda-input" className={styles.formLabel}>Moneda</label>
               <select
@@ -575,28 +630,25 @@ useEffect(() => {
                 <option value="USD">USD</option>
               </select>
             </div>
-
-            {/* NUEVO: Input de tipo de cambio si corresponde */}
+            
             {monedaBonoCargada && mostrarTipoCambio && (
             <div>
               <label htmlFor="tipo-cambio-input" className={styles.formLabel}>Tipo de cambio (MEP)</label>
               <input
                 id="tipo-cambio-input"
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={tipoCambioInput}
                 onChange={e => {
-                  const val = e.target.value;
-                  if (val === '' || /^[0-9]*\.?[0-9]*$/.test(val)) {
-                    setTipoCambioInput(val);
-                  }
+                  const val = e.target.value.replace(/[^0-9,.]/g, '');
+                  setTipoCambioInput(val);
                 }}
                 className={styles.formInput}
                 disabled={isLoading}
                 placeholder="Tipo de cambio MEP"
-                inputMode="decimal"
               />
             </div>
-          )}
+            )}
 
             <div>
               <label htmlFor="nominales-input" className={styles.formLabel}>Nominales</label>
@@ -617,14 +669,6 @@ useEffect(() => {
         {resultados && (
           <div style={{ marginTop: '2rem' }}>
             {renderResults(resultados)}
-
-            {/* --- AQUÍ MOSTRAMOS LA NUEVA HERRAMIENTA --- */}
-            <WhatIfCalculator
-              tirInput={tirInput}
-              setTirInput={setTirInput}
-              onCalculate={calcularPrecioDesdeFlujos}
-              isLoading={isLoading}
-            />
           </div>
         )}
       </div>

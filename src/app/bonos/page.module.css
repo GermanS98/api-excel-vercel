@@ -260,3 +260,26 @@
   color: #a3a3a3;
   cursor: not-allowed;
 }
+.whatIfResult {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: #e9f5ff;
+  border: 1px solid #b3d7ff;
+  border-radius: 4px;
+  font-weight: 500;
+  color: #00529B;
+}
+
+.whatIfResult strong {
+  color: #004085;
+}
+
+.whatIfError {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 4px;
+  font-weight: 500;
+  color: #c62828;
+}
