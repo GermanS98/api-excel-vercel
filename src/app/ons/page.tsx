@@ -150,7 +150,7 @@ export default function Onspage() {
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
     const [filtros, setFiltros] = useState<{ [key: string]: string }>({});
     
-    const segmentosDeEstaPagina = ['ON', 'ON HD']; // Ajusta según necesites
+    const segmentosDeEstaPagina = ['ON']; // Ajusta según necesites
 
     useEffect(() => {
         const cargarCaracteristicas = async () => {
