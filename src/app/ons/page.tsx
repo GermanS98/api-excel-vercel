@@ -152,17 +152,15 @@ export default function Onspage() {
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
     const [filtros, setFiltros] = useState<{ [key: string]: string }>({});
     
-    const segmentosDeEstaPagina = ['ON', 'ON HD']; // Ajusta según necesites
+    const segmentosDeEstaPagina = ['ON']; // CORREGIDO
 
     useEffect(() => {
         const cargarCaracteristicas = async () => {
-            // --- CAMBIO: Construir un filtro .or() para manejar espacios en los nombres ---
-            const orFilter = segmentosDeEstaPagina.map(s => `s.eq.${s}`).join(',');
-            
             const { data, error } = await supabase
                 .from('caracteristicas')
+                // CORRECCIÓN: Se renombra 'ticker' a 't' para que coincida con 'datosbonos'
                 .select('t:ticker, ley, mpago, frec, lmin, nom, amort')
-                .or(orFilter); // Carga solo las características de los segmentos de esta página
+                .eq('s', 'ON'); // CORRECCIÓN: Filtra por el segmento correcto
 
             if (error) {
                 console.error("Error al cargar características:", error);
@@ -179,13 +177,10 @@ export default function Onspage() {
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
 
-            // --- CAMBIO: Construir un filtro .or() aquí también ---
-            const orFilter = segmentosDeEstaPagina.map(s => `s.eq.${s}`).join(',');
-
             const { data, error } = await supabase
                 .from('datosbonos')
                 .select('*')
-                .or(orFilter) // <-- Filtra por segmento usando OR
+                .in('s', segmentosDeEstaPagina)
                 .gte('vto', manana.toISOString());
 
             if (error) {
@@ -198,14 +193,11 @@ export default function Onspage() {
 
         fetchInitialData();
 
-        // --- CAMBIO: Construir filtro Realtime con sintaxis OR ---
-        const realtimeOrFilter = segmentosDeEstaPagina.map(s => `s.eq.${s}`).join(',');
-
         const channel = supabase
             .channel('realtime-ons-page')
             .on(
                 'postgres_changes',
-                { event: '*', schema: 'public', table: 'datosbonos', filter: `or(${realtimeOrFilter})` },
+                { event: '*', schema: 'public', table: 'datosbonos', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
                 (payload) => {
                     const bonoActualizado = payload.new as Bono;
                     setBonos(bonosActuales => {
@@ -229,7 +221,10 @@ export default function Onspage() {
     }, []);
 
     const datosCompletos = useMemo(() => {
-        if (caracteristicasMap.size === 0) return bonos;
+        // No combina hasta que ambas fuentes de datos estén listas
+        if (bonos.length === 0 || caracteristicasMap.size === 0) {
+            return bonos;
+        }
         return bonos.map(bono => ({
             ...bono,
             ...(caracteristicasMap.get(bono.t) || {})
@@ -248,6 +243,9 @@ export default function Onspage() {
                 return (Object.entries(filtros) as [FilterableColumn, string][]).every(([key, filterValue]) => {
                     if (!filterValue) return true;
                     const config = columnConfig[key];
+                    // Si la config no existe para la key, no se puede filtrar por ella
+                    if (!config) return true; 
+
                     const cellValue = bono[key as keyof Bono];
                     if (cellValue === null || cellValue === undefined) return false;
                     
