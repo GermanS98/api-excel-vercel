@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import styles from './page.module.css'
+import { createClient } from '@supabase/supabase-js'
 
 // --- FUNCIÓN DE UTILIDAD PARA FORMATEAR NÚMEROS ---
 const formatNumberAR = (value: number | undefined | null, decimales: number = 2): string => {
@@ -12,6 +13,12 @@ const formatNumberAR = (value: number | undefined | null, decimales: number = 2)
     minimumFractionDigits: decimales,
     maximumFractionDigits: decimales,
   });
+};
+
+// --- TIPO PARA TIPO DE CAMBIO ---
+type TipoDeCambio = {
+  valor_ccl: number;
+  valor_mep: number;
 };
 
 // --- INTERFACES PARA TIPADO ---
@@ -50,6 +57,12 @@ interface DualResult {
   resultado_fija: SimpleResult;
 }
 type ResultData = SimpleResult | DualResult | null;
+
+// --- SUPABASE CLIENT ---
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_KEY!
+);
 
 // --- SUB-COMPONENTES DE UI ---
 const FlujosTable = ({ flujos }: { flujos: FlujoDetallado[] }) => {
@@ -160,6 +173,13 @@ export default function BonosPage() {
   const [mostrarLista, setMostrarLista] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  // --- NUEVO: Estados para moneda y tipo de cambio ---
+  const [moneda, setMoneda] = useState<'ARS' | 'USD'>('ARS');
+  const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
+  const [mostrarTipoCambio, setMostrarTipoCambio] = useState(false);
+  const [tipoCambioInput, setTipoCambioInput] = useState<number | ''>('');
+  const [monedaBono, setMonedaBono] = useState<'ARS' | 'USD'>('ARS');
+
   useEffect(() => {
     const getCurrentDate = () => {
       const today = new Date();
@@ -199,6 +219,70 @@ export default function BonosPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [searchContainerRef]);
+
+  // --- NUEVO: Efecto para cargar el tipo de cambio más reciente ---
+  useEffect(() => {
+    const fetchTipoDeCambio = async () => {
+      const { data, error } = await supabase
+        .from('tipodecambio')
+        .select('datos')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.error('Error al obtener tipo de cambio:', error);
+      } else if (data) {
+        setTipoDeCambio(data.datos);
+        setTipoCambioInput(data.datos.valor_mep);
+      }
+    };
+
+    fetchTipoDeCambio();
+
+    const channel = supabase
+      .channel('tipodecambio-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'tipodecambio' },
+        (payload) => {
+          if (payload.new && payload.new.datos) {
+            setTipoDeCambio(payload.new.datos);
+            setTipoCambioInput(payload.new.datos.valor_mep);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // --- NUEVO: Traer moneda del bono al seleccionar ticker ---
+  useEffect(() => {
+    if (!ticker) return;
+    const fetchMonedaBono = async () => {
+      try {
+        const res = await fetch(`/api/caracteristicas?ticker=${ticker}`);
+        const caracteristicas = await res.json();
+        if (caracteristicas && caracteristicas.moneda) {
+          setMonedaBono(caracteristicas.moneda === 'USD' ? 'USD' : 'ARS');
+        }
+      } catch (err) {
+        setMonedaBono('ARS');
+      }
+    };
+    fetchMonedaBono();
+  }, [ticker]);
+
+  // --- Mostrar input de tipo de cambio si corresponde ---
+  useEffect(() => {
+    setMostrarTipoCambio(
+      (moneda === 'ARS' && monedaBono === 'USD') ||
+      (moneda === 'USD' && monedaBono === 'ARS')
+    );
+  }, [moneda, monedaBono]);
 
   const calcular = async () => {
     setIsLoading(true);
@@ -245,6 +329,18 @@ export default function BonosPage() {
       const feriadosRes = await fetch(`/api/feriados`);
       const feriados = await feriadosRes.json();
 
+      // --- NUEVO: Ajuste de precio según moneda seleccionada y moneda del bono ---
+      let precioFinal = parseFloat(precio.replace(/\./g, '').replace(',', '.'));
+      const tc = Number(tipoCambioInput) || (tipoDeCambio?.valor_mep ?? 1);
+
+      if (mostrarTipoCambio && tc) {
+        if (moneda === 'ARS' && monedaBono === 'USD') {
+          precioFinal = precioFinal / tc;
+        } else if (moneda === 'USD' && monedaBono === 'ARS') {
+          precioFinal = precioFinal * tc;
+        }
+      }
+
       const res = await fetch('https://tir-backend-iop7.onrender.com/tir', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -254,7 +350,7 @@ export default function BonosPage() {
           cer,
           tamar,
           dolar,
-          precio: parseFloat(precio.replace(/\./g, '').replace(',', '.')),
+          precio: precioFinal,
           fecha_valor: fecha,
           feriados,
           basemes: caracteristicas?.basemes,
@@ -370,6 +466,38 @@ export default function BonosPage() {
                 disabled={isLoading}
               />
             </div>
+
+            {/* NUEVO: Selector de moneda */}
+            <div>
+              <label htmlFor="moneda-input" className={styles.formLabel}>Moneda</label>
+              <select
+                id="moneda-input"
+                value={moneda}
+                onChange={e => setMoneda(e.target.value as 'ARS' | 'USD')}
+                className={styles.formInput}
+                disabled={isLoading}
+              >
+                <option value="ARS">ARS</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
+
+            {/* NUEVO: Input de tipo de cambio si corresponde */}
+            {mostrarTipoCambio && (
+              <div>
+                <label htmlFor="tipo-cambio-input" className={styles.formLabel}>Tipo de cambio (MEP)</label>
+                <input
+                  id="tipo-cambio-input"
+                  type="number"
+                  value={tipoCambioInput}
+                  onChange={e => setTipoCambioInput(Number(e.target.value))}
+                  className={styles.formInput}
+                  disabled={isLoading}
+                  placeholder="Tipo de cambio MEP"
+                />
+              </div>
+            )}
+
             <div>
               <label htmlFor="nominales-input" className={styles.formLabel}>Nominales</label>
               <input id="nominales-input" type="number" value={nominales} onChange={e => setNominales(Number(e.target.value))} className={styles.formInput} disabled={isLoading} />
