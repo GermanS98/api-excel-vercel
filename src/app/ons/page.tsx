@@ -17,7 +17,7 @@ type Bono = {
   tir: number;
   s: string;       // segmento
   dv: number;      // dias_vto
-  pa: number;      // paridad
+  pd: number;      // paridad
   md: number | null; // modify_duration
   RD: number | null;
   dm: number | null; // duracion_macaulay
@@ -37,7 +37,7 @@ const columnConfig: Record<string, { label: string, type: 'text' | 'date' | 'num
     p: { label: 'Precio', type: 'number' },
     v: { label: 'Var', type: 'number', isPercentage: true },
     tir: { label: 'TIR', type: 'number', isPercentage: true },
-    pa: { label: 'Paridad', type: 'number' },
+    pd: { label: 'Paridad', type: 'number' },
     md: { label: 'MD', type: 'number' },
     ley: { label: 'Ley', type: 'text' },
     mpago: { label: 'Moneda', type: 'text' },
@@ -126,7 +126,7 @@ const TablaGeneral = ({
                                                 }
                                             }
                                         }
-                                        return <td key={key} style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{displayValue}</td>
+                                        return <td key={`${item.t}-${key}`} style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{displayValue}</td>;
                                     })}
                                 </tr>
                             ))
@@ -150,19 +150,19 @@ export default function Onspage() {
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
     const [filtros, setFiltros] = useState<{ [key: string]: string }>({});
     
-    const segmentosDeEstaPagina = ['ON']; // Ajusta según necesites
+    const segmentosDeEstaPagina = ['ON', 'ON HD']; // Ajusta según necesites
 
     useEffect(() => {
         const cargarCaracteristicas = async () => {
             const { data, error } = await supabase
                 .from('caracteristicas')
-                .select('t, ley, mpago, frec, lmin, nom, amort')
+                .select('ticker, ley, mpago, frec, lmin, nom, amort')
                 .in('s', segmentosDeEstaPagina); // Carga solo las características de los segmentos de esta página
 
             if (error) {
                 console.error("Error al cargar características:", error);
             } else if (data) {
-                setCaracteristicasMap(new Map(data.map(item => [item.t, item])));
+                setCaracteristicasMap(new Map(data.map(item => [item.ticker, item])));
             }
         };
         cargarCaracteristicas();
