@@ -1,61 +1,58 @@
 'use client';
 import Layout from '@/components/layout/Layout';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import Sidebar from '@/components/ui/Sidebar';
-import Link from 'next/link';
 
-// PASO 1: ACTUALIZAR LA DEFINICIÓN DE TIPO PARA INCLUIR NUEVOS CAMPOS
+// ==================================================================
+// DEFINICIÓN DE TIPOS (ACTUALIZADA)
+// ==================================================================
 type Bono = {
-  ticker: string;
+  t: string;       // ticker
   vto: string;
-  precio: number | null;
-  var: number; // Nuevo campo
+  p: number | null;  // precio
+  v: number;       // var
   tir: number;
-  segmento: string;
-  dias_vto: number;
-  modify_duration: number | null;
-  RD: number | null; // Nuevo campo
-  duracion_macaulay: number | null; // Nuevo campo
-  paridad: number | null; // Nuevo campo
-  tipo_bono: string; // Nuevo campo;
-  spread?: number | null;
+  s: string;       // segmento
+  dv: number;      // dias_vto
+  pd: number;      // paridad
+  md: number | null; // modify_duration
+  RD: number | null;
+  dm: number | null; // duracion_macaulay
+  spread?: number | null; // Campo opcional para el spread
 };
 
-// --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
+// ==================================================================
+// CONFIGURACIONES GLOBALES
+// ==================================================================
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_KEY!
 );
 
-// --- FUNCIONES AUXILIARES DE FORMATO ---
-// --- FUNCIONES AUXILIARES DE FORMATO ---
+// ==================================================================
+// FUNCIONES AUXILIARES
+// ==================================================================
 const formatValue = (value: number | null | undefined, unit: string = '%', decimals: number = 2) => {
-    // 1. Mantenemos la validación inicial
     if (value === null || typeof value === 'undefined' || !isFinite(value)) return '-';
-
-    // 2. Realizamos el cálculo si es un porcentaje
     const numeroAFormatear = value * (unit === '%' ? 100 : 1);
-
-    // 3. Usamos toLocaleString para aplicar el formato deseado
     const numeroFormateado = numeroAFormatear.toLocaleString('es-AR', {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     });
-
-    // 4. Devolvemos el número formateado con su unidad
-   return `${numeroFormateado}${unit}`;
+    return `${numeroFormateado}${unit}`;
 };
 const formatDate = (dateString: string) => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 };
 
-// --- COMPONENTE DE TABLA ACTUALIZADO ---
+// ==================================================================
+// COMPONENTE TablaGeneral (Actualizado para nombres cortos)
+// ==================================================================
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>
@@ -77,28 +74,26 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
           </thead>
           <tbody>
             {datos.length > 0 ? (
-              datos.map((item: Bono, index: number) => (
-                <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
+              datos.map((item: Bono) => (
+                <tr key={item.t} style={{ borderTop: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.precio,'',2)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.p,'',2)}</td>
                   <td style={{ 
-                                padding: '0.75rem 1rem', 
-                                color: item.var >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
-                                fontWeight: 500
-                                }}>
-                    {formatValue(item.var)}
-                  </td>                  
+                      padding: '0.75rem 1rem', 
+                      color: item.v >= 0 ? '#22c55e' : '#ef4444',
+                      fontWeight: 500
+                      }}>
+                    {formatValue(item.v)}
+                  </td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
-                  {/* --- DATO AGREGADO --- */}
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.paridad, '', 2)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.modify_duration, '', 2)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.pd, '', 2)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.md, '', 2)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontWeight: 500 }}>{formatValue(item.spread)}</td>
                 </tr>
               ))
             ) : (
-              // --- COLSPAN ACTUALIZADO A 7 ---
-               <tr><td colSpan={7} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
+              <tr><td colSpan={8} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
             )}
           </tbody>
         </table>
@@ -106,127 +101,151 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
     </div>
 );
 
-// --- COMPONENTE PRINCIPAL DE LA PÁGINA DE LECAPS (sin cambios de lógica) ---
-export default function LecapsPage() {
-    const [datosHistoricos, setDatosHistoricos] = useState<any[]>([]);
+// ==================================================================
+// COMPONENTE PRINCIPAL DE LA PÁGINA
+// ==================================================================
+export default function SoberanosPage() {
+    const [bonosSoberanos, setBonosSoberanos] = useState<Bono[]>([]);
     const [estado, setEstado] = useState('Cargando...');
-    const [menuAbierto, setMenuAbierto] = useState(false);
     const [rangoDuration, setRangoDuration] = useState<[number, number]>([0, 0]);
 
     const segmentosDeEstaPagina = ['BONAR', 'GLOBAL', 'BOPREAL'];
     
     useEffect(() => {
-        const cargarDatosDelDia = async () => {
-          const inicioDelDia = new Date();
-          inicioDelDia.setHours(0, 0, 0, 0);
-          const { data, error } = await supabase.from('datos_financieros').select('*').gte('created_at', inicioDelDia.toISOString()).order('created_at', { ascending: false });
-          if (error) setEstado(`Error: ${error.message}`);
-          else if (data && data.length > 0) {
-            setDatosHistoricos(data);
-            setEstado('Datos actualizados');
-          } else {
-            setEstado('Esperando los primeros datos del día...');
-          }
+        const fetchInitialData = async () => {
+            setEstado('Cargando instrumentos...');
+            const manana = new Date();
+            manana.setDate(manana.getDate() + 1);
+
+            const { data, error } = await supabase
+                .from('datosbonos')
+                .select('*')
+                .in('s', segmentosDeEstaPagina)
+                .gte('vto', manana.toISOString());
+
+            if (error) {
+                setEstado(`Error al cargar datos: ${error.message}`);
+            } else if (data) {
+                setBonosSoberanos(data as Bono[]);
+                setEstado('Datos cargados. Escuchando actualizaciones...');
+            }
         };
-        cargarDatosDelDia();
-        const channel = supabase.channel('custom-all-channel').on('postgres_changes', { event: '*', schema: 'public', table: 'datos_financieros' }, () => cargarDatosDelDia()).subscribe();
-        return () => { supabase.removeChannel(channel) };
+
+        fetchInitialData();
+
+        const channel = supabase
+            .channel('realtime-soberanos-page')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'datosbonos', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
+                (payload) => {
+                    const bonoActualizado = payload.new as Bono;
+                    
+                    setBonosSoberanos(bonosActuales => {
+                        if (new Date(bonoActualizado.vto) < new Date()) {
+                            return bonosActuales.filter(b => b.t !== bonoActualizado.t);
+                        }
+
+                        const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
+                        if (existe) {
+                            return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
+                        } else {
+                            return [...bonosActuales, bonoActualizado];
+                        }
+                    });
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
     
-    const ultimoLoteDeDatos: Bono[] = (datosHistoricos.length > 0 && datosHistoricos[0].datos) ? datosHistoricos[0].datos : [];
-    const datosDeLecaps = ultimoLoteDeDatos.filter(b => segmentosDeEstaPagina.includes(b.segmento));
-    const maxDurationDelSegmento = (() => {
-        if (datosDeLecaps.length === 0) return 10; // Un valor por defecto razonable para duration
-        // Usamos modify_duration y ?? 0 para manejar valores nulos
-        const maxDuration = Math.max(...datosDeLecaps.map(b => b.modify_duration ?? 0));
+    const datosConSpread = useMemo(() => {
+        const globalesPorVto = new Map<string, Bono>();
+        bonosSoberanos.forEach(bono => {
+            if (bono.s === 'GLOBAL') {
+                globalesPorVto.set(bono.vto, bono);
+            }
+        });
+
+        return bonosSoberanos.map(bono => {
+            if (bono.s === 'BONAR') {
+                const globalEquivalente = globalesPorVto.get(bono.vto);
+                if (globalEquivalente) {
+                    return {
+                        ...bono,
+                        spread: bono.tir - globalEquivalente.tir
+                    };
+                }
+            }
+            return bono;
+        });
+    }, [bonosSoberanos]);
+    
+    const datosParaTabla = useMemo(() => {
+      return [...datosConSpread].sort((a, b) => {
+        const comparacionSegmento = a.s.localeCompare(b.s);
+        if (comparacionSegmento !== 0) {
+            return comparacionSegmento;
+        }
+        return new Date(a.vto).getTime() - new Date(b.vto).getTime();
+      });
+    }, [datosConSpread]);
+
+    const maxDurationDelSegmento = useMemo(() => {
+        if (bonosSoberanos.length === 0) return 10;
+        const maxDuration = Math.max(...bonosSoberanos.map(b => b.md ?? 0));
         return isFinite(maxDuration) ? Math.ceil(maxDuration) : 10;
-    })();
+    }, [bonosSoberanos]);
 
     useEffect(() => {
         setRangoDuration([0, maxDurationDelSegmento]);
     }, [maxDurationDelSegmento]);
 
-    const datosParaGrafico = datosDeLecaps.filter(b => 
-        b.modify_duration !== null && // Asegurarnos que no sea nulo
-        b.modify_duration >= rangoDuration[0] && 
-        b.modify_duration <= rangoDuration[1]
-    );
-    const datosParaTabla = [...datosDeLecaps].sort((a, b) => {
-    // 1. Criterio principal: ordenar por segmento (alfabéticamente)
-      const comparacionSegmento = a.segmento.localeCompare(b.segmento);
-
-      // Si los segmentos son diferentes, usamos ese resultado para ordenar
-      if (comparacionSegmento !== 0) {
-          return comparacionSegmento;
-      }
-
-      // 2. Criterio secundario: si los segmentos son iguales, ordenar por fecha de VTO
-      return new Date(a.vto).getTime() - new Date(b.vto).getTime();
-    });
-    // --- INICIO DEL CÓDIGO NUEVO ---
-
-    // 1. Creamos un mapa para buscar Globales por fecha de VTO de forma rápida.
-    const globalesPorVto = new Map<string, Bono>();
-    datosParaTabla.forEach(bono => {
-        if (bono.segmento === 'GLOBAL') {
-            globalesPorVto.set(bono.vto, bono);
-        }
-    });
-
-    // 2. Recorremos los datos de la tabla para calcular y añadir el spread a los Bonares.
-    const datosParaTablaConSpread = datosParaTabla.map(bono => {
-        // Si el bono es un BONAR, intentamos calcular su spread
-        if (bono.segmento === 'BONAR') {
-            const globalEquivalente = globalesPorVto.get(bono.vto);
-            // Si encontramos un Global con el mismo VTO...
-            if (globalEquivalente) {
-                return {
-                    ...bono,
-                    spread: bono.tir - globalEquivalente.tir // Calculamos la diferencia de TIRs
-                };
-            }
-        }
-        // Si no es un BONAR o no tiene un Global equivalente, lo devolvemos como está.
-        return bono;
-    });
+    const datosParaGrafico = useMemo(() => {
+      return datosConSpread.filter(b => 
+        b.md !== null &&
+        b.md >= rangoDuration[0] && 
+        b.md <= rangoDuration[1]
+      );
+    }, [datosConSpread, rangoDuration]);
+    
     return (
         <Layout>
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
                 <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Soberanos</h1>
                 <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                     <span>Estado: <strong>{estado}</strong></span>
-                    {datosHistoricos.length > 0 && (
-                            <span style={{ marginLeft: '1rem' }}>Última act: <strong>{new Date(datosHistoricos[0].created_at).toLocaleTimeString()}</strong></span>
-                        )}
+                </div>
+                
+                <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
+                    <div style={{ padding: '0 10px', marginBottom: '20px' }}>
+                      <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Modified Duration (años):</label>
+                      <Slider
+                          range min={0} max={maxDurationDelSegmento > 0 ? maxDurationDelSegmento : 1}
+                          value={rangoDuration}
+                          onChange={(value) => setRangoDuration(value as [number, number])}
+                          step={0.1}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
+                          <span style={{ fontSize: '12px' }}>{rangoDuration[0].toFixed(1)} años</span>
+                          <span style={{ fontSize: '12px' }}>{maxDurationDelSegmento} años</span>
+                      </div>
                     </div>
                     
-                    <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
-                        
-                        <div style={{ padding: '0 10px', marginBottom: '20px' }}>
-                          <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Modified Duration (años):</label>
-                          <Slider
-                              range min={0} max={maxDurationDelSegmento > 0 ? maxDurationDelSegmento : 1}
-                              value={rangoDuration}
-                              onChange={(value) => setRangoDuration(value as [number, number])}
-                              step={0.1} // Un paso más fino para la duration
-                          />
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
-                              <span style={{ fontSize: '12px' }}>{rangoDuration[0].toFixed(1)} años</span>
-                              <span style={{ fontSize: '12px' }}>{maxDurationDelSegmento} años</span>
-                          </div>
-                        </div>
-                        
-                          <CurvaRendimientoChart 
-                          data={datosParaGrafico} 
-                          segmentoActivo="Bonares y Globales" 
-                          xAxisKey="md" // <-- Añadir esta línea
-                        />                        
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
-                        <TablaGeneral titulo="Soberanos" datos={datosParaTablaConSpread} />
-                    </div>
+                    <CurvaRendimientoChart 
+                        data={datosParaGrafico} 
+                        segmentoActivo="Bonares y Globales" 
+                        xAxisKey="md"
+                    />
                 </div>
-            </Layout>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
+                    <TablaGeneral titulo="Soberanos" datos={datosParaTabla} />
+                </div>
+            </div>
+        </Layout>
     );
 }
