@@ -4,13 +4,12 @@
 
 /* 3. Estilo del contenedor principal y fuentes */
 .container {
-  background-color: var(--veta-azul-respaldo); /* Fondo blanco */
-  color: #171717 !important;         /* Letras negras */
+  background-color: #10172a;
+  color: #fff;
   font-family: 'Roboto', sans-serif;
   min-height: 100vh;
   padding: 2rem;
 }
-
 .maxWidthWrapper {
   max-width: 896px; /* Equivalente a max-w-5xl */
   margin-left: auto;
@@ -26,10 +25,11 @@
 
  /* 4. Estilos de las tarjetas y títulos */
 .card {
-  background-color: #111 !important; /* Fondo negro */
-  color: #fff !important;            /* Letras blancas */
-  padding: 1.5rem;
-  border-radius: 0.5rem;
+  background-color: #181c23 !important; /* Gris oscuro elegante */
+  color: #fff !important;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.15);
 }
 
 .title {
