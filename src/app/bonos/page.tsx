@@ -685,6 +685,6 @@
                 )}
         </div>
         </div>
-        </layout>
+        </Layout>
         );
         }
