@@ -156,13 +156,15 @@ export default function Onspage() {
         const cargarCaracteristicas = async () => {
             const { data, error } = await supabase
                 .from('caracteristicas')
-                .select('ticker, ley, mpago, frec, lmin, nom, amort')
+                // --- CAMBIO CLAVE: Renombrar 'ticker' a 't' en la consulta ---
+                .select('t:ticker, ley, mpago, frec, lmin, nom, amort')
                 .in('s', segmentosDeEstaPagina); // Carga solo las características de los segmentos de esta página
 
             if (error) {
                 console.error("Error al cargar características:", error);
             } else if (data) {
-                setCaracteristicasMap(new Map(data.map(item => [item.ticker, item])));
+                // Ahora 'data' ya tiene la propiedad 't', por lo que el map funciona
+                setCaracteristicasMap(new Map(data.map(item => [item.t, item])));
             }
         };
         cargarCaracteristicas();
