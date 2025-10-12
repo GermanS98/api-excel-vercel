@@ -1,5 +1,5 @@
         'use client'
-
+        import Layout from '@/components/layout/Layout' // <-- PASO 1: IMPORTAR LAYOUT
         import React, { useState, useEffect, useRef } from 'react'
         import styles from './page.module.css'
         import { createClient } from '@supabase/supabase-js'
@@ -574,6 +574,7 @@
         };
 
         return (
+        <Layout>       
         <div className={styles.container}>
         <div className={styles.maxWidthWrapper}>
                 <img src="/logo-vetacap.png" alt="Logo" style={{ height: '36px', marginBottom: '1rem' }} />
@@ -684,5 +685,6 @@
                 )}
         </div>
         </div>
+        </layout>
         );
         }
