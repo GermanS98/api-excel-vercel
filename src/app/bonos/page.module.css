@@ -144,6 +144,7 @@
 }
 
 /* Tabla de flujos */
+
 .flujosTableContainer {
   margin-top: 1.5rem;
   overflow-x: auto;
@@ -151,8 +152,10 @@
 
 .flujosTable {
   min-width: 100%;
-  text-align: left;
   font-size: 0.875rem;
+  /* MODIFICADO: Esto fuerza anchos de columna uniformes */
+  table-layout: fixed;
+  width: 100%;
 }
 
 .flujosTable th {
@@ -160,17 +163,26 @@
   font-weight: 400;
   color: #00C600;
   border-bottom: 1px solid #d1d5db;
+  /* MODIFICADO: Centramos los títulos */
+  text-align: center;
+  vertical-align: middle;
 }
 
 .flujosTable td {
   padding: 0.5rem 1rem;
+  /* MODIFICADO: Aseguramos centrado */
   text-align: center;
   vertical-align: middle;
 }
+
+/* MODIFICADO: Regla para la primera columna */
 .flujosTable th:first-child,
 .flujosTable td:first-child {
   text-align: left;
+  /* NUEVO: Le damos un ancho fijo mayor a la fecha */
+  width: 28%;
 }
+
 .flujosTable tbody tr {
   border-bottom: 1px solid #d1d5db;
 }
