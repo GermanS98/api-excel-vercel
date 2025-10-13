@@ -236,14 +236,15 @@ export default function HomePage() {
     const manana = new Date();
     manana.setDate(manana.getDate() + 1);
 useEffect(() => {
-    // --- 1. CARGA DE DATOS INICIALES ---
+    // La función para cargar todos los datos ahora vivirá aquí dentro
+    // para poder ser reutilizada fácilmente.
     const fetchInitialData = async () => {
-        setEstado('Cargando datos iniciales...');
+        setEstado('Actualizando datos...');
         
         // Carga de Bonos
         const manana = new Date();
         manana.setDate(manana.getDate() + 1);
-        const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd, RD, mb';
+        const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd';
         
         const { data: bonosData, error: bonosError } = await supabase
             .from('datosbonos')
@@ -272,9 +273,10 @@ useEffect(() => {
         }
     };
 
+    // --- 1. CARGA INICIAL AL MONTAR EL COMPONENTE ---
     fetchInitialData();
 
-    // --- 2. CREACIÓN Y SUSCRIPCIÓN DE AMBOS CANALES ---
+    // --- 2. SUSCRIPCIÓN A CAMBIOS EN TIEMPO REAL ---
     const bonosChannel = supabase
         .channel('realtime-datosbonos')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos' }, 
@@ -303,13 +305,18 @@ useEffect(() => {
         )
         .subscribe();
 
-    // --- 3. LÓGICA DE VISIBILIDAD (AHORA CONTROLA AMBOS CANALES) ---
+    // --- 3. LÓGICA DE VISIBILIDAD MEJORADA ---
     const handleVisibilityChange = () => {
         if (document.hidden) {
             console.log("Pestaña oculta. Pausando todas las suscripciones...");
-            supabase.removeAllChannels(); // Forma simple y segura de pausar todo
+            supabase.removeAllChannels(); 
         } else {
-            console.log("Pestaña visible. Reanudando suscripciones...");
+            console.log("Pestaña visible. Recargando datos y reanudando suscripciones...");
+            // --> ¡CAMBIO CLAVE! Aquí está la magia.
+            // Al volver a la pestaña, forzamos una recarga completa de los datos.
+            fetchInitialData(); 
+            
+            // Y luego nos volvemos a suscribir a los canales.
             bonosChannel.subscribe();
             tipoDeCambioChannel.subscribe();
         }
@@ -317,13 +324,13 @@ useEffect(() => {
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // --- 4. LIMPIEZA COMPLETA AL SALIR ---
+    // --- 4. LIMPIEZA AL DESMONTAR EL COMPONENTE ---
     return () => {
         console.log("Saliendo de la página. Limpiando todo.");
         document.removeEventListener("visibilitychange", handleVisibilityChange);
         supabase.removeAllChannels();
     };
-}, []); // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
+}, []);  // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
     const ultimoLoteDeDatos: Bono[] = bonos;
     const handleDownloadFullReport = () => {
         setEstado('Generando reporte completo...');
