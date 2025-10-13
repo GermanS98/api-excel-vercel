@@ -551,8 +551,8 @@
         return (
                 <>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                        <ResultDisplay title="Resultado Pata TAMAR" result={data.resultado_tamar} titleColorClass={styles.titleBlue} whatIfProps={whatIfProps} />
-                        <ResultDisplay title="Resultado Pata Fija" result={data.resultado_fija} titleColorClass={styles.titleGreen} whatIfProps={whatIfProps} />
+                        <ResultDisplay title="Resultado para tasa Tamar" result={data.resultado_tamar} titleColorClass={styles.titleBlue} whatIfProps={whatIfProps} />
+                        <ResultDisplay title="Resultado para tasa fija" result={data.resultado_fija} titleColorClass={styles.titleGreen} whatIfProps={whatIfProps} />
                 </div>
                 {/* Si quieres la calculadora fuera de las tarjetas para duales, iría aquí */}
                 </>
@@ -580,8 +580,8 @@
                 
 
                 <div className={styles.card}>
-                <h1 className={`${styles.title} ${styles.fontAlbert}`}>Calculadora de TIR de Bonos</h1>
-                <p className={styles.subtitle}>Selecciona un bono y sus parámetros para calcular la Tasa Interna de Retorno.</p>
+                <h1 className={`${styles.title} ${styles.fontAlbert}`}>Calculadora de Bonos</h1>
+                <p className={styles.subtitle}>Complete todos los campos.</p>
 
                 <div className={styles.formGrid}>
                 <div className={`${styles.gridColSpan2} ${styles.tickerContainer}`} ref={searchContainerRef}>

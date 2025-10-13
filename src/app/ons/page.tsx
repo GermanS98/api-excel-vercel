@@ -161,7 +161,7 @@ export default function Onspage() {
             const { data, error } = await supabase
                 .from('caracteristicas')
 
-                .select('t:ticker, ley, mpago, frec, lmin, nom, amort')
+                .select('t:ticker, ley, mpago, frec, lmin, nom, amort, nomb')
                 .in('segmento', segmentosDeEstaPagina); 
 
             if (error) {
