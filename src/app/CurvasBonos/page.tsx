@@ -231,7 +231,7 @@ export default function HomePage() {
     };
     
     const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>(Object.keys(gruposDeSegmentos)[0]);
-    
+    const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd';
     
     const manana = new Date();
     manana.setDate(manana.getDate() + 1);
@@ -241,7 +241,7 @@ export default function HomePage() {
       setEstado('Cargando datos iniciales...');
       const { data, error } = await supabase
       .from('datosbonos')
-      .select('*')
+      .select(columnasNecesarias)
       .gte('vto', manana.toISOString()); // Apunta a tu nueva tabla
 
       if (error) {
