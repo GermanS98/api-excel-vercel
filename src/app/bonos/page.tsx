@@ -577,7 +577,7 @@
         <Layout>       
         <div className={styles.container}>
         <div className={styles.maxWidthWrapper}>
-                <img src="/logo-vetacap.png" alt="Logo" style={{ height: '36px', marginBottom: '1rem' }} />
+                
 
                 <div className={styles.card}>
                 <h1 className={`${styles.title} ${styles.fontAlbert}`}>Calculadora de TIR de Bonos</h1>
