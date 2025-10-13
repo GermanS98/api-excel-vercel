@@ -236,97 +236,87 @@ export default function HomePage() {
     const manana = new Date();
     manana.setDate(manana.getDate() + 1);
 useEffect(() => {
-    // La función para cargar todos los datos ahora vivirá aquí dentro
-    // para poder ser reutilizada fácilmente.
+    // 1. La función de carga inicial no cambia
     const fetchInitialData = async () => {
         setEstado('Actualizando datos...');
-        
-        // Carga de Bonos
         const manana = new Date();
         manana.setDate(manana.getDate() + 1);
         const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd';
-        
-        const { data: bonosData, error: bonosError } = await supabase
-            .from('datosbonos')
-            .select(columnasNecesarias)
-            .gte('vto', manana.toISOString());
 
+        const { data: bonosData, error: bonosError } = await supabase.from('datosbonos').select(columnasNecesarias).gte('vto', manana.toISOString());
         if (bonosError) {
             setEstado(`Error al cargar bonos: ${bonosError.message}`);
         } else if (bonosData) {
             setBonos(bonosData as Bono[]);
-            setEstado('Datos cargados. Escuchando actualizaciones...');
         }
 
-        // Carga de Tipo de Cambio
-        const { data: tipoDeCambioData, error: tipoDeCambioError } = await supabase
-            .from('tipodecambio')
-            .select('datos')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
+        const { data: tipoDeCambioData, error: tipoDeCambioError } = await supabase.from('tipodecambio').select('datos').order('created_at', { ascending: false }).limit(1).single();
         if (tipoDeCambioError) {
             console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
         } else if (tipoDeCambioData) {
             setTipoDeCambio(tipoDeCambioData.datos);
         }
+        setEstado('Datos cargados. Escuchando actualizaciones...');
     };
 
-    // --- 1. CARGA INICIAL AL MONTAR EL COMPONENTE ---
-    fetchInitialData();
-
-    // --- 2. SUSCRIPCIÓN A CAMBIOS EN TIEMPO REAL ---
-    const bonosChannel = supabase
-        .channel('realtime-datosbonos')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos' }, 
-            (payload) => {
+    // 2. Nueva función para configurar y activar las suscripciones
+    const setupSuscripciones = () => {
+        console.log("Configurando suscripciones de Supabase...");
+        
+        // Canal de Bonos
+        supabase.channel('realtime-datosbonos')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos' }, (payload) => {
+                console.log('Cambio recibido en bonos:', payload.new);
                 const bonoActualizado = payload.new as Bono;
                 setBonos(bonosActuales => {
                     const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
                     if (existe) {
                         return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
-                    } else {
-                        return [...bonosActuales, bonoActualizado];
                     }
+                    return [...bonosActuales, bonoActualizado];
                 });
-            }
-        )
-        .subscribe();
+            })
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('Canal de bonos suscrito.');
+                }
+            });
 
-    const tipoDeCambioChannel = supabase
-        .channel('tipodecambio-changes')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' },
-            (payload) => {
+        // Canal de Tipo de Cambio
+        supabase.channel('tipodecambio-changes')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, (payload) => {
+                console.log('Cambio recibido en tipo de cambio:', payload.new);
                 if (payload.new && payload.new.datos) {
                     setTipoDeCambio(payload.new.datos);
                 }
-            }
-        )
-        .subscribe();
+            })
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('Canal de tipo de cambio suscrito.');
+                }
+            });
+    };
 
-    // --- 3. LÓGICA DE VISIBILIDAD MEJORADA ---
+    // 3. Lógica inicial y de visibilidad simplificada
+    fetchInitialData();
+    setupSuscripciones();
+
     const handleVisibilityChange = () => {
         if (document.hidden) {
-            console.log("Pestaña oculta. Pausando todas las suscripciones...");
-            supabase.removeAllChannels(); 
+            console.log("Pestaña oculta. Eliminando todos los canales.");
+            supabase.removeAllChannels();
         } else {
-            console.log("Pestaña visible. Recargando datos y reanudando suscripciones...");
-            // --> ¡CAMBIO CLAVE! Aquí está la magia.
-            // Al volver a la pestaña, forzamos una recarga completa de los datos.
-            fetchInitialData(); 
-            
-            // Y luego nos volvemos a suscribir a los canales.
-            bonosChannel.subscribe();
-            tipoDeCambioChannel.subscribe();
+            console.log("Pestaña visible. Recargando datos y creando suscripciones.");
+            fetchInitialData();
+            setupSuscripciones(); // Se vuelven a crear desde cero
         }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    // --- 4. LIMPIEZA AL DESMONTAR EL COMPONENTE ---
+    // 4. Limpieza final
     return () => {
-        console.log("Saliendo de la página. Limpiando todo.");
+        console.log("Desmontando componente. Limpiando todo.");
         document.removeEventListener("visibilitychange", handleVisibilityChange);
         supabase.removeAllChannels();
     };
