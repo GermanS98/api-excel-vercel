@@ -28,6 +28,7 @@ type Bono = {
   lmin?: string;
   nom?: string;     // cantnominales
   amort?: string;   // tipoamort
+  nomb?: string;    // nombre
 };
 
 // Objeto de configuración para la tabla dinámica (CORREGIDO con nombres cortos)
@@ -45,6 +46,7 @@ const columnConfig: Record<string, { label: string, type: 'text' | 'date' | 'num
     lmin: { label: 'L. Mín', type: 'text' },
     nom: { label: 'Nominales', type: 'text' },
     amort: { label: 'Amort.', type: 'text' },
+    nomb: { label: 'Nombre', type: 'text' },
 };
 
 type FilterableColumn = keyof typeof columnConfig;
