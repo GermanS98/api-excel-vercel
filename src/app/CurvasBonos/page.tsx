@@ -235,99 +235,95 @@ export default function HomePage() {
     
     const manana = new Date();
     manana.setDate(manana.getDate() + 1);
-  useEffect(() => {
-    // 1. Carga inicial de todos los bonos
-    const fetchInitialBonos = async () => {
-      setEstado('Cargando datos iniciales...');
-      const { data, error } = await supabase
-      .from('datosbonos')
-      .select(columnasNecesarias)
-      .gte('vto', manana.toISOString()); // Apunta a tu nueva tabla
+useEffect(() => {
+    // --- 1. CARGA DE DATOS INICIALES ---
+    const fetchInitialData = async () => {
+        setEstado('Cargando datos iniciales...');
+        
+        // Carga de Bonos
+        const manana = new Date();
+        manana.setDate(manana.getDate() + 1);
+        const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd, RD, mb';
+        
+        const { data: bonosData, error: bonosError } = await supabase
+            .from('datosbonos')
+            .select(columnasNecesarias)
+            .gte('vto', manana.toISOString());
 
-      if (error) {
-        setEstado(`Error al cargar datos: ${error.message}`);
-      } else if (data) {
-        setBonos(data);
-        setEstado('Datos cargados. Escuchando actualizaciones...');
-      }
+        if (bonosError) {
+            setEstado(`Error al cargar bonos: ${bonosError.message}`);
+        } else if (bonosData) {
+            setBonos(bonosData as Bono[]);
+            setEstado('Datos cargados. Escuchando actualizaciones...');
+        }
+
+        // Carga de Tipo de Cambio
+        const { data: tipoDeCambioData, error: tipoDeCambioError } = await supabase
+            .from('tipodecambio')
+            .select('datos')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (tipoDeCambioError) {
+            console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
+        } else if (tipoDeCambioData) {
+            setTipoDeCambio(tipoDeCambioData.datos);
+        }
     };
 
-    fetchInitialBonos();
+    fetchInitialData();
 
-    // 2. Suscripción a Realtime para recibir actualizaciones
-    const channel = supabase
-      .channel('realtime-datosbonos')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'datosbonos' },
-        (payload) => {
-          const bonoActualizado = payload.new as Bono;
-          
-          setBonos(bonosActuales => {
-            const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
-            if (existe) {
-              // Si el bono ya existe, lo reemplazamos
-              return bonosActuales.map(b => 
-                b.t === bonoActualizado.t ? bonoActualizado : b
-              );
-            } else {
-              // Si es un bono nuevo, lo agregamos
-              return [...bonosActuales, bonoActualizado];
+    // --- 2. CREACIÓN Y SUSCRIPCIÓN DE AMBOS CANALES ---
+    const bonosChannel = supabase
+        .channel('realtime-datosbonos')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos' }, 
+            (payload) => {
+                const bonoActualizado = payload.new as Bono;
+                setBonos(bonosActuales => {
+                    const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
+                    if (existe) {
+                        return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
+                    } else {
+                        return [...bonosActuales, bonoActualizado];
+                    }
+                });
             }
-          });
-          
-          // Opcional: Actualizar el estado para mostrar feedback visual
-          // setEstado(`Actualizado: ${bonoActualizado.ticker}`);
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
 
-    // 3. Limpieza al salir de la página
+    const tipoDeCambioChannel = supabase
+        .channel('tipodecambio-changes')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' },
+            (payload) => {
+                if (payload.new && payload.new.datos) {
+                    setTipoDeCambio(payload.new.datos);
+                }
+            }
+        )
+        .subscribe();
+
+    // --- 3. LÓGICA DE VISIBILIDAD (AHORA CONTROLA AMBOS CANALES) ---
+    const handleVisibilityChange = () => {
+        if (document.hidden) {
+            console.log("Pestaña oculta. Pausando todas las suscripciones...");
+            supabase.removeAllChannels(); // Forma simple y segura de pausar todo
+        } else {
+            console.log("Pestaña visible. Reanudando suscripciones...");
+            bonosChannel.subscribe();
+            tipoDeCambioChannel.subscribe();
+        }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // --- 4. LIMPIEZA COMPLETA AL SALIR ---
     return () => {
-      supabase.removeChannel(channel);
+        console.log("Saliendo de la página. Limpiando todo.");
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+        supabase.removeAllChannels();
     };
-  }, []);
-      // --- NUEVO: EFECTO PARA CARGAR LOS DATOS DEL TIPO DE CAMBIO ---
-  useEffect(() => {
-    const fetchTipoDeCambio = async () => {
-        // Hacemos la consulta a la tabla 'tipodecambio'
-        const { data, error } = await supabase
-          .from('tipodecambio')
-          .select('datos') // Seleccionamos solo la columna que nos interesa
-          .order('created_at', { ascending: false }) // Ordenamos para obtener el más reciente
-          .limit(1) // Solo queremos un resultado
-          .single(); // .single() nos devuelve un objeto en lugar de un array
-
-        if (error) {
-          console.error('Error al obtener tipo de cambio:', error);
-        } else if (data) {
-          // El resultado está en la columna 'datos', que es un JSONB
-          setTipoDeCambio(data.datos);
-        }
-    };
-
-    fetchTipoDeCambio();
-
-    // Opcional: Escuchar cambios en tiempo real en la tabla de tipo de cambio
-    const channel = supabase
-      .channel('tipodecambio-changes')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'tipodecambio' },
-        (payload) => {
-          // Cuando llega un nuevo dato, actualizamos el estado
-          if (payload.new && payload.new.datos) {
-            setTipoDeCambio(payload.new.datos);
-          }
-        }
-      )
-      .subscribe();
-    
-    // Limpiamos la suscripción al desmontar el componente
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []); // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
+}, []); // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
     const ultimoLoteDeDatos: Bono[] = bonos;
     const handleDownloadFullReport = () => {
         setEstado('Generando reporte completo...');
