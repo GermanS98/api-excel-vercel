@@ -21,8 +21,8 @@ type Bono = {
   s: string;
   dv: number;
   md: number | null;
-  RD: number | null; // Nuevo campo
-  mb: number | null; // Nuevo campo
+   // Nuevo campo RD: number | null;
+   // Nuevo campo mb: number | null;
   pd: number | null; // Nuevo campo para Paridad
 };
 // --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
