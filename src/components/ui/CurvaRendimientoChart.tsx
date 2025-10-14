@@ -8,14 +8,14 @@ import { linearRegression } from 'simple-statistics';
 
 const PALETA_SEGMENTOS: { [key: string]: string } = {
   'LECAP': '#1036E2', 'BONCAP': '#1036E2', 'BONTE': '#1036E2', 'DUAL TAMAR': '#1036E2',
-  'CER': '#00C600', 'ON CER': '#99E899',
-  'DL': '#4C68E9', 'ON DL': '#4C68E9', 'ON HD': '#4C68E9',
-  'TAMAR': '#283A6B', 'ON TAMAR': '#283A6B',
-  'BONAR': '#808080',      // Color único para Bonares
-  'GLOBAL': '#4b5563',    // Color único para Globales
-  'BOPREAL': '#a1a1aa',   // Color único para Bopreales
-  'ON': '#021751',
-  'default': '#d1d5db'
+  'CER': '#1036E2', 'ON CER': '#1036E2',
+  'DL': '#1036E2', 'ON DL': '#1036E2', 'ON HD': '#1036E2',
+  'TAMAR': '#1036E2', 'ON TAMAR': '#1036E2',
+  'BONAR': '#1036E2',      // Color único para Bonares
+  'GLOBAL': '#00C600',    // Color único para Globales
+  'BOPREAL': '#021751',   // Color único para Bopreales
+  'ON': '#1036E2',
+  'default': '#1036E2'
 };
 
 const calcularTendencia = (datos: any[], xAxisKey: 'dv' | 'md', segmento?: string) => {
@@ -39,6 +39,18 @@ type ChartProps = {
   data: any[];
   segmentoActivo: string;
   xAxisKey: 'dv' | 'md';
+};
+const CustomLabel = (props: any) => {
+  const { x, y, index, value } = props;
+
+  // Si el índice es par, la etiqueta va arriba. Si es impar, va abajo.
+  const yOffset = index % 2 === 0 ? -8 : 18;
+
+  return (
+    <text x={x} y={y + yOffset} dy={0} textAnchor="middle" fill="#555" fontSize={9}>
+      {value}
+    </text>
+  );
 };
 
 export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }: ChartProps) {
@@ -92,22 +104,24 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
           <YAxis type="number" dataKey="tir" name="TIR" tickFormatter={(tick) => `${(tick * 100).toFixed(0)}%`} domain={['auto', 'auto']} tick={{ fontSize: 12 }} width={80} />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
-          <ZAxis type="number" range={[40, 40]} />
+          <ZAxis type="number" range={[25, 25]} />
           
           {esGrupoSoberano ? (
             segmentosSoberanos.map(segmento => (
               <Scatter
                 key={segmento}
-                name={segmento}
+                name={segmento} // <-- Con 'name', aparece en la leyenda
                 data={data.filter(p => p.s === segmento)}
                 fill={PALETA_SEGMENTOS[segmento]}
               >
-                <LabelList dataKey="t" position="top" style={{ fontSize: 10, fill: '#666' }} />
+                {/* CAMBIO 1.2: Usamos nuestro componente personalizado */}
+                <LabelList dataKey="t" content={<CustomLabel />} />
               </Scatter>
             ))
           ) : (
-            <Scatter name={segmentoActivo} data={data}>
-              <LabelList dataKey="t" position="top" style={{ fontSize: 10, fill: '#666' }} />
+            <Scatter data={data}>
+              {/* CAMBIO 1.2: Usamos nuestro componente personalizado */}
+              <LabelList dataKey="t" content={<CustomLabel />} />
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={PALETA_SEGMENTOS[entry.s] || PALETA_SEGMENTOS.default} />
               ))}
@@ -116,12 +130,13 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
           
           {esGrupoSoberano ? (
             <>
-              <Line name="Tendencia Bonares" data={trendlineBonar} dataKey="trend" stroke={PALETA_SEGMENTOS['BONAR']} dot={false} strokeWidth={2} strokeDasharray="5 5" type="monotone" />
-              <Line name="Tendencia Globales" data={trendlineGlobal} dataKey="trend" stroke={PALETA_SEGMENTOS['GLOBAL']} dot={false} strokeWidth={2} strokeDasharray="5 5" type="monotone" />
-              <Line name="Tendencia Bopreales" data={trendlineBopreal} dataKey="trend" stroke={PALETA_SEGMENTOS['BOPREAL']} dot={false} strokeWidth={2} strokeDasharray="5 5" type="monotone" />
+              <Line name="Tendencia Bonares" data={trendlineBonar} dataKey="trend" stroke={PALETA_SEGMENTOS['BONAR']} dot={false} strokeWidth={1} strokeDasharray="5 5" type="monotone" />
+              <Line name="Tendencia Globales" data={trendlineGlobal} dataKey="trend" stroke={PALETA_SEGMENTOS['GLOBAL']} dot={false} strokeWidth={1} strokeDasharray="5 5" type="monotone" />
+              <Line name="Tendencia Bopreales" data={trendlineBopreal} dataKey="trend" stroke={PALETA_SEGMENTOS['BOPREAL']} dot={false} strokeWidth={1} strokeDasharray="5 5" type="monotone" />
             </>
           ) : (
-            <Line name={`Tendencia ${segmentoActivo}`} data={trendlineGeneral} dataKey="trend" stroke="#1036E2" dot={false} strokeWidth={2} strokeDasharray="5 5" type="monotone" />
+            // CAMBIO 2: Se quita 'name' para ocultarlo de la leyenda
+            <Line data={trendlineGeneral} dataKey="trend" stroke="#1036E2" dot={false} strokeWidth={1} strokeDasharray="5 5" type="monotone" />
           )}
         </ComposedChart>
       </ResponsiveContainer>
