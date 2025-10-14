@@ -493,9 +493,6 @@
                 flujosParaCalcular = resultados.flujos_detallados;
                 
                 }
-                
-                if (!baseCalculo) {
-                throw new Error("No se encontró la base de cálculo (baseanual2) en los resultados.");
                 }
 
                 const res = await fetch('https://tir-backend-iop7.onrender.com/precio_desde_flujos', {
