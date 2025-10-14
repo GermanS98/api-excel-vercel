@@ -493,7 +493,7 @@
                 flujosParaCalcular = resultados.flujos_detallados;
                 
                 }
-                }
+                
 
                 const res = await fetch('https://tir-backend-iop7.onrender.com/precio_desde_flujos', {
                 method: 'POST',
