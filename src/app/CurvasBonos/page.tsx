@@ -60,7 +60,21 @@ const formatDate = (dateString: string) => {
   const date = toZonedTime(dateString, 'UTC');
   return format(date, 'dd/MM/yy');
 };
+const formatTimestamp = (isoString: string | null) => {
+  if (!isoString) return '...'; // Devuelve esto si la fecha aún no ha cargado
 
+  // La zona horaria para Argentina
+  const timeZone = 'America/Argentina/Buenos_Aires';
+
+  // 1. Convertimos el texto a un objeto Date
+  const utcDate = new Date(isoString);
+
+  // 2. Ajustamos la fecha a la zona horaria de Argentina
+  const zonedDate = toZonedTime(utcDate, timeZone);
+
+  // 3. Le damos el formato "dd/MM/yyyy HH:mm:ss"
+  return format(zonedDate, 'dd/MM/yyyy HH:mm:ss');
+};
 const slugify = (text: string) => {
   return text.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
 };
@@ -402,7 +416,7 @@ useEffect(() => {
 
                 <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                     <span>
-                        Estado: <strong>{ultimaActualizacion ? `Actualizado el ${ultimaActualizacion}` : 'Cargando...'}</strong>
+                        Estado: <strong>{`Actualizado el ${formatTimestamp(ultimaActualizacion)}`}</strong>
                     </span>
                 </div>
 
