@@ -8,7 +8,8 @@ import 'rc-slider/assets/index.css';
 import Sidebar from '@/components/ui/Sidebar';
 import Link from 'next/link';
 import ReportePDFGenerator from '@/components/ui/ReportePDFGenerator'; 
-
+import { format, parseISO } from 'date-fns';
+import { utcToZonedTime } from 'date-fns-tz';
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
 type Bono = {
   t: string;
@@ -55,8 +56,8 @@ const formatValue = (value: number | null | undefined, unit: string = '%', decim
 };
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const date = utcToZonedTime(dateString, 'UTC');
+  return format(date, 'dd/MM/yyyy');
 };
 
 const slugify = (text: string) => {
