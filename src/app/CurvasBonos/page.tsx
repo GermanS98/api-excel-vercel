@@ -9,7 +9,7 @@ import Sidebar from '@/components/ui/Sidebar';
 import Link from 'next/link';
 import ReportePDFGenerator from '@/components/ui/ReportePDFGenerator'; 
 import { format, parseISO } from 'date-fns';
-import { utcToZonedTime } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
 type Bono = {
   t: string;
@@ -56,7 +56,7 @@ const formatValue = (value: number | null | undefined, unit: string = '%', decim
 };
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
-  const date = utcToZonedTime(dateString, 'UTC');
+  const date = toZonedTime(dateString, 'UTC');
   return format(date, 'dd/MM/yyyy');
 };
 
