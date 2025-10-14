@@ -30,6 +30,7 @@ type Bono = {
 type TipoDeCambio = {
   valor_ccl: number;
   valor_mep: number;
+  h: string; 
 };
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
 const supabase = createClient(
@@ -218,6 +219,7 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
 export default function HomePage() {
     const [bonos, setBonos] = useState<Bono[]>([]);
     const [estado, setEstado] = useState('Cargando...');
+    const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null); //
     const [menuAbierto, setMenuAbierto] = useState(false);
     // --- NUEVO: ESTADO PARA LOS DATOS DEL TIPO DE CAMBIO ---
     const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
@@ -256,6 +258,7 @@ useEffect(() => {
             console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
         } else if (tipoDeCambioData) {
             setTipoDeCambio(tipoDeCambioData.datos);
+            setUltimaActualizacion(tipoDeCambioData.datos.h);
         }
         setEstado('Datos cargados. Escuchando actualizaciones...');
     };
@@ -289,7 +292,9 @@ useEffect(() => {
                 console.log('Cambio recibido en tipo de cambio:', payload.new);
                 if (payload.new && payload.new.datos) {
                     setTipoDeCambio(payload.new.datos);
+                    setUltimaActualizacion(payload.new.datos.h); 
                 }
+                
             })
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
@@ -394,13 +399,10 @@ useEffect(() => {
     return (
         <Layout onDownloadPDF={handleDownloadFullReport}>
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>
-                    Bonos en Tiempo Real
-                </h1>
 
                 <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                     <span>
-                        Estado: <strong>{estado}</strong>
+                        Estado: <strong>{ultimaActualizacion ? `Actualizado el ${ultimaActualizacion}` : 'Cargando...'}</strong>
                     </span>
                 </div>
 
@@ -428,8 +430,6 @@ useEffect(() => {
                         marginTop: '1.5rem'
                     }}
                 >
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#021751' }}>
-                    </h2>
 
                     <div
                         style={{
@@ -465,7 +465,7 @@ useEffect(() => {
 
                     <div style={{ padding: '0 10px', marginBottom: '20px' }}>
                         <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>
-                            {isBonaresSegment ? 'Filtrar por Modified Duration (años):' : 'Filtrar por Días al Vencimiento:'}
+                            {isBonaresSegment ? 'Filtrar por modified duration (años):' : 'Filtrar por los días al vencimiento:'}
                         </label>
                         <Slider
                             range
