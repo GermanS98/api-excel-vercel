@@ -57,7 +57,7 @@ const formatValue = (value: number | null | undefined, unit: string = '%', decim
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
   const date = toZonedTime(dateString, 'UTC');
-  return format(date, 'dd/MM/yyyy');
+  return format(date, 'dd/MM/yy');
 };
 
 const slugify = (text: string) => {

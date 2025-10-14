@@ -5,7 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-
+import { format, parseISO } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 // ==================================================================
 // DEFINICIÓN DE TIPOS (ACTUALIZADA)
 // ==================================================================
@@ -46,9 +47,9 @@ const formatValue = (value: number | null | undefined, unit: string = '%', decim
     return `${numeroFormateado}${unit}`;
 };
 const formatDate = (dateString: string) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  if (!dateString) return '-';
+  const date = toZonedTime(dateString, 'UTC');
+  return format(date, 'dd/MM/yy');
 };
 
 // ==================================================================

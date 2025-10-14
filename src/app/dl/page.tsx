@@ -7,7 +7,8 @@ import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import Sidebar from '@/components/ui/Sidebar';
 import Link from 'next/link';
-
+import { format, parseISO } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 // PASO 1: ACTUALIZAR LA DEFINICIÓN DE TIPO PARA INCLUIR NUEVOS CAMPOS
 type Bono = {
   t: string;      // ticker
@@ -50,9 +51,10 @@ const formatValue = (value: number | null | undefined, unit: string = '%', decim
 };
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-AR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const date = toZonedTime(dateString, 'UTC');
+  return format(date, 'dd/MM/yy');
 };
+
 
 // --- COMPONENTE DE TABLA ACTUALIZADO ---
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
