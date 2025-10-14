@@ -429,7 +429,6 @@ useEffect(() => {
                     }}
                 >
                     <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#021751' }}>
-                        Curva de Rendimiento (TIR vs Días al Vencimiento)
                     </h2>
 
                     <div

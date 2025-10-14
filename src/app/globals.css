@@ -58,21 +58,32 @@ a {
 }
 /* Para la barra activa (la parte coloreada) */
 .rc-slider-track {
-  background-color: #021751; /* <-- Cambia este color azul */
+  background-color: var(--veta-azul-impulso) !important; /* Usamos azul impulso */
 }
 
 /* Para el círculo que se arrastra */
 .rc-slider-handle {
-  border-color: #021751; /* <-- Cambia este color azul para el borde */
-  background-color: #021751; /* <-- Y para el fondo */
+  border-color: var(--veta-azul-impulso) !important; /* Borde y fondo del handle */
+  background-color: var(--veta-azul-impulso) !important;
+  box-shadow: 0 0 0 4px var(--veta-azul-impulso-transparente) !important; /* Efecto de "halo" */
+}
+/* Definimos una versión transparente del color si no existe ya */
+:root {
+  --veta-azul-impulso-transparente: rgba(16, 54, 226, 0.2); /* 20% de opacidad */
 }
 
 /* Para el círculo cuando pasas el mouse por encima (opcional) */
 .rc-slider-handle:hover {
-   border-color: #021751;
+   border-color: var(--veta-azul-impulso) !important; /* Mantener el color al pasar el mouse */
 }
 
 /* Para la barra de fondo (la parte gris) */
 .rc-slider-rail {
-  background-color: #e5e7eb; /* <-- Cambia este color gris si quieres */
+  background-color: #d1d5db !important; /* Un gris claro para el fondo */
+}
+
+/* Para los tooltips o etiquetas del slider (los números 0 días, 1699 días) */
+.rc-slider-mark-text {
+    color: var(--foreground) !important; /* Asegura que el texto sea legible */
+    font-size: 12px;
 }
