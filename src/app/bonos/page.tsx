@@ -484,14 +484,14 @@
                 if ('tipo_dual' in resultados) {
                 if (resultados.resultado_tamar.tir > resultados.resultado_fija.tir) {
                         flujosParaCalcular = resultados.resultado_tamar.flujos_detallados;
-                        baseCalculo = resultados.resultado_tamar.baseanual2;
+                        
                 } else {
                         flujosParaCalcular = resultados.resultado_fija.flujos_detallados;
-                        baseCalculo = resultados.resultado_fija.baseanual2;
+                        
                 }
                 } else {
                 flujosParaCalcular = resultados.flujos_detallados;
-                baseCalculo = resultados.baseanual2;
+                
                 }
                 
                 if (!baseCalculo) {
@@ -505,7 +505,7 @@
                         flujos: flujosParaCalcular,
                         fecha_valor: fecha,
                         tir: tirDecimal, // Enviamos como decimal
-                        baseanual: baseCalculo
+                        
                 })
                 });
 
