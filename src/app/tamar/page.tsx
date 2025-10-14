@@ -63,7 +63,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
       <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ position: 'sticky', top: 0 }}>
-            <tr style={{ background: '#1036E2', color: 'white' }}>
+            <tr style={{ background: '#021751', color: 'white' }}>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Ticker</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>VTO</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Precio</th>

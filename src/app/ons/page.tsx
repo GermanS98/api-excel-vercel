@@ -96,7 +96,7 @@ const TablaGeneral = ({
             <div style={{ overflowX: 'auto', maxHeight: '500px' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
-                        <tr style={{ background: '#1036E2', color: 'white' }}>
+                        <tr style={{ background: '#021751', color: 'white' }}>
                             {(Object.keys(columnConfig) as FilterableColumn[]).map(key => <th key={key} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>{columnConfig[key].label}</th>)}
                         </tr>
                         <tr style={{ background: '#f0f2f5' }}>
