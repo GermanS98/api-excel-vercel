@@ -453,9 +453,9 @@ useEffect(() => {
                                     cursor: 'pointer',
                                     borderRadius: '20px',
                                     border: '1px solid',
-                                    borderColor: segmentoSeleccionado === grupo ? '#3b82f6' : '#d1d5db',
-                                    backgroundColor: segmentoSeleccionado === grupo ? '#3b82f6' : 'white',
-                                    color: segmentoSeleccionado === grupo ? 'white' : '#374151',
+                                    borderColor: segmentoSeleccionado === grupo ? 'white' : '#021751',
+                                    backgroundColor: segmentoSeleccionado === grupo ? '#00C600' : '#021751',
+                                    color: segmentoSeleccionado === grupo ? '#021751' : 'white',
                                     transition: 'all 0.2s'
                                 }}
                             >
