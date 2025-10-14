@@ -169,3 +169,23 @@ a.secondary {
 .page {
   background: #fff !important;
 }
+/* Para la barra activa (la parte coloreada) */
+.rc-slider-track {
+  background-color: #021751; /* <-- Cambia este color azul */
+}
+
+/* Para el círculo que se arrastra */
+.rc-slider-handle {
+  border-color: #021751; /* <-- Cambia este color azul para el borde */
+  background-color: #021751; /* <-- Y para el fondo */
+}
+
+/* Para el círculo cuando pasas el mouse por encima (opcional) */
+.rc-slider-handle:hover {
+   border-color: #021751;
+}
+
+/* Para la barra de fondo (la parte gris) */
+.rc-slider-rail {
+  background-color: #e5e7eb; /* <-- Cambia este color gris si quieres */
+}
