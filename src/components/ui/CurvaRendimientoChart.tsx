@@ -103,7 +103,7 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
           />
           <YAxis type="number" dataKey="tir" name="TIR" tickFormatter={(tick) => `${(tick * 100).toFixed(0)}%`} domain={['auto', 'auto']} tick={{ fontSize: 12 }} width={80} />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
+          <Legend wrapperStyle={{ display: esGrupoSoberano ? 'block' : 'none' }} />
           <ZAxis type="number" range={[25, 25]} />
           
           {esGrupoSoberano ? (
