@@ -175,7 +175,7 @@ const FinancialDashboard = () => {
             setEstado('Actualizando datos...');
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
-            const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, pd';
+            const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, pd, RD';
             const { data: bonosData, error: bonosError } = await supabase.from('datosbonos').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
             if (bonosError) {
                 setEstado(`Error al cargar bonos: ${bonosError.message}`);
