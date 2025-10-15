@@ -327,7 +327,7 @@ export default function HomePage() {
 
                     {/* --- COLUMNA 2: Tabla LECAPs --- */}
                     <div style={{ flex: 1 }}> {/* Ocupa el espacio restante */}
-                        <TablaGeneral titulo="LECAPs y Similares" datos={tablaLecaps} />
+                        <TablaGeneral titulo="Tasa fija" datos={tablaLecaps} />
                     </div>
 
                     {/* --- COLUMNA 3: Tabla Bonares --- */}
