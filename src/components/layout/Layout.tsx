@@ -17,6 +17,7 @@ const Layout = ({ children, onDownloadPDF }: LayoutProps) => {
   // --- CORREGIDO: Definimos la lista de enlaces una sola vez ---
   // Usé la lista más completa que tenías.
   const menuItems = [
+    { label: 'Monitor', href: '/monitor' },
     { label: 'Panel Resumen', href: '/CurvasBonos' },
     { label: 'Renta Fija ARS', href: '/RentaFijaArs'},
     { label: 'CER', href: '/cer'},
