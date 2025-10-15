@@ -217,22 +217,31 @@ export default function HomePage() {
 
     // Hook de efecto para cargar datos y suscribirse a cambios en tiempo real
     useEffect(() => {
-        // Función para cargar los datos iniciales
+        // NUEVO: Se crea una lista única con todos los segmentos requeridos.
+        // El método .flat() aplana el array de arrays en un único array.
+        const segmentosRequeridos = Object.values(gruposDeSegmentos).flat();
+
         const fetchInitialData = async () => {
             setEstado('Actualizando datos...');
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
             const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, pd';
 
-            // Carga los datos de los bonos
-            const { data: bonosData, error: bonosError } = await supabase.from('datosbonos').select(columnasNecesarias).gte('vto', manana.toISOString());
+            // MODIFICADO: La consulta ahora incluye el filtro .in()
+            // para traer solo los bonos de los segmentos que necesitamos.
+            const { data: bonosData, error: bonosError } = await supabase
+                .from('datosbonos')
+                .select(columnasNecesarias)
+                .gte('vto', manana.toISOString())
+                .in('s', segmentosRequeridos); // <-- ¡AQUÍ ESTÁ LA OPTIMIZACIÓN!
+
             if (bonosError) {
                 setEstado(`Error al cargar bonos: ${bonosError.message}`);
+                console.error("Error fetching bonds:", bonosError);
             } else if (bonosData) {
                 setBonos(bonosData as Bono[]);
             }
 
-            // Carga el último tipo de cambio
             const { data: tipoDeCambioData, error: tipoDeCambioError } = await supabase.from('tipodecambio').select('datos').order('created_at', { ascending: false }).limit(1).single();
             if (tipoDeCambioError) {
                 console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
@@ -243,23 +252,30 @@ export default function HomePage() {
             setEstado('Datos cargados. Escuchando actualizaciones...');
         };
 
-        // Función para configurar las suscripciones en tiempo real de Supabase
         const setupSuscripciones = () => {
-             // Canal para cambios en la tabla de bonos
+             // MODIFICADO: El filtro también se aplica a la suscripción en tiempo real.
+             // Así, el cliente solo recibirá notificaciones de los bonos que le interesan.
+             const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
+             
              supabase.channel('realtime-datosbonos')
-               .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos' }, (payload) => {
+               .on('postgres_changes', { 
+                   event: '*', 
+                   schema: 'public', 
+                   table: 'datosbonos',
+                   filter: realtimeFilter // <-- OPTIMIZACIÓN DE REALTIME
+                }, (payload) => {
                    const bonoActualizado = payload.new as Bono;
                    setBonos(bonosActuales => {
                        const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
                        if (existe) {
                            return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
                        }
-                       return [...bonosActuales, bonoActualizado];
+                       // Solo se añade si no existe, aunque con el filtro de carga inicial es menos probable.
+                       return [...bonosActuales, bonoActualizado]; 
                    });
                })
                .subscribe();
  
-             // Canal para inserciones en la tabla de tipo de cambio
              supabase.channel('tipodecambio-changes')
                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, (payload) => {
                    if (payload.new && payload.new.datos) {
@@ -273,7 +289,6 @@ export default function HomePage() {
         fetchInitialData();
         setupSuscripciones();
 
-        // Maneja la visibilidad de la pestaña para reconectar si es necesario
         const handleVisibilityChange = () => {
             if (document.hidden) {
                 supabase.removeAllChannels();
@@ -282,15 +297,12 @@ export default function HomePage() {
                 setupSuscripciones();
             }
         };
-
         document.addEventListener("visibilitychange", handleVisibilityChange);
-
-        // Limpieza al desmontar el componente
         return () => {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
             supabase.removeAllChannels();
         };
-    }, []); // El array vacío asegura que este efecto se ejecute solo una vez
+    }, []);
 
     // Función para ordenar los bonos por fecha de vencimiento
     const ordenarPorVencimiento = (datos: Bono[]) => {
