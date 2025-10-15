@@ -126,7 +126,9 @@ export default function DolarFuturoPage() {
             { event: '*', schema: 'public', table: nombreTabla },
             (payload) => {
               console.log('Cambio en tiempo real recibido:', payload);
-              const updatedData = payload.new[nombreColumnaJsonb];
+              // CORRECCIÓN: Se añade un "type assertion" para indicarle a TypeScript la forma del objeto.
+              const newRow = payload.new as { [key: string]: any };
+              const updatedData = newRow[nombreColumnaJsonb];
               if (updatedData) {
                 const datosComoArray = Object.values(updatedData) as MarketDataItem[];
                 setMarketData(datosComoArray);
