@@ -17,6 +17,7 @@ type Bono = {
     v: number;
     s: string;
     pd: number | null;
+    RD: number | null;
 };
 
 // --- TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
@@ -89,6 +90,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                             <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>TIR</th>
                             <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>TNA</th>
                             <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>TEM</th>
+                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>RD</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -102,10 +104,11 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                                     <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                                     <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatValue(item.tna)}</td>
                                     <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatValue(item.tem)}</td>
+                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatValue(item.RD)}</td>
                                 </tr>
                             ))
                         ) : (
-                            <tr><td colSpan={7} style={{ padding: '1.5rem', textAlign: 'center', color: '#6b7280', fontSize: '1.1rem' }}>Cargando datos...</td></tr>
+                            <tr><td colSpan={8} style={{ padding: '1.5rem', textAlign: 'center', color: '#6b7280', fontSize: '1.1rem' }}>Cargando datos...</td></tr>
                         )}
                     </tbody>
                 </table>
