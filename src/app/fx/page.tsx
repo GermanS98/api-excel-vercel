@@ -18,7 +18,6 @@ type MarketDataItem = {
 // ==================================================================
 // 2. CONFIGURACIÓN DE SUPABASE
 // ==================================================================
-// Esta configuración es la misma, la librería la manejará eficientemente.
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_KEY!
@@ -27,7 +26,6 @@ const supabase = createClient(
 // ==================================================================
 // 3. FUNCIONES AUXILIARES DE FORMATO
 // ==================================================================
-// Reutilizamos tu función para formatear precios
 const formatValue = (value: number | null | undefined, unit: string = '', decimals: number = 2) => {
     if (value === null || typeof value === 'undefined' || !isFinite(value)) return '-';
     const numeroFormateado = value.toLocaleString('es-AR', {
@@ -37,17 +35,15 @@ const formatValue = (value: number | null | undefined, unit: string = '', decima
     return `${numeroFormateado}${unit}`;
 };
 
-// Nueva función para formatear el timestamp a una hora legible
 const formatTimestamp = (timestamp: number) => {
   if (!timestamp) return '-';
-  // El timestamp parece estar en milisegundos, lo convertimos a fecha
   const date = new Date(timestamp);
   return format(date, 'HH:mm:ss', { locale: es });
 };
 
 
 // ==================================================================
-// 4. COMPONENTE DE LA TABLA (ADAPTADO)
+// 4. COMPONENTE DE LA TABLA
 // ==================================================================
 const TablaMarketData = ({ titulo, datos }: { titulo: string, datos: MarketDataItem[] }) => (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
@@ -88,58 +84,63 @@ const TablaMarketData = ({ titulo, datos }: { titulo: string, datos: MarketDataI
 export default function DolarFuturoPage() {
     const [marketData, setMarketData] = useState<MarketDataItem[]>([]);
     const [estado, setEstado] = useState('Cargando...');
-    // Suponemos que tu columna JSONB se llama 'dlr' como en el ejemplo anterior
     const nombreColumnaJsonb = 'dlr';
+    const nombreTabla = 'dlrfx';
 
     useEffect(() => {
-        // --- Función para obtener y procesar los datos ---
         const fetchData = async () => {
           setEstado('Cargando datos de Dólar Futuro...');
           
-          // Obtenemos la última fila insertada en la tabla 'dlrfx'
           const { data, error } = await supabase
-            .from('dlrfx')
-            .select(nombreColumnaJsonb) // Seleccionamos solo la columna con el JSON
-            .order('created_at', { ascending: false }) // La más reciente primero
-            .limit(1) // Solo queremos una
-            .single(); // Nos aseguramos de que devuelva un objeto, no un array
+            .from(nombreTabla)
+            .select(nombreColumnaJsonb)
+            .order('created_at', { ascending: false })
+            .limit(1);
 
           if (error) {
             setEstado(`Error al cargar datos: ${error.message}`);
-          } else if (data && data[nombreColumnaJsonb]) {
-            // La data viene como un objeto, la convertimos en un array para poder mapearla
-            const datosComoArray = Object.values(data[nombreColumnaJsonb]) as MarketDataItem[];
-            setMarketData(datosComoArray);
-            setEstado('Datos cargados. Escuchando actualizaciones en tiempo real...');
+          } 
+          else if (data && data.length > 0) {
+            const latestRow = data[0];
+            const marketDataJson = latestRow[nombreColumnaJsonb];
+
+            if (marketDataJson) {
+                const datosComoArray = Object.values(marketDataJson) as MarketDataItem[];
+                setMarketData(datosComoArray);
+                setEstado('Datos cargados. Escuchando actualizaciones...');
+            } else {
+                 setEstado('La fila más reciente no contiene datos de mercado.');
+            }
+          } 
+          else {
+            setEstado('No se encontraron datos en la tabla. Esperando inserción...');
           }
         };
 
         fetchData();
 
-        // --- Suscripción a cambios en tiempo real ---
         const channel = supabase
-          .channel('realtime-dolar-futuro')
+          .channel(`realtime-${nombreTabla}`)
           .on(
             'postgres_changes',
-            { event: 'UPDATE', schema: 'public', table: 'dlrfx' },
+            { event: '*', schema: 'public', table: nombreTabla },
             (payload) => {
-              console.log('Cambio recibido!', payload);
+              console.log('Cambio en tiempo real recibido:', payload);
               const updatedData = payload.new[nombreColumnaJsonb];
               if (updatedData) {
                 const datosComoArray = Object.values(updatedData) as MarketDataItem[];
                 setMarketData(datosComoArray);
+                setEstado('Datos actualizados en tiempo real.');
               }
             }
           )
           .subscribe();
 
-        // --- Limpieza al desmontar el componente ---
         return () => {
           supabase.removeChannel(channel);
         };
     }, []);
     
-    // Ordenamos los datos por ticker para una visualización consistente
     const datosParaTabla = [...marketData].sort((a, b) => a.ticker.localeCompare(b.ticker));
 
     return (
