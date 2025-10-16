@@ -17,7 +17,7 @@ type Bono = {
     s: string;
     pd: number | null;
     RD: number | null;
-    ua: string | null;
+    ua: string | null; // Se mantiene en el tipo por si la DB lo envía, pero no se usará
 };
 
 // --- TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
@@ -76,12 +76,19 @@ const InfoCard = ({ title, value }: { title: string, value: number | null | unde
 };
 
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
-    const cellStyle = {
+    const headerCellStyle = {
         padding: '0.75rem',
         textAlign: 'left' as const,
         fontWeight: 600,
         fontSize: '1rem',
         whiteSpace: 'nowrap' as const,
+    };
+    // MODIFICADO: Estilo para las celdas de datos con letra más grande y negra
+    const dataCellStyle = {
+        ...headerCellStyle,
+        fontWeight: 500,
+        color: '#111827', // Color de letra negro
+        fontSize: '1.1rem',  // Letra más grande
     };
 
     return (
@@ -100,28 +107,28 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                 </colgroup>
                 <thead>
                     <tr style={{ background: '#021751', color: 'white' }}>
-                        <th style={cellStyle}>Ticker</th>
-                        <th style={cellStyle}>Vto</th>
-                        <th style={{...cellStyle, textAlign: 'right'}}>Precio</th>
-                        <th style={{...cellStyle, textAlign: 'center'}}>Var</th>
-                        <th style={{...cellStyle, textAlign: 'right'}}>TIR</th>
-                        <th style={{...cellStyle, textAlign: 'right'}}>TNA</th>
-                        <th style={{...cellStyle, textAlign: 'right'}}>TEM</th>
-                        <th style={{...cellStyle, textAlign: 'right'}}>RD</th>
+                        <th style={headerCellStyle}>Ticker</th>
+                        <th style={headerCellStyle}>Vto</th>
+                        <th style={{...headerCellStyle, textAlign: 'right'}}>Precio</th>
+                        <th style={{...headerCellStyle, textAlign: 'center'}}>Var</th>
+                        <th style={{...headerCellStyle, textAlign: 'right'}}>TIR</th>
+                        <th style={{...headerCellStyle, textAlign: 'right'}}>TNA</th>
+                        <th style={{...headerCellStyle, textAlign: 'right'}}>TEM</th>
+                        <th style={{...headerCellStyle, textAlign: 'right'}}>RD</th>
                     </tr>
                 </thead>
                 <tbody>
                     {datos.length > 0 ? (
                         datos.map((item, index) => (
                             <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.p, '', 2)}</td>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: item.v >= 0 ? '#22c55e' : '#ef4444', textAlign: 'center' }}>{formatValue(item.v)}</td>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.tir)}</td>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.tna)}</td>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.tem)}</td>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.RD)}</td>
+                                <td style={dataCellStyle}>{item.t}</td>
+                                <td style={dataCellStyle}>{formatDate(item.vto)}</td>
+                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.p, '', 2)}</td>
+                                <td style={{ ...dataCellStyle, color: item.v >= 0 ? '#22c55e' : '#ef4444', textAlign: 'center' }}>{formatValue(item.v)}</td>
+                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.tir)}</td>
+                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.tna)}</td>
+                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.tem)}</td>
+                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.RD)}</td>
                             </tr>
                         ))
                     ) : (
@@ -134,46 +141,54 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
 };
 
 const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
-     const cellStyle = {
+     const headerCellStyle = {
         padding: '0.75rem',
         textAlign: 'left' as const,
         fontWeight: 600,
         fontSize: '1rem',
         whiteSpace: 'nowrap' as const,
     };
+    // MODIFICADO: Estilo para las celdas de datos con letra más grande y negra
+    const dataCellStyle = {
+        ...headerCellStyle,
+        fontWeight: 500,
+        color: '#111827', // Color de letra negro
+        fontSize: '1.1rem',  // Letra más grande
+    };
+
     return (
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
             <h2 style={{ fontSize: '1.5rem', padding: '1rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 {/* MODIFICADO: Ancho de columna Ticker reducido y redistribuido */}
                 <colgroup>
-                    <col style={{ width: '28%' }} />
-                    <col style={{ width: '18%' }} />
-                    <col style={{ width: '17%' }} />
-                    <col style={{ width: '12%' }} />
-                    <col style={{ width: '11%' }} />
-                    <col style={{ width: '14%' }} />
+                    <col style={{ width: '20%' }} />
+                    <col style={{ width: '16%' }} />
+                    <col style={{ width: '16%' }} />
+                    <col style={{ width: '16%' }} />
+                    <col style={{ width: '16%' }} />
+                    <col style={{ width: '16%' }} />
                 </colgroup>
                 <thead>
                     <tr style={{ background: '#021751', color: 'white' }}>
-                        <th style={cellStyle}>Ticker</th>
-                        <th style={cellStyle}>Vto</th>
-                        <th style={{...cellStyle, textAlign: 'right'}}>Precio</th>
-                        <th style={{...cellStyle, textAlign: 'center'}}>Var</th>
-                        <th style={{...cellStyle, textAlign: 'right'}}>TIR</th>
-                        <th style={{...cellStyle, textAlign: 'right'}}>Paridad</th>
+                        <th style={headerCellStyle}>Ticker</th>
+                        <th style={headerCellStyle}>Vto</th>
+                        <th style={{...headerCellStyle, textAlign: 'right'}}>Precio</th>
+                        <th style={{...headerCellStyle, textAlign: 'center'}}>Var</th>
+                        <th style={{...headerCellStyle, textAlign: 'right'}}>TIR</th>
+                        <th style={{...headerCellStyle, textAlign: 'right'}}>Paridad</th>
                     </tr>
                 </thead>
                 <tbody>
                     {datos.length > 0 ? (
                         datos.map((item, index) => (
                             <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.p, '', 2)}</td>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: item.v >= 0 ? '#22c55e' : '#ef4444', textAlign: 'center' }}>{formatValue(item.v)}</td>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.tir)}</td>
-                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.pd, '', 2)}</td>
+                                <td style={dataCellStyle}>{item.t}</td>
+                                <td style={dataCellStyle}>{formatDate(item.vto)}</td>
+                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.p, '', 2)}</td>
+                                <td style={{ ...dataCellStyle, color: item.v >= 0 ? '#22c55e' : '#ef4444', textAlign: 'center' }}>{formatValue(item.v)}</td>
+                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.tir)}</td>
+                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.pd, '', 2)}</td>
                             </tr>
                         ))
                     ) : (
@@ -200,31 +215,28 @@ const FinancialDashboard = () => {
         const fetchInitialData = async () => {
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
-            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,ua';
+            // MODIFICADO: Se quita 'ua' de las columnas pedidas
+            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD';
             
             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
             if (bonosError) console.error("Error fetching bonds:", bonosError);
             else if (bonosData) {
                 setBonos(bonosData as Bono[]);
-                // Priorizamos la fecha 'ua' del primer bono si existe
-                if (bonosData[0]?.ua) {
-                    setUltimaActualizacion(bonosData[0].ua);
-                }
             }
 
             const { data: tipoDeCambioData, error: tipoDeCambioError } = await supabase.from('tipodecambio').select('datos').order('created_at', { ascending: false }).limit(1).single();
             if (tipoDeCambioError) console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
             else if (tipoDeCambioData) {
                 setTipoDeCambio(tipoDeCambioData.datos);
-                // Si 'ua' no vino de los bonos, usamos la fecha de los tipos de cambio como fallback
-                setUltimaActualizacion(prev => prev || tipoDeCambioData.datos.h);
+                // MODIFICADO: Se usa siempre 'h' de tipodecambio
+                setUltimaActualizacion(tipoDeCambioData.datos.h);
             }
         };
         const setupSuscripciones = () => {
              const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
              const bondChannel = supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
                    const bonoActualizado = payload.new as Bono;
-                   if (bonoActualizado.ua) setUltimaActualizacion(bonoActualizado.ua);
+                   // MODIFICADO: Ya no se mira 'ua'
                    setBonos(bonosActuales => {
                        const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
                        return existe ? bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...bonosActuales, bonoActualizado];
@@ -233,7 +245,8 @@ const FinancialDashboard = () => {
              const exchangeChannel = supabase.channel('tipodecambio-changes').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, payload => {
                    if (payload.new && payload.new.datos) {
                        setTipoDeCambio(payload.new.datos);
-                       setUltimaActualizacion(prev => prev || payload.new.datos.h);
+                       // MODIFICADO: Se usa siempre 'h' de tipodecambio
+                       setUltimaActualizacion(payload.new.datos.h);
                    }
                }).subscribe();
             return { bondChannel, exchangeChannel };
