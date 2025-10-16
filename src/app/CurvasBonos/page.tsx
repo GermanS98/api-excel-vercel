@@ -25,6 +25,7 @@ type Bono = {
    // Nuevo campo RD: number | null;
    // Nuevo campo mb: number | null;
   pd: number | null; // Nuevo campo para Paridad
+  ua?: string;
 };
 // --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
 type TipoDeCambio = {
@@ -260,7 +261,7 @@ useEffect(() => {
         manana.setDate(manana.getDate() + 1);
         const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd';
 
-        const { data: bonosData, error: bonosError } = await supabase.from('datosbonos').select(columnasNecesarias).gte('vto', manana.toISOString());
+        const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString());
         if (bonosError) {
             setEstado(`Error al cargar bonos: ${bonosError.message}`);
         } else if (bonosData) {
