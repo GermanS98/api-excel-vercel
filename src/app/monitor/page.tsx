@@ -134,7 +134,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                                 <td style={{...dataCellStyle, textAlign: 'left'}}>{item.t}</td>
                                 <td style={dataCellStyle}>{formatDate(item.vto)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.p, '', 2)}</td>
-                                <td style={{ padding: '0.75rem 1rem', color: item.v >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold'}}>{formatValue(item.v)}</td>
+                                <td style={{ ...dataCellStyle, color: item.v >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold'}}>{formatValue(item.v)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.tir)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.tna)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.tem)}</td>
@@ -195,7 +195,7 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                                 <td style={{...dataCellStyle, textAlign: 'left'}}>{item.t}</td>
                                 <td style={dataCellStyle}>{formatDate(item.vto)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.p, '', 2)}</td>
-                                <td style={{ padding: '0.75rem 1rem', color: item.v >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold'}}>{formatValue(item.v)}</td>
+                                <td style={{ ...dataCellStyle, color: item.v >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold'}}>{formatValue(item.v)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.tir)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.pd, '', 2)}</td>
                             </tr>
@@ -310,7 +310,7 @@ const FinancialDashboard = () => {
                     <img
                         src="https://raw.githubusercontent.com/GermanS98/api-excel-vercel/refs/heads/main/VetaCap_Brandpack_Reducida_Positivo-RGB.svg"
                         alt="Logo ResearchCAP"
-                        style={{ width: '150%', height: 'auto' , transform: 'translateX(-25%)'}}
+                        style={{ width: '100%', height: 'auto' , transform: 'translateX(-25%)'}}
                         onError={(e) => { e.currentTarget.src = 'https://placehold.co/200x60?text=Logo'; }}
                     />
                 </div>
