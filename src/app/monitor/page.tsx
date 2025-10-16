@@ -301,7 +301,12 @@ const FinancialDashboard = () => {
                 <InfoCard title="Dólar MEP" value={tipoDeCambio?.valor_mep} />
                 <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
                 
-                <div style={{ marginTop: 'auto', padding: '1rem 0.5rem' }}>
+                {/* MODIFICADO: Estilo del contenedor del logo para hacerlo más grande */}
+                <div style={{
+                    marginTop: 'auto',
+                    padding: '1rem 0',
+                    margin: 'auto -30px 1rem -30px' // Margen negativo para expandir
+                }}>
                     <img
                         src="https://raw.githubusercontent.com/GermanS98/api-excel-vercel/refs/heads/main/VetaCap_Brandpack_Reducida_Positivo-RGB.svg"
                         alt="Logo ResearchCAP"
