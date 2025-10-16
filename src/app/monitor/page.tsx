@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
-// MODIFICADO: Se importa el Layout principal, que ahora se encargará del Sidebar y Header.
 import Layout from '@/components/layout/Layout';
 
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
@@ -51,12 +50,13 @@ const formatDate = (dateString: string): string => {
     return format(date, 'dd/MM/yy');
 };
 
+// MODIFICADO: Formato más corto para la esquina superior
 const formatTimestamp = (isoString: string | null): string => {
     if (!isoString) return '...';
     const timeZone = 'America/Argentina/Buenos_Aires';
     const utcDate = new Date(isoString);
     const zonedDate = toZonedTime(utcDate, timeZone);
-    return format(zonedDate, 'dd/MM/yyyy HH:mm:ss');
+    return format(zonedDate, 'HH:mm:ss');
 };
 
 const slugify = (text: string): string => {
@@ -64,104 +64,132 @@ const slugify = (text: string): string => {
 };
 
 
-// --- COMPONENTES DE LA INTERFAZ DE USUARIO (UI) ---
+// --- COMPONENTES DE UI OPTIMIZADOS PARA TV ---
 
+// MODIFICADO: InfoCard mucho más compacta
 const InfoCard = ({ title, value }: { title: string, value: number | null | undefined }) => {
-    const formattedValue = value ? `$${value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'Cargando...';
+    const formattedValue = value ? `$${value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '---';
     return (
-        <div style={{ background: '#fff', padding: '2rem', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', textAlign: 'center', flex: 1, minWidth: '300px' }}>
-            <h3 style={{ margin: 0, fontSize: '1.5rem', color: '#6b7280', fontWeight: 500 }}>{title}</h3>
-            <p style={{ margin: '1rem 0 0', fontSize: '2.5rem', fontWeight: 700, color: '#111827' }}>{formattedValue}</p>
+        <div style={{ background: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', textAlign: 'center' }}>
+            <h3 style={{ margin: 0, fontSize: '1rem', color: '#6b7280', fontWeight: 500 }}>{title}</h3>
+            <p style={{ margin: '0.5rem 0 0', fontSize: '1.75rem', fontWeight: 700, color: '#111827' }}>{formattedValue}</p>
         </div>
     );
 };
 
+// MODIFICADO: TablaGeneral con anchos fijos y sin scroll
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
+    const cellStyle = {
+        padding: '0.75rem',
+        textAlign: 'left' as const,
+        fontWeight: 600,
+        fontSize: '1rem',
+        whiteSpace: 'nowrap' as const,
+    };
+
     return (
-        <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-            <h2 style={{ fontSize: '1.75rem', padding: '1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
-            <div style={{ overflowX: 'auto', maxHeight: 'none' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                        <tr style={{ background: '#021751', color: 'white' }}>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>Ticker</th>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>Vto</th>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>Precio</th>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>Var</th>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>TIR</th>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>TNA</th>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>TEM</th>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>RD</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {datos.length > 0 ? (
-                            datos.map((item, index) => (
-                                <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatValue(item.p, '', 2)}</td>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: item.v >= 0 ? '#22c55e' : '#ef4444', fontWeight: 500 }}>{formatValue(item.v)}</td>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatValue(item.tna)}</td>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatValue(item.tem)}</td>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatValue(item.RD)}</td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr><td colSpan={8} style={{ padding: '1.5rem', textAlign: 'center', color: '#6b7280', fontSize: '1.1rem' }}>Cargando datos...</td></tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+        <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
+            <h2 style={{ fontSize: '1.5rem', padding: '1rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                <colgroup>
+                    <col style={{ width: '20%' }} />
+                    <col style={{ width: '13%' }} />
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '11%' }} />
+                    <col style={{ width: '11%' }} />
+                    <col style={{ width: '11%' }} />
+                    <col style={{ width: '11%' }} />
+                    <col style={{ width: '11%' }} />
+                </colgroup>
+                <thead>
+                    <tr style={{ background: '#021751', color: 'white' }}>
+                        <th style={cellStyle}>Ticker</th>
+                        <th style={cellStyle}>Vto</th>
+                        <th style={{...cellStyle, textAlign: 'right'}}>Precio</th>
+                        <th style={{...cellStyle, textAlign: 'center'}}>Var</th>
+                        <th style={{...cellStyle, textAlign: 'right'}}>TIR</th>
+                        <th style={{...cellStyle, textAlign: 'right'}}>TNA</th>
+                        <th style={{...cellStyle, textAlign: 'right'}}>TEM</th>
+                        <th style={{...cellStyle, textAlign: 'right'}}>RD</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {datos.length > 0 ? (
+                        datos.map((item, index) => (
+                            <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563' }}>{formatDate(item.vto)}</td>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.p, '', 2)}</td>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: item.v >= 0 ? '#22c55e' : '#ef4444', textAlign: 'center' }}>{formatValue(item.v)}</td>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.tir)}</td>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.tna)}</td>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.tem)}</td>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.RD)}</td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr><td colSpan={8} style={{ padding: '1.5rem', textAlign: 'center', color: '#6b7280', fontSize: '1.1rem' }}>Cargando datos...</td></tr>
+                    )}
+                </tbody>
+            </table>
         </div>
     );
 };
 
+// MODIFICADO: TablaSoberanosYONs con anchos fijos y sin scroll
 const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
+     const cellStyle = {
+        padding: '0.75rem',
+        textAlign: 'left' as const,
+        fontWeight: 600,
+        fontSize: '1rem',
+        whiteSpace: 'nowrap' as const,
+    };
     return (
-        <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-            <h2 style={{ fontSize: '1.75rem', padding: '1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
-            <div style={{ overflowX: 'auto', maxHeight: 'none' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                        <tr style={{ background: '#021751', color: 'white' }}>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>Ticker</th>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>Vto</th>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>Precio</th>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>Var</th>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>TIR</th>
-                            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', fontWeight: 600, fontSize: '1.1rem' }}>Paridad</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {datos.length > 0 ? (
-                            datos.map((item, index) => (
-                                <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatValue(item.p, '', 2)}</td>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: item.v >= 0 ? '#22c55e' : '#ef4444', fontWeight: 500 }}>{formatValue(item.v)}</td>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
-                                    <td style={{ padding: '1rem 1.5rem', fontSize: '1.1rem', color: '#4b5563' }}>{formatValue(item.pd, '', 2)}</td>
-                                </tr>
-                            ))
-                        ) : (
-                             <tr><td colSpan={6} style={{ padding: '1.5rem', textAlign: 'center', color: '#6b7280', fontSize: '1.1rem' }}>Cargando datos...</td></tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+        <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
+            <h2 style={{ fontSize: '1.5rem', padding: '1rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                <colgroup>
+                    <col style={{ width: '34%' }} />
+                    <col style={{ width: '16%' }} />
+                    <col style={{ width: '15%' }} />
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '11%' }} />
+                    <col style={{ width: '12%' }} />
+                </colgroup>
+                <thead>
+                    <tr style={{ background: '#021751', color: 'white' }}>
+                        <th style={cellStyle}>Ticker</th>
+                        <th style={cellStyle}>Vto</th>
+                        <th style={{...cellStyle, textAlign: 'right'}}>Precio</th>
+                        <th style={{...cellStyle, textAlign: 'center'}}>Var</th>
+                        <th style={{...cellStyle, textAlign: 'right'}}>TIR</th>
+                        <th style={{...cellStyle, textAlign: 'right'}}>Paridad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {datos.length > 0 ? (
+                        datos.map((item, index) => (
+                            <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563' }}>{formatDate(item.vto)}</td>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.p, '', 2)}</td>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: item.v >= 0 ? '#22c55e' : '#ef4444', textAlign: 'center' }}>{formatValue(item.v)}</td>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.tir)}</td>
+                                <td style={{ ...cellStyle, fontWeight: 500, color: '#4b5563', textAlign: 'right' }}>{formatValue(item.pd, '', 2)}</td>
+                            </tr>
+                        ))
+                    ) : (
+                         <tr><td colSpan={6} style={{ padding: '1.5rem', textAlign: 'center', color: '#6b7280', fontSize: '1.1rem' }}>Cargando datos...</td></tr>
+                    )}
+                </tbody>
+            </table>
         </div>
     );
 };
 
-// --- ELIMINADO: Los componentes Sidebar, Header y Layout ahora se importan ---
-
-// --- COMPONENTE DE CONTENIDO DE LA PÁGINA ---
 const FinancialDashboard = () => {
     const [bonos, setBonos] = useState<Bono[]>([]);
-    const [estado, setEstado] = useState('Cargando...');
     const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
     const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
 
@@ -173,51 +201,47 @@ const FinancialDashboard = () => {
     useEffect(() => {
         const segmentosRequeridos = Object.values(gruposDeSegmentos).flat();
         const fetchInitialData = async () => {
-            setEstado('Actualizando datos...');
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
-            const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, pd, RD';
+            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,ua';
+            
             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
-            if (bonosError) {
-                setEstado(`Error al cargar bonos: ${bonosError.message}`);
-                console.error("Error fetching bonds:", bonosError);
-            } else if (bonosData) {
-                setBonos(bonosData as Bono[]);
-            }
+            if (bonosError) console.error("Error fetching bonds:", bonosError);
+            else if (bonosData) setBonos(bonosData as Bono[]);
+
             const { data: tipoDeCambioData, error: tipoDeCambioError } = await supabase.from('tipodecambio').select('datos').order('created_at', { ascending: false }).limit(1).single();
-            if (tipoDeCambioError) {
-                console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
-            } else if (tipoDeCambioData) {
+            if (tipoDeCambioError) console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
+            else if (tipoDeCambioData) {
                 setTipoDeCambio(tipoDeCambioData.datos);
-                setUltimaActualizacion(tipoDeCambioData.datos.h);
+                // Usamos 'ua' si está disponible, si no, 'h' como fallback.
+                setUltimaActualizacion(bonosData?.[0]?.ua || tipoDeCambioData.datos.h);
             }
-            setEstado('Datos cargados. Escuchando actualizaciones...');
         };
         const setupSuscripciones = () => {
              const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
-             supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, (payload) => {
+             const bondChannel = supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
                    const bonoActualizado = payload.new as Bono;
+                   if (bonoActualizado.ua) setUltimaActualizacion(bonoActualizado.ua);
                    setBonos(bonosActuales => {
                        const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
-                       if (existe) {
-                           return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
-                       }
-                       return [...bonosActuales, bonoActualizado]; 
+                       return existe ? bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...bonosActuales, bonoActualizado];
                    });
                }).subscribe();
-             supabase.channel('tipodecambio-changes').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, (payload) => {
+             const exchangeChannel = supabase.channel('tipodecambio-changes').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, payload => {
                    if (payload.new && payload.new.datos) {
                        setTipoDeCambio(payload.new.datos);
                        setUltimaActualizacion(payload.new.datos.h);
                    }
                }).subscribe();
+            return { bondChannel, exchangeChannel };
         };
+
         fetchInitialData();
-        setupSuscripciones();
+        const { bondChannel, exchangeChannel } = setupSuscripciones();
+
         const handleVisibilityChange = () => {
-            if (document.hidden) {
-                supabase.removeAllChannels();
-            } else {
+            if (document.hidden) supabase.removeAllChannels();
+            else {
                 fetchInitialData();
                 setupSuscripciones();
             }
@@ -225,7 +249,8 @@ const FinancialDashboard = () => {
         document.addEventListener("visibilitychange", handleVisibilityChange);
         return () => {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
-            supabase.removeAllChannels();
+            supabase.removeChannel(bondChannel);
+            supabase.removeChannel(exchangeChannel);
         };
     }, []);
 
@@ -237,19 +262,28 @@ const FinancialDashboard = () => {
     const tablaBonares = ordenarPorVencimiento(bonos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.s)));
 
     return (
-        <div style={{ padding: '2rem' }}>
-            <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '1.25rem', marginBottom: '2rem' }}>
-                <span>Estado: <strong>{`Actualizado el ${formatTimestamp(ultimaActualizacion)}`}</strong></span>
+        // MODIFICADO: Contenedor principal ajustado para ocupar toda la altura de la ventana
+        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 65px)', boxSizing: 'border-box' }}>
+            {/* MODIFICADO: Barra superior para la hora de actualización */}
+            <div style={{ flexShrink: 0, marginBottom: '1rem' }}>
+                <span style={{ color: '#6b7280', fontSize: '1rem' }}>
+                    Última Actualización: <strong>{formatTimestamp(ultimaActualizacion)}</strong>
+                </span>
             </div>
-            <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', flex: '0 0 350px' }}>
+            
+            {/* MODIFICADO: Contenedor flex principal para que las columnas crezcan y ocupen el espacio */}
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'stretch', flexGrow: 1 }}>
+                {/* Columna de Dólares */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flexBasis: '280px', flexShrink: 0 }}>
                     <InfoCard title="Dólar MEP" value={tipoDeCambio?.valor_mep} />
                     <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
                 </div>
-                <div style={{ flex: 1 }}>
+                {/* Columna de Tabla 1 */}
+                <div style={{ flex: 1, display: 'flex' }}>
                     <TablaGeneral titulo="LECAPs y Similares" datos={tablaLecaps} />
                 </div>
-                <div style={{ flex: 1 }}>
+                {/* Columna de Tabla 2 */}
+                <div style={{ flex: 1, display: 'flex' }}>
                     <TablaSoberanosYONs titulo="Bonares y Globales" datos={tablaBonares} />
                 </div>
             </div>
@@ -257,7 +291,6 @@ const FinancialDashboard = () => {
     );
 };
 
-// --- COMPONENTE PRINCIPAL QUE ENSAMBLA LA PÁGINA ---
 export default function HomePage() {
     return (
         <Layout>
@@ -265,3 +298,4 @@ export default function HomePage() {
         </Layout>
     );
 }
+
