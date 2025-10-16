@@ -65,10 +65,20 @@ const slugify = (text: string): string => {
 
 // --- COMPONENTES DE UI OPTIMIZADOS PARA TV ---
 
+// MODIFICADO: Se usa Flexbox para un centrado perfecto
 const InfoCard = ({ title, value }: { title: string, value: number | null | undefined }) => {
     const formattedValue = value ? `$${value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '---';
     return (
-        <div style={{ background: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', textAlign: 'center' }}>
+        <div style={{
+            background: '#fff',
+            padding: '1rem',
+            borderRadius: '8px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center'
+        }}>
             <h3 style={{ margin: 0, fontSize: '1rem', color: '#6b7280', fontWeight: 500 }}>{title}</h3>
             <p style={{ margin: '0.5rem 0 0', fontSize: '1.75rem', fontWeight: 700, color: '#111827' }}>{formattedValue}</p>
         </div>
@@ -78,22 +88,22 @@ const InfoCard = ({ title, value }: { title: string, value: number | null | unde
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
     const headerCellStyle = {
         padding: '0.75rem',
-        textAlign: 'left' as const,
+        textAlign: 'center' as const, // MODIFICADO: Centrado por defecto
         fontWeight: 600,
         fontSize: '1rem',
         whiteSpace: 'nowrap' as const,
     };
-    // MODIFICADO: Estilo para las celdas de datos con letra más grande y negra
     const dataCellStyle = {
         ...headerCellStyle,
         fontWeight: 500,
-        color: '#111827', // Color de letra negro
-        fontSize: '1.2rem',  // Letra un poco más grande
+        color: '#111827',
+        fontSize: '1.2rem',
     };
 
     return (
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
-            <h2 style={{ fontSize: '1.5rem', padding: '1rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
+            {/* MODIFICADO: Título centrado */}
+            <h2 style={{ fontSize: '1.5rem', padding: '1rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' }}>{titulo}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <colgroup>
                     <col style={{ width: '20%' }} />
@@ -107,28 +117,28 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                 </colgroup>
                 <thead>
                     <tr style={{ background: '#021751', color: 'white' }}>
-                        <th style={headerCellStyle}>Ticker</th>
+                        <th style={{...headerCellStyle, textAlign: 'left'}}>Ticker</th>
                         <th style={headerCellStyle}>Vto</th>
-                        <th style={{...headerCellStyle, textAlign: 'right'}}>Precio</th>
-                        <th style={{...headerCellStyle, textAlign: 'center'}}>Var</th>
-                        <th style={{...headerCellStyle, textAlign: 'right'}}>TIR</th>
-                        <th style={{...headerCellStyle, textAlign: 'right'}}>TNA</th>
-                        <th style={{...headerCellStyle, textAlign: 'right'}}>TEM</th>
-                        <th style={{...headerCellStyle, textAlign: 'right'}}>RD</th>
+                        <th style={headerCellStyle}>Precio</th>
+                        <th style={headerCellStyle}>Var</th>
+                        <th style={headerCellStyle}>TIR</th>
+                        <th style={headerCellStyle}>TNA</th>
+                        <th style={headerCellStyle}>TEM</th>
+                        <th style={headerCellStyle}>RD</th>
                     </tr>
                 </thead>
                 <tbody>
                     {datos.length > 0 ? (
                         datos.map((item, index) => (
                             <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                <td style={dataCellStyle}>{item.t}</td>
+                                <td style={{...dataCellStyle, textAlign: 'left'}}>{item.t}</td>
                                 <td style={dataCellStyle}>{formatDate(item.vto)}</td>
-                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.p, '', 2)}</td>
-                                <td style={{ ...dataCellStyle, color: item.v >= 0 ? '#22c55e' : '#ef4444', textAlign: 'center' }}>{formatValue(item.v)}</td>
-                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.tir)}</td>
-                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.tna)}</td>
-                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.tem)}</td>
-                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.RD)}</td>
+                                <td style={dataCellStyle}>{formatValue(item.p, '', 2)}</td>
+                                <td style={{ ...dataCellStyle, color: item.v >= 0 ? '#22c55e' : '#ef4444' }}>{formatValue(item.v)}</td>
+                                <td style={dataCellStyle}>{formatValue(item.tir)}</td>
+                                <td style={dataCellStyle}>{formatValue(item.tna)}</td>
+                                <td style={dataCellStyle}>{formatValue(item.tem)}</td>
+                                <td style={dataCellStyle}>{formatValue(item.RD)}</td>
                             </tr>
                         ))
                     ) : (
@@ -143,24 +153,23 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
 const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
      const headerCellStyle = {
         padding: '0.75rem',
-        textAlign: 'left' as const,
+        textAlign: 'center' as const, // MODIFICADO: Centrado por defecto
         fontWeight: 600,
         fontSize: '1rem',
         whiteSpace: 'nowrap' as const,
     };
-    // MODIFICADO: Estilo para las celdas de datos con letra más grande y negra
     const dataCellStyle = {
         ...headerCellStyle,
         fontWeight: 500,
-        color: '#111827', // Color de letra negro
-        fontSize: '1.2rem',  // Letra un poco más grande
+        color: '#111827',
+        fontSize: '1.2rem',
     };
 
     return (
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
-            <h2 style={{ fontSize: '1.5rem', padding: '1rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
+            {/* MODIFICADO: Título centrado */}
+            <h2 style={{ fontSize: '1.5rem', padding: '1rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' }}>{titulo}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                {/* MODIFICADO: Ancho de columna Ticker y Vto reducido y redistribuido */}
                 <colgroup>
                     <col style={{ width: '20%' }} />
                     <col style={{ width: '12%' }} />
@@ -171,24 +180,24 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                 </colgroup>
                 <thead>
                     <tr style={{ background: '#021751', color: 'white' }}>
-                        <th style={headerCellStyle}>Ticker</th>
+                        <th style={{...headerCellStyle, textAlign: 'left'}}>Ticker</th>
                         <th style={headerCellStyle}>Vto</th>
-                        <th style={{...headerCellStyle, textAlign: 'right'}}>Precio</th>
-                        <th style={{...headerCellStyle, textAlign: 'center'}}>Var</th>
-                        <th style={{...headerCellStyle, textAlign: 'right'}}>TIR</th>
-                        <th style={{...headerCellStyle, textAlign: 'right'}}>Paridad</th>
+                        <th style={headerCellStyle}>Precio</th>
+                        <th style={headerCellStyle}>Var</th>
+                        <th style={headerCellStyle}>TIR</th>
+                        <th style={headerCellStyle}>Paridad</th>
                     </tr>
                 </thead>
                 <tbody>
                     {datos.length > 0 ? (
                         datos.map((item, index) => (
                             <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                <td style={dataCellStyle}>{item.t}</td>
+                                <td style={{...dataCellStyle, textAlign: 'left'}}>{item.t}</td>
                                 <td style={dataCellStyle}>{formatDate(item.vto)}</td>
-                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.p, '', 2)}</td>
-                                <td style={{ ...dataCellStyle, color: item.v >= 0 ? '#22c55e' : '#ef4444', textAlign: 'center' }}>{formatValue(item.v)}</td>
-                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.tir)}</td>
-                                <td style={{ ...dataCellStyle, textAlign: 'right' }}>{formatValue(item.pd, '', 2)}</td>
+                                <td style={dataCellStyle}>{formatValue(item.p, '', 2)}</td>
+                                <td style={{ ...dataCellStyle, color: item.v >= 0 ? '#22c55e' : '#ef4444' }}>{formatValue(item.v)}</td>
+                                <td style={dataCellStyle}>{formatValue(item.tir)}</td>
+                                <td style={dataCellStyle}>{formatValue(item.pd, '', 2)}</td>
                             </tr>
                         ))
                     ) : (
@@ -274,17 +283,16 @@ const FinancialDashboard = () => {
     const tablaBonares = ordenarPorVencimiento(bonos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.s)));
 
     return (
-        // MODIFICADO: Padding horizontal aumentado para dar más margen
         <div style={{ padding: '1.5rem 2.5rem', display: 'flex', gap: '1.5rem', height: 'calc(100vh - 65px)', boxSizing: 'border-box' }}>
             
-            {/* Columna Izquierda (ACTUALIZACIÓN + DÓLARES) */}
+            {/* MODIFICADO: Columna de Dólares más angosta */}
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '1rem',
-                flexBasis: '280px',
+                flexBasis: '240px',
                 flexShrink: 0,
-                paddingTop: '2.5rem' // Espacio superior para evitar el botón del menú
+                paddingTop: '2.5rem'
             }}>
                 <div style={{ paddingLeft: '0.5rem' }}>
                     <span style={{ color: '#6b7280', fontSize: '1rem' }}>
@@ -295,12 +303,10 @@ const FinancialDashboard = () => {
                 <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
             </div>
 
-            {/* Columna de Tabla 1 */}
             <div style={{ flex: 1, display: 'flex' }}>
                 <TablaGeneral titulo="LECAPs y Similares" datos={tablaLecaps} />
             </div>
 
-            {/* Columna de Tabla 2 */}
             <div style={{ flex: 1, display: 'flex' }}>
                 <TablaSoberanosYONs titulo="Bonares y Globales" datos={tablaBonares} />
             </div>
@@ -315,4 +321,5 @@ export default function HomePage() {
         </Layout>
     );
 }
+
 
