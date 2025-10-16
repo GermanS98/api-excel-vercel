@@ -92,17 +92,16 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
         fontSize: '1rem',
         whiteSpace: 'nowrap' as const,
     };
-    // MODIFICADO: Letra más grande
+    // MODIFICADO: Letra más pequeña
     const dataCellStyle = {
         ...headerCellStyle,
         fontWeight: 500,
         color: '#111827',
-        fontSize: '1.5rem', 
+        fontSize: '1.3rem', 
     };
 
     return (
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
-            {/* MODIFICADO: Padding del título reducido */}
             <h2 style={{ fontSize: '1.5rem', padding: '0.75rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' }}>{titulo}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <colgroup>
@@ -158,17 +157,16 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
         fontSize: '1rem',
         whiteSpace: 'nowrap' as const,
     };
-    // MODIFICADO: Letra más grande
+    // MODIFICADO: Letra más pequeña
     const dataCellStyle = {
         ...headerCellStyle,
         fontWeight: 500,
         color: '#111827',
-        fontSize: '1.5rem',
+        fontSize: '1.3rem',
     };
 
     return (
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
-            {/* MODIFICADO: Padding del título reducido */}
             <h2 style={{ fontSize: '1.5rem', padding: '0.75rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' }}>{titulo}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <colgroup>
@@ -321,6 +319,4 @@ export default function HomePage() {
         </Layout>
     );
 }
-
-
 
