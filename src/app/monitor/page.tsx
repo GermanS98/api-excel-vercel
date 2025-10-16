@@ -102,7 +102,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
 
     return (
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
-            <h2 style={{ fontSize: '1.5rem', padding: '0.75rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' , fontWieght:'bold'}}>{titulo}</h2>
+            <h2 style={{ fontSize: '1.5rem', padding: '0.75rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' , fontWeight:'bold'}}>{titulo}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <colgroup>
                     <col style={{ width: '20%' }} />
