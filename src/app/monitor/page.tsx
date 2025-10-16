@@ -65,7 +65,6 @@ const slugify = (text: string): string => {
 
 // --- COMPONENTES DE UI OPTIMIZADOS PARA TV ---
 
-// MODIFICADO: Se usa Flexbox para un centrado perfecto
 const InfoCard = ({ title, value }: { title: string, value: number | null | undefined }) => {
     const formattedValue = value ? `$${value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '---';
     return (
@@ -88,21 +87,21 @@ const InfoCard = ({ title, value }: { title: string, value: number | null | unde
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
     const headerCellStyle = {
         padding: '0.75rem',
-        textAlign: 'center' as const, // MODIFICADO: Centrado por defecto
+        textAlign: 'center' as const,
         fontWeight: 600,
         fontSize: '1rem',
         whiteSpace: 'nowrap' as const,
     };
+    // MODIFICADO: Letra más grande
     const dataCellStyle = {
         ...headerCellStyle,
         fontWeight: 500,
         color: '#111827',
-        fontSize: '1.2rem',
+        fontSize: '1.3rem', 
     };
 
     return (
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
-            {/* MODIFICADO: Título centrado */}
             <h2 style={{ fontSize: '1.5rem', padding: '1rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' }}>{titulo}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <colgroup>
@@ -153,21 +152,21 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
 const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
      const headerCellStyle = {
         padding: '0.75rem',
-        textAlign: 'center' as const, // MODIFICADO: Centrado por defecto
+        textAlign: 'center' as const,
         fontWeight: 600,
         fontSize: '1rem',
         whiteSpace: 'nowrap' as const,
     };
+    // MODIFICADO: Letra más grande
     const dataCellStyle = {
         ...headerCellStyle,
         fontWeight: 500,
         color: '#111827',
-        fontSize: '1.2rem',
+        fontSize: '1.3rem',
     };
 
     return (
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
-            {/* MODIFICADO: Título centrado */}
             <h2 style={{ fontSize: '1.5rem', padding: '1rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' }}>{titulo}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <colgroup>
@@ -214,8 +213,9 @@ const FinancialDashboard = () => {
     const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
     const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
 
+    // MODIFICADO: Se cambia el nombre del grupo
     const gruposDeSegmentos = {
-        'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
+        'Renta fija ars': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
         'Bonares y Globales': ['BONAR', 'GLOBAL', 'BOPREAL'],
     };
 
@@ -279,13 +279,13 @@ const FinancialDashboard = () => {
         return [...datos].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
     };
 
-    const tablaLecaps = ordenarPorVencimiento(bonos.filter(b => gruposDeSegmentos['LECAPs y Similares'].includes(b.s)));
+    // MODIFICADO: Se usa la nueva clave para filtrar
+    const tablaLecaps = ordenarPorVencimiento(bonos.filter(b => gruposDeSegmentos['Renta fija ars'].includes(b.s)));
     const tablaBonares = ordenarPorVencimiento(bonos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.s)));
 
     return (
         <div style={{ padding: '1.5rem 2.5rem', display: 'flex', gap: '1.5rem', height: 'calc(100vh - 65px)', boxSizing: 'border-box' }}>
             
-            {/* MODIFICADO: Columna de Dólares más angosta */}
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -295,7 +295,8 @@ const FinancialDashboard = () => {
                 paddingTop: '2.5rem'
             }}>
                 <div style={{ paddingLeft: '0.5rem' }}>
-                    <span style={{ color: '#6b7280', fontSize: '1rem' }}>
+                    {/* MODIFICADO: Color de texto en negro */}
+                    <span style={{ color: '#111827', fontSize: '1rem' }}>
                         Actualización: <strong>{formatTimestamp(ultimaActualizacion)}</strong>
                     </span>
                 </div>
@@ -304,7 +305,8 @@ const FinancialDashboard = () => {
             </div>
 
             <div style={{ flex: 1, display: 'flex' }}>
-                <TablaGeneral titulo="LECAPs y Similares" datos={tablaLecaps} />
+                {/* MODIFICADO: Se pasa el nuevo título */}
+                <TablaGeneral titulo="Renta fija ars" datos={tablaLecaps} />
             </div>
 
             <div style={{ flex: 1, display: 'flex' }}>
@@ -321,5 +323,6 @@ export default function HomePage() {
         </Layout>
     );
 }
+
 
 
