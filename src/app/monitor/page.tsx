@@ -88,7 +88,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
         ...headerCellStyle,
         fontWeight: 500,
         color: '#111827', // Color de letra negro
-        fontSize: '1.1rem',  // Letra más grande
+        fontSize: '1.2rem',  // Letra un poco más grande
     };
 
     return (
@@ -153,21 +153,21 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
         ...headerCellStyle,
         fontWeight: 500,
         color: '#111827', // Color de letra negro
-        fontSize: '1.1rem',  // Letra más grande
+        fontSize: '1.2rem',  // Letra un poco más grande
     };
 
     return (
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
             <h2 style={{ fontSize: '1.5rem', padding: '1rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                {/* MODIFICADO: Ancho de columna Ticker reducido y redistribuido */}
+                {/* MODIFICADO: Ancho de columna Ticker y Vto reducido y redistribuido */}
                 <colgroup>
                     <col style={{ width: '20%' }} />
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '18%' }} />
                     <col style={{ width: '16%' }} />
                     <col style={{ width: '16%' }} />
-                    <col style={{ width: '16%' }} />
-                    <col style={{ width: '16%' }} />
-                    <col style={{ width: '16%' }} />
+                    <col style={{ width: '18%' }} />
                 </colgroup>
                 <thead>
                     <tr style={{ background: '#021751', color: 'white' }}>
@@ -215,7 +215,6 @@ const FinancialDashboard = () => {
         const fetchInitialData = async () => {
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
-            // MODIFICADO: Se quita 'ua' de las columnas pedidas
             const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD';
             
             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
@@ -228,7 +227,6 @@ const FinancialDashboard = () => {
             if (tipoDeCambioError) console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
             else if (tipoDeCambioData) {
                 setTipoDeCambio(tipoDeCambioData.datos);
-                // MODIFICADO: Se usa siempre 'h' de tipodecambio
                 setUltimaActualizacion(tipoDeCambioData.datos.h);
             }
         };
@@ -236,7 +234,6 @@ const FinancialDashboard = () => {
              const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
              const bondChannel = supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
                    const bonoActualizado = payload.new as Bono;
-                   // MODIFICADO: Ya no se mira 'ua'
                    setBonos(bonosActuales => {
                        const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
                        return existe ? bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...bonosActuales, bonoActualizado];
@@ -245,7 +242,6 @@ const FinancialDashboard = () => {
              const exchangeChannel = supabase.channel('tipodecambio-changes').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, payload => {
                    if (payload.new && payload.new.datos) {
                        setTipoDeCambio(payload.new.datos);
-                       // MODIFICADO: Se usa siempre 'h' de tipodecambio
                        setUltimaActualizacion(payload.new.datos.h);
                    }
                }).subscribe();
@@ -278,8 +274,8 @@ const FinancialDashboard = () => {
     const tablaBonares = ordenarPorVencimiento(bonos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.s)));
 
     return (
-        // MODIFICADO: Nueva estructura de layout
-        <div style={{ padding: '1.5rem', display: 'flex', gap: '1.5rem', height: 'calc(100vh - 65px)', boxSizing: 'border-box' }}>
+        // MODIFICADO: Padding horizontal aumentado para dar más margen
+        <div style={{ padding: '1.5rem 2.5rem', display: 'flex', gap: '1.5rem', height: 'calc(100vh - 65px)', boxSizing: 'border-box' }}>
             
             {/* Columna Izquierda (ACTUALIZACIÓN + DÓLARES) */}
             <div style={{
