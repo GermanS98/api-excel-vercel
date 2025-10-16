@@ -116,7 +116,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                 </colgroup>
                 <thead>
                     {/* MODIFICADO: Estilo de la cabecera cambiado a fondo claro y texto negro */}
-                    <tr style={{ background: '#021751', color: '#111827', borderBottom: '1px solid #e5e7eb' }}>
+                    <tr style={{ background: '#021751', color: 'white', borderBottom: '1px solid #e5e7eb' }}>
                         <th style={{...headerCellStyle, textAlign: 'left'}}>Ticker</th>
                         <th style={headerCellStyle}>Vto</th>
                         <th style={headerCellStyle}>Precio</th>
@@ -282,14 +282,14 @@ const FinancialDashboard = () => {
     const tablaLecaps = ordenarPorVencimiento(bonos.filter(b => gruposDeSegmentos['Renta fija ars'].includes(b.s)));
     const tablaBonares = ordenarPorVencimiento(bonos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.s)));
 
-    return (
+   return (
         <div style={{ padding: '1.5rem 2.5rem', display: 'flex', gap: '1.5rem', height: 'calc(100vh - 65px)', boxSizing: 'border-box' }}>
             
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '1rem',
-                flexBasis: '240px',
+                flexBasis: '280px', // MODIFICADO: Ancho de la columna aumentado
                 flexShrink: 0,
                 paddingTop: '2.5rem'
             }}>
@@ -321,7 +321,6 @@ const FinancialDashboard = () => {
         </div>
     );
 };
-
 export default function HomePage() {
     return (
         <Layout>
