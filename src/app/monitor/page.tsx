@@ -50,7 +50,6 @@ const formatDate = (dateString: string): string => {
     return format(date, 'dd/MM/yy');
 };
 
-// MODIFICADO: Formato más corto para la esquina superior
 const formatTimestamp = (isoString: string | null): string => {
     if (!isoString) return '...';
     const timeZone = 'America/Argentina/Buenos_Aires';
@@ -66,7 +65,6 @@ const slugify = (text: string): string => {
 
 // --- COMPONENTES DE UI OPTIMIZADOS PARA TV ---
 
-// MODIFICADO: InfoCard mucho más compacta
 const InfoCard = ({ title, value }: { title: string, value: number | null | undefined }) => {
     const formattedValue = value ? `$${value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '---';
     return (
@@ -77,7 +75,6 @@ const InfoCard = ({ title, value }: { title: string, value: number | null | unde
     );
 };
 
-// MODIFICADO: TablaGeneral con anchos fijos y sin scroll
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
     const cellStyle = {
         padding: '0.75rem',
@@ -136,7 +133,6 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
     );
 };
 
-// MODIFICADO: TablaSoberanosYONs con anchos fijos y sin scroll
 const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
      const cellStyle = {
         padding: '0.75rem',
@@ -149,13 +145,14 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
             <h2 style={{ fontSize: '1.5rem', padding: '1rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                {/* MODIFICADO: Ancho de columna Ticker reducido y redistribuido */}
                 <colgroup>
-                    <col style={{ width: '34%' }} />
-                    <col style={{ width: '16%' }} />
-                    <col style={{ width: '15%' }} />
+                    <col style={{ width: '28%' }} />
+                    <col style={{ width: '18%' }} />
+                    <col style={{ width: '17%' }} />
                     <col style={{ width: '12%' }} />
                     <col style={{ width: '11%' }} />
-                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '14%' }} />
                 </colgroup>
                 <thead>
                     <tr style={{ background: '#021751', color: 'white' }}>
@@ -207,14 +204,20 @@ const FinancialDashboard = () => {
             
             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
             if (bonosError) console.error("Error fetching bonds:", bonosError);
-            else if (bonosData) setBonos(bonosData as Bono[]);
+            else if (bonosData) {
+                setBonos(bonosData as Bono[]);
+                // Priorizamos la fecha 'ua' del primer bono si existe
+                if (bonosData[0]?.ua) {
+                    setUltimaActualizacion(bonosData[0].ua);
+                }
+            }
 
             const { data: tipoDeCambioData, error: tipoDeCambioError } = await supabase.from('tipodecambio').select('datos').order('created_at', { ascending: false }).limit(1).single();
             if (tipoDeCambioError) console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
             else if (tipoDeCambioData) {
                 setTipoDeCambio(tipoDeCambioData.datos);
-                // Usamos 'ua' si está disponible, si no, 'h' como fallback.
-                setUltimaActualizacion(bonosData?.[0]?.ua || tipoDeCambioData.datos.h);
+                // Si 'ua' no vino de los bonos, usamos la fecha de los tipos de cambio como fallback
+                setUltimaActualizacion(prev => prev || tipoDeCambioData.datos.h);
             }
         };
         const setupSuscripciones = () => {
@@ -230,7 +233,7 @@ const FinancialDashboard = () => {
              const exchangeChannel = supabase.channel('tipodecambio-changes').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, payload => {
                    if (payload.new && payload.new.datos) {
                        setTipoDeCambio(payload.new.datos);
-                       setUltimaActualizacion(payload.new.datos.h);
+                       setUltimaActualizacion(prev => prev || payload.new.datos.h);
                    }
                }).subscribe();
             return { bondChannel, exchangeChannel };
@@ -262,30 +265,35 @@ const FinancialDashboard = () => {
     const tablaBonares = ordenarPorVencimiento(bonos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.s)));
 
     return (
-        // MODIFICADO: Contenedor principal ajustado para ocupar toda la altura de la ventana
-        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', height: 'calc(100vh - 65px)', boxSizing: 'border-box' }}>
-            {/* MODIFICADO: Barra superior para la hora de actualización */}
-            <div style={{ flexShrink: 0, marginBottom: '1rem' }}>
-                <span style={{ color: '#6b7280', fontSize: '1rem' }}>
-                    Última Actualización: <strong>{formatTimestamp(ultimaActualizacion)}</strong>
-                </span>
-            </div>
+        // MODIFICADO: Nueva estructura de layout
+        <div style={{ padding: '1.5rem', display: 'flex', gap: '1.5rem', height: 'calc(100vh - 65px)', boxSizing: 'border-box' }}>
             
-            {/* MODIFICADO: Contenedor flex principal para que las columnas crezcan y ocupen el espacio */}
-            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'stretch', flexGrow: 1 }}>
-                {/* Columna de Dólares */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flexBasis: '280px', flexShrink: 0 }}>
-                    <InfoCard title="Dólar MEP" value={tipoDeCambio?.valor_mep} />
-                    <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
+            {/* Columna Izquierda (ACTUALIZACIÓN + DÓLARES) */}
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+                flexBasis: '280px',
+                flexShrink: 0,
+                paddingTop: '2.5rem' // Espacio superior para evitar el botón del menú
+            }}>
+                <div style={{ paddingLeft: '0.5rem' }}>
+                    <span style={{ color: '#6b7280', fontSize: '1rem' }}>
+                        Actualización: <strong>{formatTimestamp(ultimaActualizacion)}</strong>
+                    </span>
                 </div>
-                {/* Columna de Tabla 1 */}
-                <div style={{ flex: 1, display: 'flex' }}>
-                    <TablaGeneral titulo="LECAPs y Similares" datos={tablaLecaps} />
-                </div>
-                {/* Columna de Tabla 2 */}
-                <div style={{ flex: 1, display: 'flex' }}>
-                    <TablaSoberanosYONs titulo="Bonares y Globales" datos={tablaBonares} />
-                </div>
+                <InfoCard title="Dólar MEP" value={tipoDeCambio?.valor_mep} />
+                <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
+            </div>
+
+            {/* Columna de Tabla 1 */}
+            <div style={{ flex: 1, display: 'flex' }}>
+                <TablaGeneral titulo="LECAPs y Similares" datos={tablaLecaps} />
+            </div>
+
+            {/* Columna de Tabla 2 */}
+            <div style={{ flex: 1, display: 'flex' }}>
+                <TablaSoberanosYONs titulo="Bonares y Globales" datos={tablaBonares} />
             </div>
         </div>
     );
