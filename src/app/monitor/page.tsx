@@ -79,7 +79,8 @@ const InfoCard = ({ title, value }: { title: string, value: number | null | unde
             justifyContent: 'center'
         }}>
             <h3 style={{ margin: 0, fontSize: '1rem', color: '#6b7280', fontWeight: 500 }}>{title}</h3>
-            <p style={{ margin: '0.5rem 0 0', fontSize: '1.75rem', fontWeight: 700, color: '#111827' }}>{formattedValue}</p>
+            {/* MODIFICADO: Color del texto cambiado a #021751 */}
+            <p style={{ margin: '0.5rem 0 0', fontSize: '1.75rem', fontWeight: 700, color: '#021751' }}>{formattedValue}</p>
         </div>
     );
 };
@@ -92,7 +93,6 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
         fontSize: '1rem',
         whiteSpace: 'nowrap' as const,
     };
-    // MODIFICADO: Letra más pequeña
     const dataCellStyle = {
         ...headerCellStyle,
         fontWeight: 500,
@@ -115,7 +115,8 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                     <col style={{ width: '11%' }} />
                 </colgroup>
                 <thead>
-                    <tr style={{ background: '#021751', color: 'white' }}>
+                    {/* MODIFICADO: Estilo de la cabecera cambiado a fondo claro y texto negro */}
+                    <tr style={{ background: '#021751', color: '#111827', borderBottom: '1px solid #e5e7eb' }}>
                         <th style={{...headerCellStyle, textAlign: 'left'}}>Ticker</th>
                         <th style={headerCellStyle}>Vto</th>
                         <th style={headerCellStyle}>Precio</th>
@@ -133,7 +134,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                                 <td style={{...dataCellStyle, textAlign: 'left'}}>{item.t}</td>
                                 <td style={dataCellStyle}>{formatDate(item.vto)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.p, '', 2)}</td>
-                                <td style={{ ...dataCellStyle, color: item.v >= 0 ? '#22c55e' : '#ef4444' }}>{formatValue(item.v)}</td>
+                                <td style={dataCellStyle}>{formatValue(item.v)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.tir)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.tna)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.tem)}</td>
@@ -157,7 +158,6 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
         fontSize: '1rem',
         whiteSpace: 'nowrap' as const,
     };
-    // MODIFICADO: Letra más pequeña
     const dataCellStyle = {
         ...headerCellStyle,
         fontWeight: 500,
@@ -178,7 +178,8 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                     <col style={{ width: '18%' }} />
                 </colgroup>
                 <thead>
-                    <tr style={{ background: '#021751', color: 'white' }}>
+                    {/* MODIFICADO: Estilo de la cabecera cambiado a fondo claro y texto negro */}
+                    <tr style={{ background: '#021751', color: '#111827', borderBottom: '1px solid #e5e7eb' }}>
                         <th style={{...headerCellStyle, textAlign: 'left'}}>Ticker</th>
                         <th style={headerCellStyle}>Vto</th>
                         <th style={headerCellStyle}>Precio</th>
@@ -194,7 +195,7 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                                 <td style={{...dataCellStyle, textAlign: 'left'}}>{item.t}</td>
                                 <td style={dataCellStyle}>{formatDate(item.vto)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.p, '', 2)}</td>
-                                <td style={{ ...dataCellStyle, color: item.v >= 0 ? '#22c55e' : '#ef4444' }}>{formatValue(item.v)}</td>
+                                <td style={dataCellStyle}>{formatValue(item.v)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.tir)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.pd, '', 2)}</td>
                             </tr>
@@ -299,6 +300,15 @@ const FinancialDashboard = () => {
                 </div>
                 <InfoCard title="Dólar MEP" value={tipoDeCambio?.valor_mep} />
                 <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
+                
+                <div style={{ marginTop: 'auto', padding: '1rem 0.5rem' }}>
+                    <img
+                        src="https://placehold.co/200x60/021751/FFFFFF?text=ResearchCAP"
+                        alt="Logo ResearchCAP"
+                        style={{ width: '100%', height: 'auto' }}
+                        onError={(e) => { e.currentTarget.src = 'https://placehold.co/200x60?text=Logo'; }}
+                    />
+                </div>
             </div>
 
             <div style={{ flex: 1, display: 'flex' }}>
@@ -319,4 +329,3 @@ export default function HomePage() {
         </Layout>
     );
 }
-
