@@ -310,7 +310,7 @@ const FinancialDashboard = () => {
                     <img
                         src="https://raw.githubusercontent.com/GermanS98/api-excel-vercel/refs/heads/main/VetaCap_Brandpack_Reducida_Positivo-RGB.svg"
                         alt="Logo ResearchCAP"
-                        style={{ width: '200%', height: 'auto' , transform: 'translateX(-25%)'}}
+                        style={{ width: '150%', height: 'auto' , transform: 'translateX(-25%)'}}
                         onError={(e) => { e.currentTarget.src = 'https://placehold.co/200x60?text=Logo'; }}
                     />
                 </div>
