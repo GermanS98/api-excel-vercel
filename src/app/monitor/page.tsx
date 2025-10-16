@@ -97,12 +97,13 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
         ...headerCellStyle,
         fontWeight: 500,
         color: '#111827',
-        fontSize: '1.3rem', 
+        fontSize: '1.5rem', 
     };
 
     return (
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
-            <h2 style={{ fontSize: '1.5rem', padding: '1rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' }}>{titulo}</h2>
+            {/* MODIFICADO: Padding del título reducido */}
+            <h2 style={{ fontSize: '1.5rem', padding: '0.75rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' }}>{titulo}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <colgroup>
                     <col style={{ width: '20%' }} />
@@ -162,12 +163,13 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
         ...headerCellStyle,
         fontWeight: 500,
         color: '#111827',
-        fontSize: '1.3rem',
+        fontSize: '1.5rem',
     };
 
     return (
         <div id={slugify(titulo)} style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 6px 10px rgba(0,0,0,0.05)', overflow: 'hidden', height: '100%' }}>
-            <h2 style={{ fontSize: '1.5rem', padding: '1rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' }}>{titulo}</h2>
+            {/* MODIFICADO: Padding del título reducido */}
+            <h2 style={{ fontSize: '1.5rem', padding: '0.75rem 1.5rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' }}>{titulo}</h2>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <colgroup>
                     <col style={{ width: '20%' }} />
@@ -213,7 +215,6 @@ const FinancialDashboard = () => {
     const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
     const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
 
-    // MODIFICADO: Se cambia el nombre del grupo
     const gruposDeSegmentos = {
         'Renta fija ars': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
         'Bonares y Globales': ['BONAR', 'GLOBAL', 'BOPREAL'],
@@ -279,7 +280,6 @@ const FinancialDashboard = () => {
         return [...datos].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
     };
 
-    // MODIFICADO: Se usa la nueva clave para filtrar
     const tablaLecaps = ordenarPorVencimiento(bonos.filter(b => gruposDeSegmentos['Renta fija ars'].includes(b.s)));
     const tablaBonares = ordenarPorVencimiento(bonos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.s)));
 
@@ -295,7 +295,6 @@ const FinancialDashboard = () => {
                 paddingTop: '2.5rem'
             }}>
                 <div style={{ paddingLeft: '0.5rem' }}>
-                    {/* MODIFICADO: Color de texto en negro */}
                     <span style={{ color: '#111827', fontSize: '1rem' }}>
                         Actualización: <strong>{formatTimestamp(ultimaActualizacion)}</strong>
                     </span>
@@ -305,7 +304,6 @@ const FinancialDashboard = () => {
             </div>
 
             <div style={{ flex: 1, display: 'flex' }}>
-                {/* MODIFICADO: Se pasa el nuevo título */}
                 <TablaGeneral titulo="Renta fija ars" datos={tablaLecaps} />
             </div>
 
