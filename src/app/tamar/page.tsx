@@ -24,6 +24,7 @@ type Bono = {
   RD: number | null;
   dm: number | null; // duracion_macaulay
   mb: number | null; // mep_breakeven
+  ua: string | null; // ultimo_anuncio
 };
 
 // ==================================================================
@@ -122,7 +123,7 @@ export default function TamarPage() {
             manana.setDate(manana.getDate() + 1);
 
             const { data, error } = await supabase
-                .from('datosbonos')
+                .from('latest_bonds')
                 .select('*')
                 .in('s', segmentosDeEstaPagina)
                 .gte('vto', manana.toISOString());

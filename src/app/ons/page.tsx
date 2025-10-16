@@ -30,6 +30,7 @@ type Bono = {
   nom?: string;     // cantnominales
   amort?: string;   // tipoamort
   nomb?: string;    // nombre
+  ua?: string | null; // ultimo_anuncio
 };
 
 // Objeto de configuración para la tabla dinámica (CORREGIDO con nombres cortos)
@@ -181,7 +182,7 @@ export default function Onspage() {
             manana.setDate(manana.getDate() + 1);
 
             const { data, error } = await supabase
-                .from('datosbonos')
+                .from('latest_bonds')
                 .select('*')
                 .in('s', segmentosDeEstaPagina)
                 .gte('vto', manana.toISOString());

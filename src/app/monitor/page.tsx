@@ -18,6 +18,7 @@ type Bono = {
     s: string;
     pd: number | null;
     RD: number | null;
+    ua: string | null;
 };
 
 // --- TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
@@ -176,7 +177,7 @@ const FinancialDashboard = () => {
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
             const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, pd, RD';
-            const { data: bonosData, error: bonosError } = await supabase.from('datosbonos').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
+            const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
             if (bonosError) {
                 setEstado(`Error al cargar bonos: ${bonosError.message}`);
                 console.error("Error fetching bonds:", bonosError);

@@ -24,6 +24,7 @@ type Bono = {
   RD: number | null;
   dm: number | null; // duracion_macaulay
   mb: number | null; // mep_breakeven
+  ua: string | null; // ultimo_anuncio
 };
 
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
@@ -127,7 +128,7 @@ export default function DollarLinkedPage() { // Renombrado para mayor claridad
       manana.setDate(manana.getDate() + 1);
 
       const { data, error } = await supabase
-        .from('datosbonos')
+        .from('latest_bonds')
         .select('*')
         .in('s', segmentosDeEstaPagina) // Filtra por segmento
         .gte('vto', manana.toISOString()); // Filtra por fecha de vencimiento

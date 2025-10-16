@@ -23,6 +23,7 @@ type Bono = {
   RD: number | null;
   dm: number | null; // duracion_macaulay
   spread?: number | null; // Campo opcional para el spread
+  ua: string | null; // ultimo_anuncio
 };
 
 // ==================================================================
@@ -118,7 +119,7 @@ export default function SoberanosPage() {
             manana.setDate(manana.getDate() + 1);
 
             const { data, error } = await supabase
-                .from('datosbonos')
+                .from('latest_bonds')
                 .select('*')
                 .in('s', segmentosDeEstaPagina)
                 .gte('vto', manana.toISOString());

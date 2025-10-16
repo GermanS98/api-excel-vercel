@@ -24,6 +24,7 @@ type Bono = {
   RD: number | null; // Nuevo campo
   dm: number | null; // Nuevo campo
   mb: number | null; // Nuevo campo
+  ua: string | null; // Nuevo campo
 };
 
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
@@ -122,7 +123,7 @@ export default function LecapsPage() {
     const fetchInitialData = async () => {
       setEstado('Cargando instrumentos CER...');
       const { data, error } = await supabase
-        .from('datosbonos')
+        .from('latest_bonds')
         .select('*')
         .in('s', segmentosDeEstaPagina); // 
 
