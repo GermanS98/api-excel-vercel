@@ -303,7 +303,7 @@ const FinancialDashboard = () => {
                 
                 <div style={{ marginTop: 'auto', padding: '1rem 0.5rem' }}>
                     <img
-                        src="https://placehold.co/200x60/021751/FFFFFF?text=ResearchCAP"
+                        src="https://raw.githubusercontent.com/GermanS98/api-excel-vercel/refs/heads/main/VetaCap_Brandpack_Reducida_Positivo-RGB.svg"
                         alt="Logo ResearchCAP"
                         style={{ width: '100%', height: 'auto' }}
                         onError={(e) => { e.currentTarget.src = 'https://placehold.co/200x60?text=Logo'; }}
