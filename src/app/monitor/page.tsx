@@ -179,7 +179,7 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                 </colgroup>
                 <thead>
                     {/* MODIFICADO: Estilo de la cabecera cambiado a fondo claro y texto negro */}
-                    <tr style={{ background: '#021751', color: '#111827', borderBottom: '1px solid #e5e7eb' }}>
+                    <tr style={{ background: '#021751', color: 'white', borderBottom: '1px solid #e5e7eb' }}>
                         <th style={{...headerCellStyle, textAlign: 'left'}}>Ticker</th>
                         <th style={headerCellStyle}>Vto</th>
                         <th style={headerCellStyle}>Precio</th>
