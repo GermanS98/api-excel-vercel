@@ -84,7 +84,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   style={{ 
                     borderTop: '1px solid #e5e7eb',
                     // 2. Se alterna el color de fondo para las filas impares
-                    backgroundColor: index % 2 !== 0 ? '#1036E21A' : 'transparent' 
+                    backgroundColor: index % 2 !== 0 ? '#1036E2' : 'transparent' 
                   }}
                   >
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
