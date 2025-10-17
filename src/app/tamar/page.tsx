@@ -78,8 +78,15 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
           </thead>
           <tbody>
             {datos.length > 0 ? (
-              datos.map((item: Bono) => (
-                <tr key={item.t} style={{ borderTop: '1px solid #e5e7eb' }}>
+              datos.map((item: Bono, index) => ( // <-- 1. Se añade el 'index' aquí
+                <tr 
+                  key={item.t} 
+                  style={{ 
+                    borderTop: '1px solid #e5e7eb',
+                    // 2. Se alterna el color de fondo para las filas impares
+                    backgroundColor: index % 2 !== 0 ? '#1036E21A' : 'transparent' 
+                  }}
+                  >
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.p,'',2)}</td> 
