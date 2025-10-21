@@ -18,6 +18,7 @@ type Bono = {
     pd: number | null;
     RD: number | null;
     ua: string | null; // Se mantiene en el tipo por si la DB lo envía, pero no se usará
+    cje: number;
 };
 
 // --- TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
@@ -171,11 +172,12 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <colgroup>
                     <col style={{ width: '20%' }} />
+                    <col style={{ width: '16%' }} />
                     <col style={{ width: '12%' }} />
-                    <col style={{ width: '18%' }} />
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '12%' }} />
                     <col style={{ width: '16%' }} />
-                    <col style={{ width: '16%' }} />
-                    <col style={{ width: '18%' }} />
+                    <col style={{ width: '12%' }} />
                 </colgroup>
                 <thead>
                     {/* MODIFICADO: Estilo de la cabecera cambiado a fondo claro y texto negro */}
@@ -186,6 +188,7 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                         <th style={headerCellStyle}>Var</th>
                         <th style={headerCellStyle}>TIR</th>
                         <th style={headerCellStyle}>Paridad</th>
+                        <th style={headerCellStyle}>Canje</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -198,10 +201,11 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                                 <td style={{ ...dataCellStyle, color: item.v >= 0 ? '#22c55e' : '#ef4444', fontWeight: 'bold'}}>{formatValue(item.v)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.tir)}</td>
                                 <td style={dataCellStyle}>{formatValue(item.pd, '', 2)}</td>
+                                <td style={dataCellStyle}>{formatValue(item.cje, '%', 2)}</td>
                             </tr>
                         ))
                     ) : (
-                         <tr><td colSpan={6} style={{ padding: '1.5rem', textAlign: 'center', color: '#6b7280', fontSize: '1.1rem' }}>Cargando datos...</td></tr>
+                         <tr><td colSpan={7} style={{ padding: '1.5rem', textAlign: 'center', color: '#6b7280', fontSize: '1.1rem' }}>Cargando datos...</td></tr>
                     )}
                 </tbody>
             </table>
