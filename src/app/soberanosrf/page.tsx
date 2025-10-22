@@ -47,10 +47,22 @@ const formatValue = (value: number | null | undefined, unit: string = '%', decim
     });
     return `${numeroFormateado}${unit}`;
 };
+
 const formatDate = (dateString: string) => {
   if (!dateString) return '-';
   const date = toZonedTime(dateString, 'UTC');
   return format(date, 'dd/MM/yy');
+};
+const formatDateTime = (dateString: string | null) => {
+  if (!dateString) return '-';
+  try {
+    // parseISO convierte el string ISO (que viene de la base de datos) a un objeto Date
+    const date = parseISO(dateString); 
+    // format() lo mostrará en la zona horaria local del usuario
+    return format(date, 'dd/MM/yy HH:mm:ss'); 
+  } catch (e) {
+    return 'Fecha inv.'; // En caso de que la fecha sea inválida
+  }
 };
 // ==================================================================
 // COMPONENTE TablaGeneral (Actualizado para nombres cortos)
@@ -92,8 +104,8 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.pd, '', 2)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.md, '', 2)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontWeight: 500 }}>{formatValue(item.spread)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontWeight: 500 }}>{formatValue(item.cje,'%',2)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.spread)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.cje,'%',2)}</td>
                 </tr>
               ))
             ) : (
@@ -186,6 +198,21 @@ export default function SoberanosPage() {
             }
             return bono;
         });
+        const ultimaActualizacion = useMemo(() => {
+        // 1. Obtener todos los valores 'ua' válidos
+        const todasLasFechas = bonosSoberanos
+            .map(b => b.ua)
+            .filter((ua): ua is string => !!ua); // Filtra los null
+
+        // 2. Si no hay fechas, devolver null
+        if (todasLasFechas.length === 0) return null;
+
+        // 3. Ordenar las fechas para encontrar la más reciente
+        // Convertimos a objeto Date para una comparación numérica segura
+        todasLasFechas.sort((a: string, b: string) => new Date(b).getTime() - new Date(a).getTime());
+        
+        // 4. Devolver la más reciente (la primera del array ordenado)
+        return todasLasFechas[0];
     }, [bonosSoberanos]);
     
     const datosParaTabla = useMemo(() => {
@@ -220,8 +247,17 @@ export default function SoberanosPage() {
         <Layout>
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
                 <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Soberanos</h1>
-                <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
-                    <span>Estado: <strong>{estado}</strong></span>
+                <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem', display: 'flex',justifyContent: 'center',gap: '24px'}}>
+                  <span>Estado: <strong>{estado}</strong></span>
+
+                    {/* --- LÍNEAS AÑADIDAS --- */}
+                    {/* Solo mostrar si hay una fecha y no estamos en la carga inicial */}
+                    {ultimaActualizacion && estado !== 'Cargando instrumentos...' && (
+                        <span style={{ color: '#374151' }}> {/* Un color de texto más fuerte */}
+                            Última act: <strong>{formatDateTime(ultimaActualizacion)}</strong>
+                        </span>
+                    )}
+                    {/* ------------------------- */}
                 </div>
                 
                 <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
