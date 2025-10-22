@@ -258,15 +258,13 @@ export default function SoberanosPage() {
         <Layout>
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
                 <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Soberanos</h1>
-                <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem', display: 'flex',justifyContent: 'center',gap: '24px'}}>
-                  <span>Estado: <strong>{estado}</strong></span>
-
-                    {/* --- LÍNEAS AÑADIDAS --- */}
-                    {/* Solo mostrar si hay una fecha y no estamos en la carga inicial */}
-                    {ultimaActualizacion && estado !== 'Cargando instrumentos...' && (
-                        <span style={{ color: '#374151' }}> {/* Un color de texto más fuerte */}
-                            Última act: <strong>{formatDateTime(ultimaActualizacion)}</strong>
+                <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem'}}>
+                    {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
+                        <span style={{ color: '#374151', fontWeight: 500 }}>
+                            Estado: <strong>Actualizado el {formatDateTime(ultimaActualizacion)}</strong>
                         </span>
+                    ) : (
+                        <span>Estado: <strong>{estado}</strong></span>
                     )}
                     {/* ------------------------- */}
                 </div>
