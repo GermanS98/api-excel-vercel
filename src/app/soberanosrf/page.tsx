@@ -24,6 +24,7 @@ type Bono = {
   dm: number | null; // duracion_macaulay
   spread?: number | null; // Campo opcional para el spread
   ua: string | null; // ultimo_anuncio
+  cje: number | null;
 };
 
 // ==================================================================
@@ -71,6 +72,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Paridad</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>MD</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Spread l. tasa</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>canje</th>
             </tr>
           </thead>
           <tbody>
@@ -91,10 +93,11 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.pd, '', 2)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.md, '', 2)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontWeight: 500 }}>{formatValue(item.spread)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontWeight: 500 }}>{formatValue(item.cje,'%',2)}</td>
                 </tr>
               ))
             ) : (
-              <tr><td colSpan={8} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
+              <tr><td colSpan={9} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
             )}
           </tbody>
         </table>
