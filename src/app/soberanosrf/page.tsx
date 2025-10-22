@@ -178,42 +178,53 @@ export default function SoberanosPage() {
         };
     }, []);
     
+// ... (inicio del componente SoberanosPage)
+
     const datosConSpread = useMemo(() => {
-        const globalesPorVto = new Map<string, Bono>();
-        bonosSoberanos.forEach(bono => {
-            if (bono.s === 'GLOBAL') {
-                globalesPorVto.set(bono.vto, bono);
-            }
-        });
+         const globalesPorVto = new Map<string, Bono>();
+         bonosSoberanos.forEach(bono => {
+      if (bono.s === 'GLOBAL') {
+        globalesPorVto.set(bono.vto, bono);
+       }
+       });
 
-        return bonosSoberanos.map(bono => {
-            if (bono.s === 'BONAR') {
-                const globalEquivalente = globalesPorVto.get(bono.vto);
+      return bonosSoberanos.map(bono => {
+          if (bono.s === 'BONAR') {
+               const globalEquivalente = globalesPorVto.get(bono.vto);
                 if (globalEquivalente) {
-                    return {
-                        ...bono,
-                        spread: bono.tir - globalEquivalente.tir
-                    };
-                }
-            }
-            return bono;
+                 return {
+                   ...bono,
+                 spread: bono.tir - globalEquivalente.tir
+              };
+             }
+           }
+         return bono;
         });
-        const ultimaActualizacion = useMemo(() => {
-        // 1. Obtener todos los valores 'ua' válidos
-        const todasLasFechas = bonosSoberanos
-            .map(b => b.ua)
-            .filter((ua): ua is string => !!ua); // Filtra los null
+    }, [bonosSoberanos]); // <-- Fin de datosConSpread
 
-        // 2. Si no hay fechas, devolver null
-        if (todasLasFechas.length === 0) return null;
 
-        // 3. Ordenar las fechas para encontrar la más reciente
-        // Convertimos a objeto Date para una comparación numérica segura
-        todasLasFechas.sort((a: string, b: string) => new Date(b).getTime() - new Date(a).getTime());
-        
+    // --- INICIO DEL BLOQUE (UBICACIÓN CORRECTA) ---
+    // (Pegado aquí, afuera del anterior)
+    const ultimaActualizacion = useMemo(() => {
+       // 1. Obtener todos los valores 'ua' válidos
+         const todasLasFechas = bonosSoberanos
+         .map(b => b.ua)
+         .filter((ua): ua is string => !!ua); // Filtra los null
+
+       // 2. Si no hay fechas, devolver null
+         if (todasLasFechas.length === 0) return null;
+
+       // 3. Ordenar las fechas para encontrar la más reciente
+         // Convertimos a objeto Date para una comparación numérica segura
+         todasLasFechas.sort((a: string, b: string) => new Date(b).getTime() - new Date(a).getTime());
+   
         // 4. Devolver la más reciente (la primera del array ordenado)
         return todasLasFechas[0];
     }, [bonosSoberanos]);
+    // --- FIN DEL BLOQUE (UBICACIÓN CORRECTA) ---
+
+
+
     
     const datosParaTabla = useMemo(() => {
       return [...datosConSpread].sort((a, b) => {
