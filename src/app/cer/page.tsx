@@ -135,7 +135,7 @@ export default function LecapsPage() {
         const fetchInitialData = async () => {
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
-            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dm,mb,dv,ua';
+            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua';
             
             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
             if (bonosError) console.error("Error fetching bonds:", bonosError);
