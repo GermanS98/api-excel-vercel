@@ -154,6 +154,7 @@ export default function LecapsPage() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'datosbonos', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
         (payload) => {
+          console.log('¡EVENTO REALTIME RECIBIDO!', payload);
           const bonoActualizado = payload.new as Bono;
           
           setBonosCER(bonosActuales => {
