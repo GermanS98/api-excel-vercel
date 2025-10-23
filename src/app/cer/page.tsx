@@ -152,7 +152,7 @@ export default function LecapsPage() {
       .channel('realtime-cer-page')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'datosbonos', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
+        { event: '*', schema: 'public', table: 'latest_bonds', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
         (payload) => {
           const bonoActualizado = payload.new as Bono;
           
