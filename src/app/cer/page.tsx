@@ -5,8 +5,6 @@ import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import Sidebar from '@/components/ui/Sidebar';
-import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 // PASO 1: ACTUALIZAR LA DEFINICIÓN DE TIPO PARA INCLUIR NUEVOS CAMPOS
@@ -125,7 +123,6 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
 export default function LecapsPage() {
      const [bonosCER, setBonosCER] = useState<Bono[]>([])
     const [estado, setEstado] = useState('Cargando...');
-    const [menuAbierto, setMenuAbierto] = useState(false);
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
     const segmentosDeEstaPagina = ['CER'];
