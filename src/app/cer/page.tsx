@@ -130,75 +130,57 @@ export default function LecapsPage() {
     
     const manana = new Date();
     manana.setDate(manana.getDate() + 1);
-useEffect(() => {
-    // 1. La función de carga inicial no cambia
-    const fetchInitialData = async () => {
-        setEstado('Actualizando datos...');
-        const manana = new Date();
-        manana.setDate(manana.getDate() + 1);
-        const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, ua, RD';
-
-        const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString());
-        if (bonosError) {
-            setEstado(`Error al cargar bonos: ${bonosError.message}`);
+   useEffect(() => {
+        const segmentosRequeridos = segmentosDeEstaPagina;
+        const fetchInitialData = async () => {
+            const manana = new Date();
+            manana.setDate(manana.getDate() + 1);
+            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dm,mb,dv,ua';
             
-        } else if (bonosData) {
-            setBonosCER(bonosData as Bono[]);
-            setUltimaActualizacion(bonosData[0]?.ua || null);
-        }
-        setEstado('Datos cargados. Escuchando actualizaciones...');
-    };
+            const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
+            if (bonosError) console.error("Error fetching bonds:", bonosError);
+            else if (bonosData) {
+                setBonosCER(bonosData as Bono[]);
+            }
 
-    // 2. Nueva función para configurar y activar las suscripciones
-    const setupSuscripciones = () => {
-        console.log("Configurando suscripciones de Supabase...");
-        
-        // Canal de Bonos
-        supabase.channel('realtime-datosbonos')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos' }, (payload) => {
-                console.log('Cambio recibido en bonos:', payload.new);
-                const bonoActualizado = payload.new as Bono;
-                setBonosCER(bonosActuales => {
-                    const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
-                    if (existe) {
-                        return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
-                    }
-                    return [...bonosActuales, bonoActualizado];
-                });
-                setUltimaActualizacion(bonoActualizado.ua || null);
-            })
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') {
-                    console.log('Canal de bonos suscrito.');
-                }
-            });
-        console.log("Suscripciones configuradas.");
-    };
+        };
+        let bondChannel: any = null; // 
+        const setupSuscripciones = () => {
+             const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
+             const bondChannel = supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
+                   const bonoActualizado = payload.new as Bono;
+                   setBonosCER(bonosActuales => {
+                       const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
+                       return existe ? bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...bonosActuales, bonoActualizado];
+                   });
+                   setUltimaActualizacion(bonoActualizado.ua || null);
+               }).subscribe();
+             
+            return { bondChannel };
+        };
 
-    // 3. Lógica inicial y de visibilidad simplificada
-    fetchInitialData();
-    setupSuscripciones();
+        fetchInitialData();
+        setupSuscripciones();
 
-    const handleVisibilityChange = () => {
-        if (document.hidden) {
-            console.log("Pestaña oculta. Eliminando todos los canales.");
-            supabase.removeAllChannels();
-        } else {
-            console.log("Pestaña visible. Recargando datos y creando suscripciones.");
-            fetchInitialData();
-            setupSuscripciones(); // Se vuelven a crear desde cero
-        }
-    };
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
+            } else {
+                fetchInitialData();
+                if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
+                setupSuscripciones();
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // 4. Limpieza final
-    return () => {
-        console.log("Desmontando componente. Limpiando todo.");
+      return () => {
         document.removeEventListener("visibilitychange", handleVisibilityChange);
-        supabase.removeAllChannels();
+        if (bondChannel) {
+            if (bondChannel.unsubscribe) bondChannel.unsubscribe();
+            else supabase.removeChannel(bondChannel);
+        }
     };
-}, []);
+    }, []);
     
     
     
