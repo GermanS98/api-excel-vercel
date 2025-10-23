@@ -123,53 +123,82 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
 export default function LecapsPage() {
      const [bonosCER, setBonosCER] = useState<Bono[]>([])
     const [estado, setEstado] = useState('Cargando...');
+    const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
     const segmentosDeEstaPagina = ['CER'];
     
-  useEffect(() => {
+    const manana = new Date();
+    manana.setDate(manana.getDate() + 1);
+useEffect(() => {
+    // 1. La función de carga inicial no cambia
     const fetchInitialData = async () => {
-      setEstado('Cargando instrumentos CER...');
-      const { data, error } = await supabase
-        .from('latest_bonds')
-        .select('*')
-        .in('s', segmentosDeEstaPagina); // 
+        setEstado('Actualizando datos...');
+        const manana = new Date();
+        manana.setDate(manana.getDate() + 1);
+        const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pdu, ua, RD, dm, mb';
 
-      if (error) {
-        setEstado(`Error al cargar datos: ${error.message}`);
-      } else if (data) {
-        setBonosCER(data as Bono[]);
-        setEstado('Datos cargados. Escuchando actualizaciones...');
-      }
-    };
-
-    fetchInitialData();
-
-    const channel = supabase
-      .channel('realtime-cer-page')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'datosbonos', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
-        (payload) => {
-          console.log('¡EVENTO REALTIME RECIBIDO!', payload);
-          const bonoActualizado = payload.new as Bono;
-          
-          setBonosCER(bonosActuales => {
-            const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
-            if (existe) {
-              return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
-            } else {
-              return [...bonosActuales, bonoActualizado];
-            }
-          });
+        const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString());
+        if (bonosError) {
+            setEstado(`Error al cargar bonos: ${bonosError.message}`);
+            
+        } else if (bonosData) {
+            setBonos(bonosData as Bono[]);
+            setUltimaActualizacion(bonosData[0]?.ua || null);
         }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
+        setEstado('Datos cargados. Escuchando actualizaciones...');
     };
-  }, []);
+
+    // 2. Nueva función para configurar y activar las suscripciones
+    const setupSuscripciones = () => {
+        console.log("Configurando suscripciones de Supabase...");
+        
+        // Canal de Bonos
+        supabase.channel('realtime-datosbonos')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos' }, (payload) => {
+                console.log('Cambio recibido en bonos:', payload.new);
+                const bonoActualizado = payload.new as Bono;
+                setBonos(bonosActuales => {
+                    const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
+                    if (existe) {
+                        return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
+                    }
+                    return [...bonosActuales, bonoActualizado];
+                });
+                setUltimaActualizacion(payload.new.datos.h)
+            })
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('Canal de bonos suscrito.');
+                }
+            });
+        console.log("Suscripciones configuradas.");
+    };
+
+    // 3. Lógica inicial y de visibilidad simplificada
+    fetchInitialData();
+    setupSuscripciones();
+
+    const handleVisibilityChange = () => {
+        if (document.hidden) {
+            console.log("Pestaña oculta. Eliminando todos los canales.");
+            supabase.removeAllChannels();
+        } else {
+            console.log("Pestaña visible. Recargando datos y creando suscripciones.");
+            fetchInitialData();
+            setupSuscripciones(); // Se vuelven a crear desde cero
+        }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // 4. Limpieza final
+    return () => {
+        console.log("Desmontando componente. Limpiando todo.");
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+        supabase.removeAllChannels();
+    };
+}, []);
     
     
     
