@@ -136,14 +136,14 @@ useEffect(() => {
         setEstado('Actualizando datos...');
         const manana = new Date();
         manana.setDate(manana.getDate() + 1);
-        const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pdu, ua, RD, dm, mb';
+        const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, ua, RD';
 
         const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString());
         if (bonosError) {
             setEstado(`Error al cargar bonos: ${bonosError.message}`);
             
         } else if (bonosData) {
-            setBonos(bonosData as Bono[]);
+            setBonosCER(bonosData as Bono[]);
             setUltimaActualizacion(bonosData[0]?.ua || null);
         }
         setEstado('Datos cargados. Escuchando actualizaciones...');
@@ -158,14 +158,14 @@ useEffect(() => {
             .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos' }, (payload) => {
                 console.log('Cambio recibido en bonos:', payload.new);
                 const bonoActualizado = payload.new as Bono;
-                setBonos(bonosActuales => {
+                setBonosCER(bonosActuales => {
                     const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
                     if (existe) {
                         return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
                     }
                     return [...bonosActuales, bonoActualizado];
                 });
-                setUltimaActualizacion(payload.new.datos.h)
+                setUltimaActualizacion(bonoActualizado.ua || null);
             })
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
@@ -211,26 +211,6 @@ useEffect(() => {
   useEffect(() => {
       setRangoDias([0, maxDiasDelSegmento]);
     }, [maxDiasDelSegmento]);
-
-        // --- INICIO DEL BLOQUE (UBICACIÓN CORRECTA) ---
-    // (Pegado aquí, afuera del anterior)
-    const ultimaActualizacion = useMemo(() => {
-       // 1. Obtener todos los valores 'ua' válidos
-         const todasLasFechas = bonosCER
-         .map(b => b.ua)
-         .filter((ua): ua is string => !!ua); // Filtra los null
-
-       // 2. Si no hay fechas, devolver null
-         if (todasLasFechas.length === 0) return null;
-
-       // 3. Ordenar las fechas para encontrar la más reciente
-         // Convertimos a objeto Date para una comparación numérica segura
-         todasLasFechas.sort((a: string, b: string) => new Date(b).getTime() - new Date(a).getTime());
-   
-        // 4. Devolver la más reciente (la primera del array ordenado)
-        return todasLasFechas[0];
-    }, [bonosCER]);
-    // --- FIN DEL BLOQUE (UBICACIÓN CORRECTA) ---
 
     const datosParaGrafico = bonosCER.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
     const datosParaTabla = [...bonosCER].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
