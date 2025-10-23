@@ -200,7 +200,7 @@ export default function DollarLinkedPage() { // Renombrado para mayor claridad
     // (Pegado aquí, afuera del anterior)
     const ultimaActualizacion = useMemo(() => {
        // 1. Obtener todos los valores 'ua' válidos
-         const todasLasFechas = bonosActuales
+         const todasLasFechas = bonosDL
          .map(b => b.ua)
          .filter((ua): ua is string => !!ua); // Filtra los null
 
@@ -213,7 +213,7 @@ export default function DollarLinkedPage() { // Renombrado para mayor claridad
    
         // 4. Devolver la más reciente (la primera del array ordenado)
         return todasLasFechas[0];
-    }, [bonosActuales]);
+    }, [bonosDL]);
     // --- FIN DEL BLOQUE (UBICACIÓN CORRECTA) ---
 
     const datosParaGrafico = bonosDL.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
