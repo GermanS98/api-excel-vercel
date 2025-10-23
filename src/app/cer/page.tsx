@@ -123,57 +123,61 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
 
 // --- COMPONENTE PRINCIPAL DE LA PÁGINA DE CER ---
 export default function LecapsPage() {
-     const [bonosCER, setBonosCER] = useState<Bono[]>([])
-    const [estado, setEstado] = useState('Cargando...');
-    const [menuAbierto, setMenuAbierto] = useState(false);
-    const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
+     const [bonosCER, setBonosCER] = useState<Bono[]>([])
+    const [estado, setEstado] = useState('Cargando...');
+    const [menuAbierto, setMenuAbierto] = useState(false);
+    const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
 
-    const segmentosDeEstaPagina = ['CER'];
-    
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      setEstado('Cargando instrumentos CER...');
-      const { data, error } = await supabase
-        .from('latest_bonds')
-        .select('*')
-        .in('s', segmentosDeEstaPagina); // 
+    const segmentosDeEstaPagina = ['CER'];
+    
+    // --- REEMPLAZAR TU useEffect (líneas 131-161) POR ESTE BLOQUE ---
+    useEffect(() => {
+        // 1. Ponemos la función de carga DENTRO del useEffect
+        const fetchCERData = async (isInitialLoad = false) => {
+            if (isInitialLoad) {
+                setEstado('Cargando instrumentos CER...');
+            }
 
-      if (error) {
-        setEstado(`Error al cargar datos: ${error.message}`);
-      } else if (data) {
-        setBonosCER(data as Bono[]);
-        setEstado('Datos cargados. Escuchando actualizaciones...');
-      }
-    };
+            const { data, error } = await supabase
+                .from('latest_bonds') // Siempre consultamos la VISTA
+                .select('*')
+                .in('s', segmentosDeEstaPagina); 
 
-    fetchInitialData();
+            if (error) {
+                setEstado(`Error al cargar datos: ${error.message}`);
+            } else if (data) {
+                // Reemplazamos TODO el estado con el nuevo snapshot
+                setBonosCER(data as Bono[]);
+                
+                if (isInitialLoad) {
+                    setEstado('Datos cargados. Escuchando actualizaciones...');
+                }
+            }
+        };
 
-    const channel = supabase
-      .channel('realtime-cer-page')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'datosbonos', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
-        (payload) => {
-          console.log('¡EVENTO REALTIME RECIBIDO!', payload);
-          const bonoActualizado = payload.new as Bono;
-          
-          setBonosCER(bonosActuales => {
-            const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
-            if (existe) {
-              return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
-            } else {
-              return [...bonosActuales, bonoActualizado];
-            }
-          });
-        }
-      )
-      .subscribe();
+        // 2. Hacemos la carga inicial
+        fetchCERData(true);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-    
+        // 3. Configuramos el listener (la "alarma")
+        const channel = supabase
+            .channel('realtime-cer-page')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'datosbonos', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
+                (payload) => {
+                    // 4. ¡LA SOLUCIÓN!
+                    // No usamos el payload. Solo volvemos a cargar el snapshot.
+                    console.log('¡EVENTO REALTIME RECIBIDO! Recargando snapshot desde la VISTA...');
+                    fetchCERData(false); // Llamamos a la recarga
+                }
+            )
+            .subscribe();
+
+        // 5. Limpieza
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
     
     
     const maxDiasDelSegmento = (() => {
