@@ -213,9 +213,15 @@ export default function LecapsPage() {
                 <div style={{ maxWidth: '1400px', margin: 'auto' }}>
                     <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Instrumentos CER </h1>
                     <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
-                        <span>Estado: <strong>{estado}</strong></span>
-
-                    </div>
+                      {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
+                          <span style={{ color: '#374151', fontWeight: 500 }}>
+                              Estado: <strong>Actualizado el {formatDateTime(ultimaActualizacion)}</strong>
+                          </span>
+                      ) : (
+                          <span>Estado: <strong>{estado}</strong></span>
+                      )}
+                      {/* ------------------------- */}
+                  </div>
                     
                     <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
                         
