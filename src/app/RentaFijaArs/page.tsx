@@ -50,7 +50,17 @@ const formatDate = (dateString: string) => {
   const date = toZonedTime(dateString, 'UTC');
   return format(date, 'dd/MM/yy');
 };
-
+const formatDateTime = (dateString: string | null) => {
+  if (!dateString) return '-';
+  try {
+    // parseISO convierte el string ISO (que viene de la base de datos) a un objeto Date
+    const date = parseISO(dateString); 
+    // format() lo mostrará en la zona horaria local del usuario
+    return format(date, 'dd/MM/yy HH:mm:ss'); 
+  } catch (e) {
+    return 'Fecha inv.'; // En caso de que la fecha sea inválida
+  }
+};
 // ==================================================================
 // COMPONENTE TablaGeneral (Actualizado para nombres cortos)
 // ==================================================================
