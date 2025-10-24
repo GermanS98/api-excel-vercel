@@ -18,10 +18,8 @@ type Bono = {
   v: number; // Nuevo campo
   s: string;
   dv: number;
-  md: number | null;
+  pd: number | null;
   RD: number | null; // Nuevo campo
-  dm: number | null; // Nuevo campo
-  mb: number | null; // Nuevo campo
   ua: string | null; // Nuevo campo
 };
 
