@@ -20,10 +20,7 @@ type Bono = {
   v: number;      // var
   s: string;      // segmento
   dv: number;     // dias_vto
-  md: number | null; // modify_duration
   RD: number | null;
-  dm: number | null; // duracion_macaulay
-  mb: number | null; // mep_breakeven
   ua: string | null; // ultimo_anuncio
 };
 
