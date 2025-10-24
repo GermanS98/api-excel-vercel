@@ -154,9 +154,10 @@ export default function DollarLinkedPage() { // Renombrado para mayor claridad
 
           setEstado('Datos cargados'); 
       }
-             }
+             
  
          };
+
          let bondChannel: any = null; // 
          const setupSuscripciones = () => {
               const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
