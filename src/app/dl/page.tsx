@@ -142,7 +142,7 @@ export default function DollarLinkedPage() { // Renombrado para mayor claridad
              const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
              if (bonosError) console.error("Error fetching bonds:", bonosError);
              else if (bonosData) {
-                 setBonosCER(bonosData as Bono[]);
+                 setBonosDL(bonosData as Bono[]);
              }
  
          };
@@ -151,7 +151,7 @@ export default function DollarLinkedPage() { // Renombrado para mayor claridad
               const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
               const bondChannel = supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
                     const bonoActualizado = payload.new as Bono;
-                    setBonosCER(bonosActuales => {
+                    setBonosDL(bonosActuales => {
                         const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
                         return existe ? bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...bonosActuales, bonoActualizado];
                     });
