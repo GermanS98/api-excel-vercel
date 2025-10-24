@@ -143,7 +143,7 @@ export default function TamarPage() {
             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
             if (bonosError) console.error("Error fetching bonds:", bonosError);
             else if (bonosData) {
-                setBonosLecaps(bonosData as Bono[]);
+                setBonosTamar(bonosData as Bono[]);
                  if (bonosData.length > 0) { 
               // Encuentra el UA más reciente entre todos los bonos cargados
               const maxUA = bonosData.reduce((latestUA, bono) => {
@@ -167,7 +167,7 @@ export default function TamarPage() {
              const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
              const bondChannel = supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
                    const bonoActualizado = payload.new as Bono;
-                   setBonosLecaps(bonosActuales => {
+                   setBonosTamar(bonosActuales => {
                        const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
                        return existe ? bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...bonosActuales, bonoActualizado];
                    });
