@@ -74,6 +74,17 @@ const formatDate = (dateString: string) => {
   const date = toZonedTime(dateString, 'UTC');
   return format(date, 'dd/MM/yy');
 };
+const formatDateTime = (dateString: string | null) => {
+  if (!dateString) return '-';
+  try {
+    // parseISO convierte el string ISO (que viene de la base de datos) a un objeto Date
+    const date = parseISO(dateString); 
+    // format() lo mostrará en la zona horaria local del usuario
+    return format(date, 'dd/MM/yy HH:mm:ss'); 
+  } catch (e) {
+    return 'Fecha inv.'; // En caso de que la fecha sea inválida
+  }
+};
 
 // ==================================================================
 // COMPONENTE TablaGeneral (Actualizado para nombres cortos)
@@ -155,7 +166,7 @@ export default function Onspage() {
     const [estado, setEstado] = useState('Cargando...');
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
     const [filtros, setFiltros] = useState<{ [key: string]: string }>({});
-    
+    const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
     const segmentosDeEstaPagina = ['ON'];
 
     useEffect(() => {
@@ -175,54 +186,59 @@ export default function Onspage() {
         cargarCaracteristicas();
     }, []);
 
+     const manana = new Date();
+     manana.setDate(manana.getDate() + 1);
     useEffect(() => {
-        const fetchInitialData = async () => {
-            setEstado('Cargando instrumentos...');
-            const manana = new Date();
-            manana.setDate(manana.getDate() + 1);
-
-            const { data, error } = await supabase
-                .from('latest_bonds')
-                .select('*')
-                .in('s', segmentosDeEstaPagina)
-                .gte('vto', manana.toISOString());
-
-            if (error) {
-                setEstado(`Error al cargar datos: ${error.message}`);
-            } else if (data) {
-                setBonos(data as Bono[]);
-                setEstado('Datos cargados. Escuchando actualizaciones...');
-            }
-        };
-
-        fetchInitialData();
-
-        const channel = supabase
-            .channel('realtime-ons-page')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'datosbonos', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
-                (payload) => {
+         const segmentosRequeridos = segmentosDeEstaPagina;
+         const fetchInitialData = async () => {
+             const manana = new Date();
+             manana.setDate(manana.getDate() + 1);
+             const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua,md';
+             
+             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
+             if (bonosError) console.error("Error fetching bonds:", bonosError);
+             else if (bonosData) {
+                 setBonos(bonosData as Bono[]);
+             }
+ 
+         };
+         let bondChannel: any = null; // 
+         const setupSuscripciones = () => {
+              const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
+              const bondChannel = supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
                     const bonoActualizado = payload.new as Bono;
                     setBonos(bonosActuales => {
-                        if (new Date(bonoActualizado.vto) < new Date()) {
-                            return bonosActuales.filter(b => b.t !== bonoActualizado.t);
-                        }
                         const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
-                        if (existe) {
-                            return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
-                        } else {
-                            return [...bonosActuales, bonoActualizado];
-                        }
+                        return existe ? bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...bonosActuales, bonoActualizado];
                     });
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, []);
+                    setUltimaActualizacion(bonoActualizado.ua || null);
+                }).subscribe();
+              
+             return { bondChannel };
+         };
+ 
+         fetchInitialData();
+         setupSuscripciones();
+ 
+         const handleVisibilityChange = () => {
+             if (document.hidden) {
+                 if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
+             } else {
+                 fetchInitialData();
+                 if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
+                 setupSuscripciones();
+             }
+         };
+         document.addEventListener("visibilitychange", handleVisibilityChange);
+ 
+       return () => {
+         document.removeEventListener("visibilitychange", handleVisibilityChange);
+         if (bondChannel) {
+             if (bondChannel.unsubscribe) bondChannel.unsubscribe();
+             else supabase.removeChannel(bondChannel);
+         }
+     };
+     }, []);
 
     const datosCompletos = useMemo(() => {
         if (bonos.length === 0 || caracteristicasMap.size === 0) {
@@ -319,8 +335,15 @@ export default function Onspage() {
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
                 <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Obligaciones Negociables</h1>
                 <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
-                    <span>Estado: <strong>{estado}</strong></span>
-                </div>
+                      {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
+                          <span style={{ color: '#374151', fontWeight: 500 }}>
+                              Estado: <strong>Actualizado el {formatDateTime(ultimaActualizacion)}</strong>
+                          </span>
+                      ) : (
+                          <span>Estado: <strong>{estado}</strong></span>
+                      )}
+                      {/* ------------------------- */}
+                  </div>
                 <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
                     <div style={{ padding: '0 10px', marginBottom: '20px' }}>
                         <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
