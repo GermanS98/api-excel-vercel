@@ -19,6 +19,7 @@ type Bono = {
   s: string;
   dv: number;
   pd: number | null;
+  mb: number | null;
   RD: number | null; // Nuevo campo
   ua: string | null; // Nuevo campo
 };
@@ -133,7 +134,7 @@ export default function LecapsPage() {
         const fetchInitialData = async () => {
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
-            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua';
+            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua,mb';
             
             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
             if (bonosError) console.error("Error fetching bonds:", bonosError);
