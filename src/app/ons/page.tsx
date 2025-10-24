@@ -21,7 +21,6 @@ type Bono = {
   pd: number;      // paridad
   md: number | null; // modify_duration
   RD: number | null;
-  dm: number | null; // duracion_macaulay
   // --- Campos de 'caracteristicas' (opcionales) ---
   ley?: string;
   mpago?: string;   // monedadepago
