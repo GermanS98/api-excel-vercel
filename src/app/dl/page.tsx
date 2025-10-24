@@ -137,7 +137,7 @@ export default function DollarLinkedPage() { // Renombrado para mayor claridad
          const fetchInitialData = async () => {
              const manana = new Date();
              manana.setDate(manana.getDate() + 1);
-             const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua,mb';
+             const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua';
              
              const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
              if (bonosError) console.error("Error fetching bonds:", bonosError);
@@ -193,25 +193,6 @@ export default function DollarLinkedPage() { // Renombrado para mayor claridad
     useEffect(() => {
         setRangoDias([0, maxDiasDelSegmento]);
     }, [maxDiasDelSegmento]);
-        // --- INICIO DEL BLOQUE (UBICACIÓN CORRECTA) ---
-    // (Pegado aquí, afuera del anterior)
-    const ultimaActualizacion = useMemo(() => {
-       // 1. Obtener todos los valores 'ua' válidos
-         const todasLasFechas = bonosDL
-         .map(b => b.ua)
-         .filter((ua): ua is string => !!ua); // Filtra los null
-
-       // 2. Si no hay fechas, devolver null
-         if (todasLasFechas.length === 0) return null;
-
-       // 3. Ordenar las fechas para encontrar la más reciente
-         // Convertimos a objeto Date para una comparación numérica segura
-         todasLasFechas.sort((a: string, b: string) => new Date(b).getTime() - new Date(a).getTime());
-   
-        // 4. Devolver la más reciente (la primera del array ordenado)
-        return todasLasFechas[0];
-    }, [bonosDL]);
-    // --- FIN DEL BLOQUE (UBICACIÓN CORRECTA) ---
 
     const datosParaGrafico = bonosDL.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
     const datosParaTabla = [...bonosDL].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
