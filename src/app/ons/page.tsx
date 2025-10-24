@@ -198,7 +198,22 @@ export default function Onspage() {
              if (bonosError) console.error("Error fetching bonds:", bonosError);
              else if (bonosData) {
                  setBonos(bonosData as Bono[]);
-             }
+                if (bonosData.length > 0) { 
+              // Encuentra el UA más reciente entre todos los bonos cargados
+              const maxUA = bonosData.reduce((latestUA, bono) => {
+                  // ... lógica para encontrar maxUA ...
+                  if (!bono.ua) return latestUA;
+                  if (!latestUA || new Date(bono.ua) > new Date(latestUA)) {
+                      return bono.ua;
+                  }
+                  return latestUA;
+              }, null as string | null);
+              
+              setUltimaActualizacion(maxUA);
+          }
+                    setEstado('Datos cargados'); 
+        }
+
  
          };
          let bondChannel: any = null; // 
