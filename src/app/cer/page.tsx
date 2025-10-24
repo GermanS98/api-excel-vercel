@@ -140,6 +140,7 @@ export default function LecapsPage() {
             if (bonosError) console.error("Error fetching bonds:", bonosError);
             else if (bonosData) {
                 setBonosCER(bonosData as Bono[]);
+                 if (bonosData.length > 0) { 
               // Encuentra el UA más reciente entre todos los bonos cargados
               const maxUA = bonosData.reduce((latestUA, bono) => {
                   // ... lógica para encontrar maxUA ...
