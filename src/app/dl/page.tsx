@@ -86,7 +86,6 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
               {/* --- COLUMNA AGREGADA --- */}
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TEM</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>RD</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>MEP Breakeven</th>
             </tr>
           </thead>
           <tbody>
@@ -108,7 +107,6 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   {/* --- DATO AGREGADO --- */}
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tem)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.RD)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.mb ? `$${item.mb.toFixed(2)}` : '-'}</td>
                 </tr>
               ))
             ) : (
