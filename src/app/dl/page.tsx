@@ -127,66 +127,63 @@ export default function DollarLinkedPage() { // Renombrado para mayor claridad
     const [estado, setEstado] = useState('Cargando...');
     const [menuAbierto, setMenuAbierto] = useState(false);
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
-
+    const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
     const segmentosDeEstaPagina = ['DL', 'ON DL'];
     
-  useEffect(() => {
-    // 1. Carga inicial SOLO de los bonos Dollar Linked y vigentes
-    const fetchInitialData = async () => {
-      setEstado('Cargando instrumentos Dollar Linked...');
-      const manana = new Date();
-      manana.setDate(manana.getDate() + 1);
-
-      const { data, error } = await supabase
-        .from('latest_bonds')
-        .select('*')
-        .in('s', segmentosDeEstaPagina) // Filtra por segmento
-        .gte('vto', manana.toISOString()); // Filtra por fecha de vencimiento
-
-      if (error) {
-        setEstado(`Error al cargar datos: ${error.message}`);
-      } else if (data) {
-        setBonosDL(data as Bono[]);
-        setEstado('Datos cargados. Escuchando actualizaciones...');
-      }
-    };
-
-    fetchInitialData();
-
-    // 2. Suscripción a Realtime para recibir actualizaciones filtradas
-    const channel = supabase
-      .channel('realtime-dl-page')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'datosbonos', filter: `s=in.(${segmentosDeEstaPagina.map(s => `'${s}'`).join(',')})` },
-        (payload) => {
-          const bonoActualizado = payload.new as Bono;
-          
-          setBonosDL(bonosActuales => {
-            // No agregues bonos vencidos que puedan llegar por Realtime
-            if (new Date(bonoActualizado.vto) < new Date()) {
-                // Si el bono está vencido, lo filtramos y lo eliminamos de la vista
-                return bonosActuales.filter(b => b.t !== bonoActualizado.t);
-            }
-
-            const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
-            if (existe) {
-              return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
-            } else {
-              return [...bonosActuales, bonoActualizado];
-            }
-          });
-        }
-      )
-      .subscribe();
-
-    // 3. Limpieza al salir de la página
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-    
-
+     const manana = new Date();
+     manana.setDate(manana.getDate() + 1);
+    useEffect(() => {
+         const segmentosRequeridos = segmentosDeEstaPagina;
+         const fetchInitialData = async () => {
+             const manana = new Date();
+             manana.setDate(manana.getDate() + 1);
+             const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua,mb';
+             
+             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
+             if (bonosError) console.error("Error fetching bonds:", bonosError);
+             else if (bonosData) {
+                 setBonosCER(bonosData as Bono[]);
+             }
+ 
+         };
+         let bondChannel: any = null; // 
+         const setupSuscripciones = () => {
+              const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
+              const bondChannel = supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
+                    const bonoActualizado = payload.new as Bono;
+                    setBonosCER(bonosActuales => {
+                        const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
+                        return existe ? bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...bonosActuales, bonoActualizado];
+                    });
+                    setUltimaActualizacion(bonoActualizado.ua || null);
+                }).subscribe();
+              
+             return { bondChannel };
+         };
+ 
+         fetchInitialData();
+         setupSuscripciones();
+ 
+         const handleVisibilityChange = () => {
+             if (document.hidden) {
+                 if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
+             } else {
+                 fetchInitialData();
+                 if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
+                 setupSuscripciones();
+             }
+         };
+         document.addEventListener("visibilitychange", handleVisibilityChange);
+ 
+       return () => {
+         document.removeEventListener("visibilitychange", handleVisibilityChange);
+         if (bondChannel) {
+             if (bondChannel.unsubscribe) bondChannel.unsubscribe();
+             else supabase.removeChannel(bondChannel);
+         }
+     };
+     }, []);
+     
   const maxDiasDelSegmento = (() => {
     if (bonosDL.length === 0) return 1000;
     const maxDias = Math.max(...bonosDL.map(b => b.dv));
