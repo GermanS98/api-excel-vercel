@@ -139,6 +139,20 @@ export default function DollarLinkedPage() { // Renombrado para mayor claridad
              else if (bonosData) {
                  setBonosDL(bonosData as Bono[]);
              }
+             // 2. ✅ NUEVA LÓGICA: Encontrar la última hora de actualización
+        if (bonosData.length > 0) {
+            // Encuentra el UA más reciente entre todos los bonos cargados
+            const maxUA = bonosData.reduce((latestUA, bono) => {
+                if (!bono.ua) return latestUA;
+                if (!latestUA || new Date(bono.ua) > new Date(latestUA)) {
+                    return bono.ua;
+                }
+                return latestUA;
+            }, null as string | null);
+            
+            // 3. ✅ ACTUALIZA LA VARIABLE DE ESTADO
+            setUltimaActualizacion(maxUA);
+        }
  
          };
          let bondChannel: any = null; // 
