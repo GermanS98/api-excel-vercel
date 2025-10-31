@@ -411,7 +411,7 @@ export default function LecapsPage() {
 
         const fetchInitialDlrfx = async () => {
           // ... (código de fetch dlrfx sin cambios) ...
-          const { data, error } = await supabase.from('dlrfx2').select('ticker, l, ld, ts');
+          const { data, error } = await supabase.from('dlrfx2').select('t, l, ld, ts');
           if (error) {
             console.error("Error fetching dlrfx:", error);
           } else if (data) {
