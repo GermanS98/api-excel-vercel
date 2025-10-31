@@ -411,7 +411,7 @@ export default function LecapsPage() {
 
         const fetchInitialDlrfx = async () => {
           // ... (código de fetch dlrfx sin cambios) ...
-          const { data, error } = await supabase.from('dlrfx').select('ticker, l, ld, ts');
+          const { data, error } = await supabase.from('dlrfx2').select('ticker, l, ld, ts');
           if (error) {
             console.error("Error fetching dlrfx:", error);
           } else if (data) {
@@ -441,7 +441,7 @@ export default function LecapsPage() {
             // ... (código de suscripción a dlrfx sin cambios) ...
             dlrfxChannel = supabase.channel('realtime-dlrfx')
               .on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'dlrfx' }, 
+                { event: '*', schema: 'public', table: 'dlrfx2' }, 
                 (payload) => {
                   const nuevoDato = payload.new as DlrfxData;
                   if (nuevoDato && nuevoDato.ticker) {
