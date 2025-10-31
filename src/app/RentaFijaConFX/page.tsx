@@ -5,8 +5,6 @@ import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import { format, parseISO } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
 import { format, parseISO, parse, differenceInDays, endOfMonth } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 // ==================================================================
