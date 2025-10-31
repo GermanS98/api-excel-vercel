@@ -140,7 +140,7 @@ type SinteticoCalculado = {
 
 // Función para parsear el ticker y obtener la fecha de vto
 // "DLR/OCT24" -> 31 de Octubre 2024
-// "DLR/CI" -> 0 días
+// "DLR/SPOT" -> 0 días
 const getVtoInfo = (ticker: string): { diasVto: number, vtoString: string } => {
   const hoy = new Date();
   const partes = ticker.split('/');
@@ -167,7 +167,7 @@ const TablaSinteticos = ({ datos }: { datos: Map<string, DlrfxData> }) => {
   
   // 1. Encontrar el precio SPOT (Contado Inmediato)
   // 🚨 ASUNCIÓN: Tu ticker de spot se llama 'DLR/CI'
-  const spot = datos.get('DLR/CI');
+  const spot = datos.get('DLR/SPOT');
   const precioSpot = spot?.l;
 
   // 2. Calcular rendimientos
@@ -175,7 +175,7 @@ const TablaSinteticos = ({ datos }: { datos: Map<string, DlrfxData> }) => {
   
   datos.forEach((valor, ticker) => {
     // Omitir el spot mismo o tickers sin precio
-    if (ticker === 'DLR/CI' || !valor.l) return; 
+    if (ticker === 'DLR/SPOT' || !valor.l) return; 
 
     const { diasVto } = getVtoInfo(ticker);
     // Omitir CI, 24hs, o errores de parseo
@@ -227,7 +227,7 @@ const TablaSinteticos = ({ datos }: { datos: Map<string, DlrfxData> }) => {
                 <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatTimestamp(spot.ts)}</td>
               </tr>
             ) : (
-              <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>Cargando precio Spot (DLR/CI)...</td></tr>
+              <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>Cargando precio Spot (DLR/SPOT)...</td></tr>
             )}
             
             {/* Filas para los futuros calculados */}
@@ -267,7 +267,7 @@ type SinteticoUSD = {
 const TablaSinteticosUSD = ({ bonos, futuros }: { bonos: Bono[], futuros: Map<string, DlrfxData> }) => {
   
   // 1. Encontrar el precio SPOT (Contado Inmediato)
-  const spot = futuros.get('DLR/CI');
+  const spot = futuros.get('DLR/SPOT');
   const precioSpot = spot?.l;
 
   // 2. Calcular rendimientos
@@ -343,7 +343,7 @@ const TablaSinteticosUSD = ({ bonos, futuros }: { bonos: Bono[], futuros: Map<st
           </thead>
           <tbody>
             {!precioSpot && (
-                 <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>Cargando precio Spot (DLR/CI) para calcular...</td></tr>
+                 <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>Cargando precio Spot (DLR/SPOT) para calcular...</td></tr>
             )}
             {calculados.length > 0 ? (
               calculados.map((item) => (
