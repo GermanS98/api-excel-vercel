@@ -26,7 +26,7 @@ type Bono = {
 };
 // --- NUEVO TIPO para datos de DLRFX ---
 type DlrfxData = {
-  ticker: string;
+  t: string;
   l: number | null;  // last price
   ld: number | null; // last date
   ts: number | null; // timestamp
@@ -220,7 +220,7 @@ const TablaSinteticos = ({ datos }: { datos: Map<string, DlrfxData> }) => {
             {/* Fila especial para el SPOT */}
             {spot ? (
               <tr style={{ borderTop: '1px solid #e5e7eb', background: '#f9fafb' }}>
-                <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#111827' }}>{spot.ticker} (Spot)</td>
+                <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#111827' }}>{spot.t} (Spot)</td>
                 <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#111827' }}>{formatValue(spot.l, '', 2)}</td>
                 <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>-</td>
                 <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>-</td>
@@ -417,7 +417,7 @@ export default function LecapsPage() {
           } else if (data) {
             const initialMap = new Map<string, DlrfxData>();
             (data as DlrfxData[]).forEach(item => {
-              initialMap.set(item.ticker, item);
+              initialMap.set(item.t, item);
             });
             setDatosSinteticos(initialMap);
           }
@@ -444,10 +444,10 @@ export default function LecapsPage() {
                 { event: '*', schema: 'public', table: 'dlrfx2' }, 
                 (payload) => {
                   const nuevoDato = payload.new as DlrfxData;
-                  if (nuevoDato && nuevoDato.ticker) {
+                  if (nuevoDato && nuevoDato.t) {
                     setDatosSinteticos(mapaActual => {
                       const nuevoMapa = new Map(mapaActual);
-                      nuevoMapa.set(nuevoDato.ticker, nuevoDato);
+                      nuevoMapa.set(nuevoDato.t, nuevoDato);
                       return nuevoMapa;
                     });
                   }
