@@ -144,9 +144,9 @@ type SinteticoCalculado = {
 const getVtoInfo = (ticker: string): { diasVto: number, vtoString: string } => {
   const hoy = new Date();
   const partes = ticker.split('/');
-  if (partes.length < 2 || partes[1] === 'CI') {
-    return { diasVto: 0, vtoString: 'CI' };
-  }
+  if (partes.length < 2 || partes[1] === 'SPOT') { // <--- CORREGIDO
+    return { diasVto: 0, vtoString: 'SPOT' };
+  }
   if (partes[1] === '24hs') {
     return { diasVto: 1, vtoString: '24hs' };
   }
