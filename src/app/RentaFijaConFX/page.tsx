@@ -312,7 +312,7 @@ const TablaSinteticosUSD = ({ bonos, futuros }: { bonos: Bono[], futuros: Map<st
 
     // Tasa Efectiva en ARS (cuántos pesos tengo al final)
         // El factor de ganancia es simplemente (1 + RD)
-    const te_lecap_factor = (1 + rd_lecap); // <--- Fórmula simplificada
+    const te_lecap_factor = (1 + rd_lecap); // <--- Fórmula simplififcada
     
     // Tasa Efectiva de Devaluación (cuánto $/USD pagué vs. cuánto $/USD recibiré)
     const te_deval_factor = (precioFuturo / precioSpot);
@@ -554,7 +554,7 @@ export default function LecapsPage() {
     	</div>
                 
                 {/* --- LAYOUT ACTUALIZADO --- */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '2rem' }}>
                     <TablaGeneral titulo="Renta fija" datos={datosParaTabla} />
                     
                     <TablaSinteticos datos={datosSinteticos} />
