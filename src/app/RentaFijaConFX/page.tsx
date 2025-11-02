@@ -525,7 +525,7 @@ export default function LecapsPage() {
         // ... (código de fetch/suscripción inicial sin cambios) ...
         fetchInitialData();
         fetchInitialDlrfx(); 
-        ({ bondChannel, dlrfxChannel } = setupSuscripciones()); 
+        ({ bondChannel, dlrfxChannel, tipoDeCambioChannel } = setupSuscripciones());
 
         // ... (código de 'handleVisibilityChange' sin cambios) ...
       	const handleVisibilityChange = () => {
