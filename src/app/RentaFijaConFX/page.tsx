@@ -185,7 +185,7 @@ const getVtoInfo = (ticker: string): { diasVto: number, vtoString: string } => {
 
   try {
     // Parsea "OCT24" a una fecha (ej. 1 Oct 2024)
-    const fechaVto = parse(partes[1], 'MMMyy', new Date());
+    const fechaVto = parse(partes[1], 'MMMyy', new Date(), { locale: es });
     // Los futuros Rofex vencen el último día hábil del mes.
     // Usamos endOfMonth como una aproximación simple.
     const finDeMes = endOfMonth(fechaVto);
