@@ -388,8 +388,8 @@ const TablaSinteticosUSD = ({ bonos, futuros }: { bonos: Bono[], futuros: Map<st
        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Letra (Tasa)</th>
        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Días</th>
               {/* --- 💎 CORRECCIÓN 3: Cambiar título de columna --- */}
-       <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>RD (ARS)</th>
        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Futuro (Hedge)</th>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>RD (USD)</th>
        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TNA (USD)</th>
        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TCI</th>
       </tr>
@@ -404,8 +404,9 @@ const TablaSinteticosUSD = ({ bonos, futuros }: { bonos: Bono[], futuros: Map<st
          <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', textAlign: 'center' }}>{item.tickerLecap}</td>
          <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{item.dias}</td>
                 {/* Esta línea ahora formatea el RD que le pasamos */}
-         <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.rdArs)}</td>
+         
          <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{item.tickerFuturo}</td>
+         <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.rdUsd)}</td>
          <td style={{ padding: '0.75rem 1rem', fontWeight: 700, background: item.tnaUsd && item.tnaUsd > 0 ? '#f0fdf4' : '#fef2f2', color: item.tnaUsd && item.tnaUsd > 0 ? '#059669' : '#ef4444', textAlign: 'center' }}>
           {formatValue(item.tnaUsd)}
          </td>
