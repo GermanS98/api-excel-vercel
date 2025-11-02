@@ -85,9 +85,14 @@ const formatTimestamp = (ts: number | null) => {
     return '-';
   }
 };
-// --- NUEVO: COMPONENTE PARA LAS TARJETAS DE INFORMACIÓN ---
+// --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
+type TipoDeCambio = {
+  valor_ccl: number;
+  valor_mep: number;
+  h: string; 
+};
+// --- 💎 AÑADIR ESTE COMPONENTE 💎 ---
 const InfoCard = ({ title, value }: { title: string, value: number | null | undefined }) => {
-    // Formatea el valor como moneda, mostrando 'Cargando...' si aún no hay datos.
     const formattedValue = value 
       ? `$${value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
       : 'Cargando...';
@@ -99,15 +104,15 @@ const InfoCard = ({ title, value }: { title: string, value: number | null | unde
         borderRadius: '8px',
         boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
         textAlign: 'center',
-        flex: 1, // Para que ocupe el espacio disponible
+        flex: 1, 
         minWidth: '200px'
       }}>
         <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#6b7280', fontWeight: 500 }}>{title}</h3>
         <p style={{ margin: '0.5rem 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#111827' }}>
           {formattedValue}
-        </p>
-      </div>
-    );
+    </p>
+   </div>
+  );
 };
 // ==================================================================
 // COMPONENTE TablaGeneral (Actualizado para nombres cortos)
@@ -359,7 +364,7 @@ const TablaSinteticosUSD = ({ bonos, futuros }: { bonos: Bono[], futuros: Map<st
    tickerLecap: bono.t,
    tickerFuturo: tickerFuturo,
    dias: bono.dv,
-   tnaLecap: bono.RD, // <-- Pasamos el RD
+      tnaLecap: bono.RD, // <-- Pasamos el RD
    tnaUsd: tnaUsd,
   });
  });
@@ -421,12 +426,11 @@ export default function LecapsPage() {
   const [estado, setEstado] = useState('Cargando...');
   const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
   const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
-  const [datosSinteticos, setDatosSinteticos] = useState<Map<string, DlrfxData>>(new Map());
-      // --- NUEVO: ESTADO PARA LOS DATOS DEL TIPO DE CAMBIO ---
-  const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
+    const [datosSinteticos, setDatosSinteticos] = useState<Map<string, DlrfxData>>(new Map());
+    const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
   const segmentosDeEstaPagina = ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'];
   const manana = new Date();
-  manana.setDate(manana.getDate() + 1);
+  manana.setDate(manana.getDate() + 1)
 
    useEffect(() => {
         const segmentosRequeridos = segmentosDeEstaPagina;
@@ -435,7 +439,7 @@ export default function LecapsPage() {
             // ... (código de fetch bonos sin cambios) ...
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
-            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua,mb';
+            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua, mb';
             
             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
             if (bonosError) console.error("Error fetching bonds:", bonosError);
@@ -453,18 +457,18 @@ export default function LecapsPage() {
   	}
   	setEstado('Datos cargados'); 
     const { data: tipoDeCambioData, error: tipoDeCambioError } = await supabase
-                .from('tipodecambio')
-                .select('datos')
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single();
-      
-            if (tipoDeCambioError) {
-              console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
-            } else if (tipoDeCambioData) {
-              setTipoDeCambio(tipoDeCambioData.datos);
-            }
-        };
+      .from('tipodecambio')
+      .select('datos')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+      if (tipoDeCambioError) {
+        console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
+        } else if (tipoDeCambioData) {
+          setTipoDeCambio(tipoDeCambioData.datos);
+          }
+  	}
+    };
 
         const fetchInitialDlrfx = async () => {
           // ... (código de fetch dlrfx sin cambios) ...
@@ -482,7 +486,7 @@ export default function LecapsPage() {
 
         let bondChannel: any = null;
         let dlrfxChannel: any = null; 
-        let tipoDeCambioChannel: any = null;
+        let tipoDeCambioChannel: any = null;  
         const setupSuscripciones = () => {
             // ... (código de suscripción a bonos sin cambios) ...
              const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
@@ -510,21 +514,28 @@ export default function LecapsPage() {
                   }
                 }
               ).subscribe();
-            tipoDeCambioChannel = supabase.channel('tipodecambio-changes')
-              .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, (payload) => {
+        // Canal de Tipo de Cambio
+        supabase.channel('tipodecambio-changes')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, (payload) => {
+                console.log('Cambio recibido en tipo de cambio:', payload.new);
                 if (payload.new && payload.new.datos) {
                     setTipoDeCambio(payload.new.datos);
+                    setUltimaActualizacion(payload.new.datos.h); 
                 }
-              })
-              .subscribe();
-
-            // --- 💎 MODIFICAR ESTA LÍNEA 💎 ---
-            return { bondChannel, dlrfxChannel, tipoDeCambioChannel }; 
+                
+            })
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('Canal de tipo de cambio suscrito.');
+                }
+            });
+            return { bondChannel, dlrfxChannel, tipoDeCambioChannel}; 
         };
 
         // ... (código de fetch/suscripción inicial sin cambios) ...
         fetchInitialData();
         fetchInitialDlrfx(); 
+        
         ({ bondChannel, dlrfxChannel, tipoDeCambioChannel } = setupSuscripciones());
 
         // ... (código de 'handleVisibilityChange' sin cambios) ...
@@ -537,10 +548,8 @@ export default function LecapsPage() {
         	  	 fetchInitialData();
                 fetchInitialDlrfx(); 
       	  	 if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
-                if (dlrfxChannel?.unsubscribe) dlrfxChannel.unsubscribe(); 
-                  if (tipoDeCambioChannel?.unsubscribe) tipoDeCambioChannel.unsubscribe();
-                // --- 💎 MODIFICAR ESTA LÍNEA 💎 ---
-               ({ bondChannel, dlrfxChannel, tipoDeCambioChannel } = setupSuscripciones());
+                if (tipoDeCambioChannel?.unsubscribe) tipoDeCambioChannel.unsubscribe();
+        	  	 ({ bondChannel, dlrfxChannel, tipoDeCambioChannel } = setupSuscripciones()); 
         	}
       	};
       	document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -555,8 +564,8 @@ export default function LecapsPage() {
     	  	 supabase.removeChannel(dlrfxChannel); 
     	}
       if (tipoDeCambioChannel) {
-              supabase.removeChannel(tipoDeCambioChannel);
-          }
+        supabase.removeChannel(tipoDeCambioChannel);
+      }
   	};
   	}, []);
     
@@ -588,18 +597,20 @@ export default function LecapsPage() {
       	  	   <span>Estado: <strong>{estado}</strong></span>
       	)}
     	</div>
-      <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    gap: '20px',
-                    margin: '1.5rem 0',
-                    flexWrap: 'wrap'
-                }}
-              >
-                  <InfoCard title="Dólar MEP" value={tipoDeCambio?.valor_mep} />
-                  <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
-              </div>
+                      {/* --- CONTENEDOR PARA LAS TARJETAS DE TIPO DE CAMBIO --- */}
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: '20px',
+                        margin: '1.5rem 0',
+                        flexWrap: 'wrap'
+                    }}
+                >
+                    <InfoCard title="Dólar MEP" value={tipoDeCambio?.valor_mep} />
+                    <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
+                </div>
+            	
             	{/* ... (código del slider y gráfico sin cambios) ... */}
             	<div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
             	  <div style={{ padding: '0 10px', marginBottom: '20px' }}>
