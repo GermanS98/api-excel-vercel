@@ -32,6 +32,12 @@ type DlrfxData = {
   ld: number | null; // last date
   ts: number | null; // timestamp
 };
+// --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
+type TipoDeCambio = {
+  valor_ccl: number;
+  valor_mep: number;
+  h: string; 
+};
 
 // ==================================================================
 // CONFIGURACIONES GLOBALES
@@ -78,6 +84,30 @@ const formatTimestamp = (ts: number | null) => {
   } catch (e) {
     return '-';
   }
+};
+// --- NUEVO: COMPONENTE PARA LAS TARJETAS DE INFORMACIÓN ---
+const InfoCard = ({ title, value }: { title: string, value: number | null | undefined }) => {
+    // Formatea el valor como moneda, mostrando 'Cargando...' si aún no hay datos.
+    const formattedValue = value 
+      ? `$${value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+      : 'Cargando...';
+  
+    return (
+      <div style={{
+        background: '#fff',
+        padding: '1rem',
+        borderRadius: '8px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+        textAlign: 'center',
+        flex: 1, // Para que ocupe el espacio disponible
+        minWidth: '200px'
+      }}>
+        <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#6b7280', fontWeight: 500 }}>{title}</h3>
+        <p style={{ margin: '0.5rem 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#111827' }}>
+          {formattedValue}
+        </p>
+      </div>
+    );
 };
 // ==================================================================
 // COMPONENTE TablaGeneral (Actualizado para nombres cortos)
@@ -147,8 +177,8 @@ const getVtoInfo = (ticker: string): { diasVto: number, vtoString: string } => {
   const hoy = new Date();
   const partes = ticker.split('/');
   if (partes.length < 2 || partes[1] === 'SPOT') { // <--- CORREGIDO
-    return { diasVto: 0, vtoString: 'SPOT' };
-  }
+    return { diasVto: 0, vtoString: 'SPOT' };
+  }
   if (partes[1] === '24hs') {
     return { diasVto: 1, vtoString: '24hs' };
   }
@@ -329,7 +359,7 @@ const TablaSinteticosUSD = ({ bonos, futuros }: { bonos: Bono[], futuros: Map<st
    tickerLecap: bono.t,
    tickerFuturo: tickerFuturo,
    dias: bono.dv,
-      tnaLecap: bono.RD, // <-- Pasamos el RD
+   tnaLecap: bono.RD, // <-- Pasamos el RD
    tnaUsd: tnaUsd,
   });
  });
@@ -391,37 +421,50 @@ export default function LecapsPage() {
   const [estado, setEstado] = useState('Cargando...');
   const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
   const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
-    const [datosSinteticos, setDatosSinteticos] = useState<Map<string, DlrfxData>>(new Map());
+  const [datosSinteticos, setDatosSinteticos] = useState<Map<string, DlrfxData>>(new Map());
+      // --- NUEVO: ESTADO PARA LOS DATOS DEL TIPO DE CAMBIO ---
+  const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
   const segmentosDeEstaPagina = ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'];
   const manana = new Date();
   manana.setDate(manana.getDate() + 1)
 
-   useEffect(() => {
-        const segmentosRequeridos = segmentosDeEstaPagina;
+   useEffect(() => {
+        const segmentosRequeridos = segmentosDeEstaPagina;
         
-        const fetchInitialData = async () => {
-            // ... (código de fetch bonos sin cambios) ...
-            const manana = new Date();
-            manana.setDate(manana.getDate() + 1);
-            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua, mb';
-            
-            const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
-            if (bonosError) console.error("Error fetching bonds:", bonosError);
-            else if (bonosData) {
-                setBonosLecaps(bonosData as Bono[]);
-                 if (bonosData.length > 0) { 
-                  const maxUA = bonosData.reduce((latestUA, bono) => {
-                      if (!bono.ua) return latestUA;
-                      if (!latestUA || new Date(bono.ua) > new Date(latestUA)) {
-                    	return bono.ua;
-                	}
-      	return latestUA;
-      	}, null as string | null);
-    	setUltimaActualizacion(maxUA);
-  	}
-  	setEstado('Datos cargados'); 
-  	}
-    };
+        const fetchInitialData = async () => {
+            // ... (código de fetch bonos sin cambios) ...
+            const manana = new Date();
+            manana.setDate(manana.getDate() + 1);
+            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua,mb';
+            
+            const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
+            if (bonosError) console.error("Error fetching bonds:", bonosError);
+            else if (bonosData) {
+                setBonosLecaps(bonosData as Bono[]);
+                 if (bonosData.length > 0) { 
+                  const maxUA = bonosData.reduce((latestUA, bono) => {
+                      if (!bono.ua) return latestUA;
+                      if (!latestUA || new Date(bono.ua) > new Date(latestUA)) {
+                    	return bono.ua;
+                	}
+      	return latestUA;
+      	}, null as string | null);
+    	setUltimaActualizacion(maxUA);
+  	}
+  	setEstado('Datos cargados'); 
+    const { data: tipoDeCambioData, error: tipoDeCambioError } = await supabase
+                .from('tipodecambio')
+                .select('datos')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+      
+            if (tipoDeCambioError) {
+              console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
+            } else if (tipoDeCambioData) {
+              setTipoDeCambio(tipoDeCambioData.datos);
+            }
+        };
 
         const fetchInitialDlrfx = async () => {
           // ... (código de fetch dlrfx sin cambios) ...
@@ -437,21 +480,21 @@ export default function LecapsPage() {
           }
         };
 
-        let bondChannel: any = null;
+        let bondChannel: any = null;
         let dlrfxChannel: any = null; 
-
-        const setupSuscripciones = () => {
+        let tipoDeCambioChannel: any = null;
+        const setupSuscripciones = () => {
             // ... (código de suscripción a bonos sin cambios) ...
-             const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
-             bondChannel = supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
-        	const bonoActualizado = payload.new as Bono;
-      	setBonosLecaps(bonosActuales => {
-        	const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
-      	return existe ? bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...bonosActuales, bonoActualizado];
-      	});
-    	setUltimaActualizacion(bonoActualizado.ua || null);
-    }).subscribe();
-             
+             const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
+             bondChannel = supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
+        	const bonoActualizado = payload.new as Bono;
+      	setBonosLecaps(bonosActuales => {
+        	const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
+      	return existe ? bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...bonosActuales, bonoActualizado];
+      	});
+    	setUltimaActualizacion(bonoActualizado.ua || null);
+    }).subscribe();
+             
             // ... (código de suscripción a dlrfx sin cambios) ...
             dlrfxChannel = supabase.channel('realtime-dlrfx')
               .on('postgres_changes', 
@@ -467,103 +510,128 @@ export default function LecapsPage() {
                   }
                 }
               ).subscribe();
+            tipoDeCambioChannel = supabase.channel('tipodecambio-changes')
+              .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, (payload) => {
+                if (payload.new && payload.new.datos) {
+                    setTipoDeCambio(payload.new.datos);
+                }
+              })
+              .subscribe();
 
-            return { bondChannel, dlrfxChannel }; 
-        };
+            // --- 💎 MODIFICAR ESTA LÍNEA 💎 ---
+            return { bondChannel, dlrfxChannel, tipoDeCambioChannel }; 
+        };
 
         // ... (código de fetch/suscripción inicial sin cambios) ...
-        fetchInitialData();
+        fetchInitialData();
         fetchInitialDlrfx(); 
-        ({ bondChannel, dlrfxChannel } = setupSuscripciones()); 
+        ({ bondChannel, dlrfxChannel } = setupSuscripciones()); 
 
         // ... (código de 'handleVisibilityChange' sin cambios) ...
-      	const handleVisibilityChange = () => {
-        	if (document.hidden) {
-        	  	 if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
+      	const handleVisibilityChange = () => {
+        	if (document.hidden) {
+        	  	 if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
                 if (dlrfxChannel?.unsubscribe) dlrfxChannel.unsubscribe(); 
-        	} else {
-        	  	 fetchInitialData();
+                if (tipoDeCambioChannel?.unsubscribe) tipoDeCambioChannel.unsubscribe();
+        	} else {
+        	  	 fetchInitialData();
                 fetchInitialDlrfx(); 
-      	  	 if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
+      	  	 if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
                 if (dlrfxChannel?.unsubscribe) dlrfxChannel.unsubscribe(); 
-        	  	 ({ bondChannel, dlrfxChannel } = setupSuscripciones()); 
-        	}
-      	};
-      	document.addEventListener("visibilitychange", handleVisibilityChange);
+                  if (tipoDeCambioChannel?.unsubscribe) tipoDeCambioChannel.unsubscribe();
+                // --- 💎 MODIFICAR ESTA LÍNEA 💎 ---
+               ({ bondChannel, dlrfxChannel, tipoDeCambioChannel } = setupSuscripciones());
+        	}
+      	};
+      	document.addEventListener("visibilitychange", handleVisibilityChange);
 
         // ... (código de 'cleanup' sin cambios) ...
-    	return () => {
-    	document.removeEventListener("visibilitychange", handleVisibilityChange);
-  	if (bondChannel) {
-    	  	 supabase.removeChannel(bondChannel); 
-    	}
+    	return () => {
+    	document.removeEventListener("visibilitychange", handleVisibilityChange);
+  	if (bondChannel) {
+    	  	 supabase.removeChannel(bondChannel); 
+    	}
         if (dlrfxChannel) {
-    	  	 supabase.removeChannel(dlrfxChannel); 
-    	}
-  	};
-  	}, []);
-    
+    	  	 supabase.removeChannel(dlrfxChannel); 
+    	}
+      if (tipoDeCambioChannel) {
+              supabase.removeChannel(tipoDeCambioChannel);
+          }
+  	};
+  	}, []);
+    
     // ... (código de 'maxDiasDelSegmento' y 'useEffect' para el slider sin cambios) ...
-    const maxDiasDelSegmento = (() => {
-        if (bonosLecaps.length === 0) return 1000;
-        const maxDias = Math.max(...bonosLecaps.map(b => b.dv));
-        return isFinite(maxDias) ? maxDias : 1000;
-    })();
+    const maxDiasDelSegmento = (() => {
+        if (bonosLecaps.length === 0) return 1000;
+        const maxDias = Math.max(...bonosLecaps.map(b => b.dv));
+        return isFinite(maxDias) ? maxDias : 1000;
+    })();
 
-    useEffect(() => {
-        setRangoDias([0, maxDiasDelSegmento]);
-    }, [maxDiasDelSegmento]);
+    useEffect(() => {
+        setRangoDias([0, maxDiasDelSegmento]);
+    }, [maxDiasDelSegmento]);
 
-    const datosParaGrafico = bonosLecaps.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
-    const datosParaTabla = [...bonosLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
+    const datosParaGrafico = bonosLecaps.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
+    const datosParaTabla = [...bonosLecaps].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
 
-    return (
-        <Layout>
-            <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-            	{/* ... (código del título y estado sin cambios) ... */}
-            	<h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Renta fija Ars</h1>
-            	<div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
-            	  	 {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
-            	  	   <span style={{ color: '#374151', fontWeight: 500 }}>
-            	  	   	 Estado: <strong>Actualizado el {formatDateTime(ultimaActualizacion)}</strong>
-            	  	   </span>
-      	) : (
-      	  	   <span>Estado: <strong>{estado}</strong></span>
-      	)}
-    	</div>
-            	
-            	{/* ... (código del slider y gráfico sin cambios) ... */}
-            	<div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
-            	  <div style={{ padding: '0 10px', marginBottom: '20px' }}>
-            	  	 <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
-            	  	 <Slider
-            	  	     range min={0} max={maxDiasDelSegmento > 0 ? maxDiasDelSegmento : 1}
-      	  	     value={rangoDias}
-      	  	     onChange={(value) => setRangoDias(value as [number, number])}
-      	  	 />
-      	  	 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
-      	  	   	 <span style={{ fontSize: '12px' }}>{rangoDias[0]} días</span>
-      	  	   	 <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
-      	  	 </div>
-      	  </div>
-      	  
-      	  <CurvaRendimientoChart 
-      	  	 data={datosParaGrafico} 
-      	  	 segmentoActivo="LECAPs y Similares" 
-    	    	 xAxisKey="dv"
-      	  />
-    	</div>
+    return (
+        <Layout>
+            <div style={{ maxWidth: '1400px', margin: 'auto' }}>
+            	{/* ... (código del título y estado sin cambios) ... */}
+            	<h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Renta fija Ars</h1>
+            	<div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
+            	  	 {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
+            	  	   <span style={{ color: '#374151', fontWeight: 500 }}>
+            	  	   	 Estado: <strong>Actualizado el {formatDateTime(ultimaActualizacion)}</strong>
+            	  	   </span>
+      	) : (
+      	  	   <span>Estado: <strong>{estado}</strong></span>
+      	)}
+    	</div>
+      <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: '20px',
+                    margin: '1.5rem 0',
+                    flexWrap: 'wrap'
+                }}
+              >
+                  <InfoCard title="Dólar MEP" value={tipoDeCambio?.valor_mep} />
+                  <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
+              </div>
+            	{/* ... (código del slider y gráfico sin cambios) ... */}
+            	<div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
+            	  <div style={{ padding: '0 10px', marginBottom: '20px' }}>
+            	  	 <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
+            	  	 <Slider
+            	  	     range min={0} max={maxDiasDelSegmento > 0 ? maxDiasDelSegmento : 1}
+      	  	     value={rangoDias}
+      	  	     onChange={(value) => setRangoDias(value as [number, number])}
+      	  	 />
+      	  	 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
+      	  	   	 <span style={{ fontSize: '12px' }}>{rangoDias[0]} días</span>
+      	  	   	 <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
+      	  	 </div>
+      	  </div>
+      	  
+      	  <CurvaRendimientoChart 
+      	  	 data={datosParaGrafico} 
+      	  	 segmentoActivo="LECAPs y Similares" 
+    	    	 xAxisKey="dv"
+      	  />
+    	</div>
                 
                 {/* --- LAYOUT ACTUALIZADO --- */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '2rem' }}>
-                    <TablaGeneral titulo="Renta fija" datos={datosParaTabla} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '2rem' }}>
+                    <TablaGeneral titulo="Renta fija" datos={datosParaTabla} />
                     {/* --- 💎 NUEVA TABLA AÑADIDA AQUÍ 💎 --- */}
                     <TablaSinteticosUSD bonos={datosParaTabla} futuros={datosSinteticos} />
 
                     <TablaSinteticos datos={datosSinteticos} />
 
-                </div>
-            </div>
-        </Layout>
-    );
+                </div>
+            </div>
+        </Layout>
+    );
 }
