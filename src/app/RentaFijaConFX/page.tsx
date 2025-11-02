@@ -85,12 +85,7 @@ const formatTimestamp = (ts: number | null) => {
     return '-';
   }
 };
-// --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
-type TipoDeCambio = {
-  valor_ccl: number;
-  valor_mep: number;
-  h: string; 
-};
+
 // --- 💎 AÑADIR ESTE COMPONENTE 💎 ---
 const InfoCard = ({ title, value }: { title: string, value: number | null | undefined }) => {
     const formattedValue = value 
