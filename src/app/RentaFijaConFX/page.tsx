@@ -214,7 +214,7 @@ const TablaSinteticos = ({ datos }: { datos: Map<string, DlrfxData> }) => {
   // 4. Renderizar la tabla
   return (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden'}}>
-      <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 , textAling: 'center'}}>
+      <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 , textAlign: 'center'}}>
         Rendimiento Sintéticos (Dólar Futuro)
       </h2>
       <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
