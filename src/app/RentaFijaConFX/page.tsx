@@ -315,129 +315,113 @@ const TablaSinteticosUSD = ({ bonos, futuros }: { bonos: Bono[], futuros: Map<st
  const precioSpot = spot?.l;
 
  // 2. Calcular rendimientos
-const TablaSinteticosUSD = ({ bonos, futuros }: { bonos: Bono[], futuros: Map<string, DlrfxData> }) => {
-
-// 1. Encontrar el precio SPOT (Contado Inmediato)
-const spot = futuros.get('DLR/SPOT');
-const precioSpot = spot?.l;
-
-// 2. Calcular rendimientos
-const calculados: SinteticoUSD[] = [];
-
-bonos.forEach((bono) => {
- // Usar RD
- if (bono.RD === null || bono.RD === undefined || !bono.dv || bono.dv <= 0) return;
-
- // Buscar el futuro correspondiente
- let tickerFuturo = '';
- try {
-  const vtoDate = parseISO(bono.vto);
-  const mesFuturo = format(vtoDate, 'MMMyy', { locale: es }).toUpperCase(); 
-  tickerFuturo = `DLR/${mesFuturo}`;
- } catch(e) {
-  return; // Fecha de bono inválida
- }
-
- const futuro = futuros.get(tickerFuturo);
- const precioFuturo = futuro?.l;
-
-  // --- INICIALIZAR NUEVOS VALORES ---
- let tnaUsd: number | null = null;
- let rdUsd: number | null = null;
- let tci: number | null = null;
-
- // Si tenemos todos los datos, calculamos
- if (precioSpot && precioFuturo && precioFuturo > 0 && bono.dv > 0) {
-  const rd_lecap = bono.RD; 
-  const dias_lecap = bono.dv;
-
-  // Tasa Efectiva en ARS
-  const te_lecap_factor = (1 + rd_lecap);
-  
-  // Tasa Efectiva de Devaluación
-  const te_deval_factor = (precioFuturo / precioSpot);
-
-  // --- 💎 1. NUEVO CÁLCULO (RD USD) ---
-  const te_usd = (te_lecap_factor / te_deval_factor) - 1;
-  rdUsd = te_usd;
-
-  // --- 💎 2. CÁLCULO EXISTENTE (TNA USD) ---
-  tnaUsd = te_usd * (365 / dias_lecap);
-
-    // --- 💎 3. NUEVO CÁLCULO (TCI) ---
-    // Tu fórmula: (precio de la letra)/(precio de la letra *(1+rd)/precio rofex)
-    // Simplificada: precio_rofex / (1 + rd)
-    tci = precioFuturo / te_lecap_factor;
- }
+ const calculados: SinteticoUSD[] = [];
  
- calculados.push({
- tickerLecap: bono.t,
- tickerFuturo: tickerFuturo,
- dias: bono.dv,
- rdArs: bono.RD, // <-- Pasamos el RD
- tnaUsd: tnaUsd,
-   rdUsd: rdUsd,   // <-- Añadido
-   tci: tci,       // <-- Añadido
+ bonos.forEach((bono) => {
+    // --- 💎 CORRECCIÓN 1: Usar RD en lugar de TNA ---
+    // bono.RD es el rendimiento directo (ej. 0.05 para 5%)
+  if (bono.RD === null || bono.RD === undefined || !bono.dv || bono.dv <= 0) return;
+
+  // Buscar el futuro correspondiente
+  let tickerFuturo = '';
+  try {
+    const vtoDate = parseISO(bono.vto);
+    const mesFuturo = format(vtoDate, 'MMMyy', { locale: es }).toUpperCase(); 
+    tickerFuturo = `DLR/${mesFuturo}`;
+  } catch(e) {
+    return; // Fecha de bono inválida
+  }
+
+  const futuro = futuros.get(tickerFuturo);
+  const precioFuturo = futuro?.l;
+
+  let tnaUsd: number | null = null;
+  let rdUsd: number | null = null;
+  let tci: number | null = null;
+  // Si tenemos todos los datos, calculamos
+  if (precioSpot && precioFuturo && precioFuturo > 0 && bono.dv > 0) {
+      // --- 💎 CORRECCIÓN 2: Fórmula con RD ---
+    const rd_lecap = bono.RD; // <--- Usamos RD
+    const dias_lecap = bono.dv;
+    
+    // Tasa Efectiva en ARS (cuántos pesos tengo al final)
+        // El factor de ganancia es simplemente (1 + RD)
+    const te_lecap_factor = (1 + rd_lecap); // <--- Fórmula simplififcada
+    
+    // Tasa Efectiva de Devaluación (cuánto $/USD pagué vs. cuánto $/USD recibiré)
+    const te_deval_factor = (precioFuturo / precioSpot);
+    // --- 💎 1. NUEVO CÁLCULO (RD USD) ---
+    const te_usd = (te_lecap_factor / te_deval_factor) - 1;
+    rdUsd = te_usd;
+    
+
+    // Convertir Tasa Efectiva en USD a TNA en USD
+    tnaUsd = te_usd * (365 / dias_lecap);
+    //Tipo de coambio implícito
+    tci = precioFuturo / te_lecap_factor;
+  }
+  
+  calculados.push({
+   tickerLecap: bono.t,
+   tickerFuturo: tickerFuturo,
+   dias: bono.dv,
+   rdArs: bono.RD,   // <-- Pasamos el RD
+   rdUsd: rdUsd,
+   tnaUsd: tnaUsd,
+   tci: tci,
+  });
  });
-});
 
-// 3. Ordenar por días al vencimiento
-calculados.sort((a, b) => a.dias - b.dias);
+ // 3. Ordenar por días al vencimiento
+ calculados.sort((a, b) => a.dias - b.dias);
 
-// 4. Renderizar la tabla
-return (
- <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
- <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 , textAlign: 'center'}}>
-  Sintético Tasa en Dólares (Lecap + Venta Futuro)
- </h2>
- <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
-  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-  <thead style={{ position: 'sticky', top: 0 }}>
-        {/* --- ENCABEZADO ACTUALIZADO --- */}
-   <tr style={{ background: '#021751', color: 'white' }}>
-   <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Letra</th>
-   <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Días</th>
-   <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>RD (ARS)</th>
-   <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Futuro</th>
-   <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>RD (USD)</th>
-   <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TCI (Spot)</th>
-   <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TNA (USD)</th>
-   </tr>
-  </thead>
-  <tbody>
-   {!precioSpot && (
-        // --- COLSPAN ACTUALIZADO ---
-    <tr><td colSpan={7} style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>Cargando precio Spot (DLR/SPOT) para calcular...</td></tr>
-   )}
-   {calculados.length > 0 ? (
-   calculados.map((item) => (
-    <tr key={item.tickerLecap} style={{ borderTop: '1px solid #e5e7eb' }}>
-    <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', textAlign: 'center' }}>{item.tickerLecap}</td>
-    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{item.dias}</td>
-    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.rdArs)}</td>
-    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{item.tickerFuturo}</td>
-          {/* --- NUEVAS CELDAS AÑADIDAS --- */}
-    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontWeight: 700, textAlign: 'center' }}>
-           {formatValue(item.rdUsd)}
+ // 4. Renderizar la tabla
+ return (
+  <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+   <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 , textAlign: 'center'}}>
+    Sintético Tasa en Dólares (Lecap + Venta Futuro)
+   </h2>
+   <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
+    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+     <thead style={{ position: 'sticky', top: 0 }}>
+      <tr style={{ background: '#021751', color: 'white' }}>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Letra (Tasa)</th>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Días</th>
+              {/* --- 💎 CORRECCIÓN 3: Cambiar título de columna --- */}
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>RD (ARS)</th>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Futuro (Hedge)</th>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TNA (USD)</th>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TCI</th>
+      </tr>
+     </thead>
+     <tbody>
+      {!precioSpot && (
+        <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>Cargando precio Spot (DLR/SPOT) para calcular...</td></tr>
+      )}
+      {calculados.length > 0 ? (
+       calculados.map((item) => (
+        <tr key={item.tickerLecap} style={{ borderTop: '1px solid #e5e7eb' }}>
+         <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', textAlign: 'center' }}>{item.tickerLecap}</td>
+         <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{item.dias}</td>
+                {/* Esta línea ahora formatea el RD que le pasamos */}
+         <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tnaLecap)}</td>
+         <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{item.tickerFuturo}</td>
+         <td style={{ padding: '0.75rem 1rem', fontWeight: 700, background: item.tnaUsd && item.tnaUsd > 0 ? '#f0fdf4' : '#fef2f2', color: item.tnaUsd && item.tnaUsd > 0 ? '#059669' : '#ef4444', textAlign: 'center' }}>
+          {formatValue(item.tnaUsd)}
          </td>
-    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontWeight: 700, textAlign: 'center' }}>
-           {formatValue(item.tci, '$', 2)}
-         </td>
-    <td style={{ padding: '0.75rem 1rem', fontWeight: 700, background: item.tnaUsd && item.tnaUsd > 0 ? '#f0fdf4' : '#fef2f2', color: item.tnaUsd && item.tnaUsd > 0 ? '#059669' : '#ef4444', textAlign: 'center' }}>
-     {formatValue(item.tnaUsd)}
-    </td>
-    </tr>
-   ))
-   ) : (
-        // --- COLSPAN ACTUALIZADO ---
-   <tr><td colSpan={7} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No hay letras con RD para calcular.</td></tr>
-   )}
-  </tbody>
-  </table>
- </div>
- </div>
-);
+          <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tci, '', 2)}</td>
+        </tr>
+       ))
+      ) : (
+       <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No hay letras con RD para calcular.</td></tr>
+      )}
+     </tbody>
+    </table>
+   </div>
+  </div>
+ );
 };
+
 
 // ==================================================================
 // COMPONENTE PRINCIPAL DE LA PÁGINA (ACTUALIZADO)
