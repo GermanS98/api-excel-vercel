@@ -112,7 +112,8 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   <td style={{ 
                       padding: '0.75rem 1rem', 
                       color: item.v >= 0 ? '#22c55e' : '#ef4444',
-                      fontWeight: 500
+                      fontWeight: 500,
+                      textAlign: 'center'
                       }}>
                     {formatValue(item.v)}
                   </td>
@@ -212,30 +213,30 @@ const TablaSinteticos = ({ datos }: { datos: Map<string, DlrfxData> }) => {
 
   // 4. Renderizar la tabla
   return (
-    <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-      <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>
+    <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden'}}>
+      <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 , textAling: 'center'}}>
         Rendimiento Sintéticos (Dólar Futuro)
       </h2>
       <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ position: 'sticky', top: 0 }}>
             <tr style={{ background: '#021751', color: 'white' }}>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Ticker</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Precio Futuro</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Días Vto.</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TNA</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Últ. Act.</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Ticker</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Precio Futuro</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Días Vto.</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TNA</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Últ. Act.</th>
             </tr>
           </thead>
           <tbody>
             {/* Fila especial para el SPOT */}
             {spot ? (
               <tr style={{ borderTop: '1px solid #e5e7eb', background: '#f9fafb' }}>
-                <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#111827' }}>{spot.t} (Spot)</td>
-                <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#111827' }}>{formatValue(spot.l, '', 2)}</td>
-                <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>-</td>
-                <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>-</td>
-                <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatTimestamp(spot.ts)}</td>
+                <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#111827', textAlign: 'center'}}>{spot.t} (Spot)</td>
+                <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#111827' , textAlign: 'center'}}>{formatValue(spot.l, '', 2)}</td>
+                <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>-</td>
+                <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>-</td>
+                <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatTimestamp(spot.ts)}</td>
               </tr>
             ) : (
               <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>Cargando precio Spot (DLR/SPOT)...</td></tr>
@@ -245,13 +246,13 @@ const TablaSinteticos = ({ datos }: { datos: Map<string, DlrfxData> }) => {
             {calculados.length > 0 ? (
               calculados.map((item) => (
                 <tr key={item.ticker} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.precio, '', 2)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.diasVto}</td>
+                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', textAlign: 'center' }}>{item.ticker}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' , textAlign: 'center'}}>{formatValue(item.precio, '', 2)}</td>
+                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' , textAlign: 'center'}}>{item.diasVto}</td>
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: item.tna && item.tna < 0 ? '#ef4444' : '#059669' }}>
                     {formatValue(item.tna)}
                   </td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.actualizado}</td>
+                  <td style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#4b5563' }}>{item.actualizado}</td>
                 </tr>
               ))
             ) : (
@@ -339,19 +340,19 @@ const TablaSinteticosUSD = ({ bonos, futuros }: { bonos: Bono[], futuros: Map<st
  // 4. Renderizar la tabla
  return (
   <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-   <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>
+   <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 , textAlign: 'center'}}>
     Sintético Tasa en Dólares (Lecap + Venta Futuro)
    </h2>
    <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
      <thead style={{ position: 'sticky', top: 0 }}>
       <tr style={{ background: '#021751', color: 'white' }}>
-       <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Letra (Tasa)</th>
-       <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Días</th>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Letra (Tasa)</th>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Días</th>
               {/* --- 💎 CORRECCIÓN 3: Cambiar título de columna --- */}
-       <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>RD (ARS)</th>
-       <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Futuro (Hedge)</th>
-       <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TNA (USD)</th>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>RD (ARS)</th>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Futuro (Hedge)</th>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TNA (USD)</th>
       </tr>
      </thead>
      <tbody>
@@ -361,12 +362,12 @@ const TablaSinteticosUSD = ({ bonos, futuros }: { bonos: Bono[], futuros: Map<st
       {calculados.length > 0 ? (
        calculados.map((item) => (
         <tr key={item.tickerLecap} style={{ borderTop: '1px solid #e5e7eb' }}>
-         <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.tickerLecap}</td>
-         <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.dias}</td>
+         <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', textAlign: 'center' }}>{item.tickerLecap}</td>
+         <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{item.dias}</td>
                 {/* Esta línea ahora formatea el RD que le pasamos */}
-         <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tnaLecap)}</td>
-         <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.tickerFuturo}</td>
-         <td style={{ padding: '0.75rem 1rem', fontWeight: 700, background: item.tnaUsd && item.tnaUsd > 0 ? '#f0fdf4' : '#fef2f2', color: item.tnaUsd && item.tnaUsd > 0 ? '#059669' : '#ef4444' }}>
+         <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tnaLecap)}</td>
+         <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{item.tickerFuturo}</td>
+         <td style={{ padding: '0.75rem 1rem', fontWeight: 700, background: item.tnaUsd && item.tnaUsd > 0 ? '#f0fdf4' : '#fef2f2', color: item.tnaUsd && item.tnaUsd > 0 ? '#059669' : '#ef4444', textAlign: 'center' }}>
           {formatValue(item.tnaUsd)}
          </td>
         </tr>
