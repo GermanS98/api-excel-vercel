@@ -268,130 +268,132 @@ const TablaSinteticos = ({ datos }: { datos: Map<string, DlrfxData> }) => {
 // --- 💎 NUEVO COMPONENTE: TablaSinteticosUSD (Tasa en Dólares) 💎 ---
 // ==================================================================
 type SinteticoUSD = {
-  tickerLecap: string;
-  tickerFuturo: string;
-  dias: number;
-  tnaLecap: number;
-  tnaUsd: number | null;
+ tickerLecap: string;
+ tickerFuturo: string;
+ dias: number;
+ tnaLecap: number; // Reutilizaremos este campo para pasar el RD
+ tnaUsd: number | null;
 };
 
 const TablaSinteticosUSD = ({ bonos, futuros }: { bonos: Bono[], futuros: Map<string, DlrfxData> }) => {
-  
-  // 1. Encontrar el precio SPOT (Contado Inmediato)
-  const spot = futuros.get('DLR/SPOT');
-  const precioSpot = spot?.l;
+ 
+ // 1. Encontrar el precio SPOT (Contado Inmediato)
+ const spot = futuros.get('DLR/SPOT');
+ const precioSpot = spot?.l;
 
-  // 2. Calcular rendimientos
-  const calculados: SinteticoUSD[] = [];
-  
-  bonos.forEach((bono) => {
-    // Necesitamos la TNA y los días de la letra
-    if (!bono.tna || !bono.dv || bono.dv <= 0) return;
+ // 2. Calcular rendimientos
+ const calculados: SinteticoUSD[] = [];
+ 
+ bonos.forEach((bono) => {
+    // --- 💎 CORRECCIÓN 1: Usar RD en lugar de TNA ---
+    // bono.RD es el rendimiento directo (ej. 0.05 para 5%)
+  if (bono.RD === null || bono.RD === undefined || !bono.dv || bono.dv <= 0) return;
 
-    // Buscar el futuro correspondiente
-    // ej. VTO '2024-10-31T00:00:00' -> 'OCT24'
-    let tickerFuturo = '';
-    try {
-        const vtoDate = parseISO(bono.vto);
-        // Formatear a 'MMMyy' (ej. OCT24)
-        const mesFuturo = format(vtoDate, 'MMMyy', { locale: es }).toUpperCase();
-        tickerFuturo = `DLR/${mesFuturo}`;
-    } catch(e) {
-        return; // Fecha de bono inválida
-    }
+  // Buscar el futuro correspondiente
+  let tickerFuturo = '';
+  try {
+    const vtoDate = parseISO(bono.vto);
+    const mesFuturo = format(vtoDate, 'MMMyy', { locale: es }).toUpperCase(); 
+    tickerFuturo = `DLR/${mesFuturo}`;
+  } catch(e) {
+    return; // Fecha de bono inválida
+  }
 
-    const futuro = futuros.get(tickerFuturo);
-    const precioFuturo = futuro?.l;
+  const futuro = futuros.get(tickerFuturo);
+  const precioFuturo = futuro?.l;
 
-    let tnaUsd: number | null = null;
+  let tnaUsd: number | null = null;
 
-    // Si tenemos todos los datos, calculamos
-    if (precioSpot && precioFuturo && precioFuturo > 0 && bono.tna && bono.dv > 0) {
-        const tna_lecap = bono.tna;
-        const dias_lecap = bono.dv;
+  // Si tenemos todos los datos, calculamos
+  if (precioSpot && precioFuturo && precioFuturo > 0 && bono.dv > 0) {
+      // --- 💎 CORRECCIÓN 2: Fórmula con RD ---
+    const rd_lecap = bono.RD; // <--- Usamos RD
+    const dias_lecap = bono.dv;
 
-        // Tasa Efectiva en ARS (cuántos pesos tengo al final)
-        const te_lecap_factor = (1 + (tna_lecap * dias_lecap / 365));
-        
-        // Tasa Efectiva de Devaluación (cuánto $/USD pagué vs. cuánto $/USD recibiré)
-        const te_deval_factor = (precioFuturo / precioSpot);
-
-        // Tasa Efectiva en USD = (Factor de ganancia en ARS / Factor de "pérdida" por devaluación) - 1
-        const te_usd = (te_lecap_factor / te_deval_factor) - 1;
-
-        // Convertir Tasa Efectiva en USD a TNA en USD
-        tnaUsd = te_usd * (365 / dias_lecap);
-    }
+    // Tasa Efectiva en ARS (cuántos pesos tengo al final)
+        // El factor de ganancia es simplemente (1 + RD)
+    const te_lecap_factor = (1 + rd_lecap); // <--- Fórmula simplificada
     
-    calculados.push({
-      tickerLecap: bono.t,
-      tickerFuturo: tickerFuturo,
-      dias: bono.dv,
-      tnaLecap: bono.tna,
-      tnaUsd: tnaUsd,
-    });
+    // Tasa Efectiva de Devaluación (cuánto $/USD pagué vs. cuánto $/USD recibiré)
+    const te_deval_factor = (precioFuturo / precioSpot);
+
+    // Tasa Efectiva en USD = (Factor de ganancia en ARS / Factor de "pérdida" por devaluación) - 1
+    const te_usd = (te_lecap_factor / te_deval_factor) - 1;
+
+    // Convertir Tasa Efectiva en USD a TNA en USD
+    tnaUsd = te_usd * (365 / dias_lecap);
+  }
+  
+  calculados.push({
+   tickerLecap: bono.t,
+   tickerFuturo: tickerFuturo,
+   dias: bono.dv,
+      tnaLecap: bono.RD, // <-- Pasamos el RD
+   tnaUsd: tnaUsd,
   });
+ });
 
-  // 3. Ordenar por días al vencimiento
-  calculados.sort((a, b) => a.dias - b.dias);
+ // 3. Ordenar por días al vencimiento
+ calculados.sort((a, b) => a.dias - b.dias);
 
-  // 4. Renderizar la tabla
-  return (
-    <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-      <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>
-        Sintético Tasa en Dólares (Lecap + Venta Futuro)
-      </h2>
-      <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead style={{ position: 'sticky', top: 0 }}>
-            <tr style={{ background: '#021751', color: 'white' }}>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Letra (Tasa)</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Días</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TNA (ARS)</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Futuro (Hedge)</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TNA (USD)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!precioSpot && (
-                 <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>Cargando precio Spot (DLR/SPOT) para calcular...</td></tr>
-            )}
-            {calculados.length > 0 ? (
-              calculados.map((item) => (
-                <tr key={item.tickerLecap} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.tickerLecap}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.dias}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tnaLecap)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.tickerFuturo}</td>
-                  <td style={{ padding: '0.75rem 1rem', fontWeight: 700, background: item.tnaUsd && item.tnaUsd > 0 ? '#f0fdf4' : '#fef2f2', color: item.tnaUsd && item.tnaUsd > 0 ? '#059669' : '#ef4444' }}>
-                    {formatValue(item.tnaUsd)}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No hay letras (Lecaps) con TNA para calcular.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+ // 4. Renderizar la tabla
+ return (
+  <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+   <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>
+    Sintético Tasa en Dólares (Lecap + Venta Futuro)
+   </h2>
+   <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
+    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+     <thead style={{ position: 'sticky', top: 0 }}>
+      <tr style={{ background: '#021751', color: 'white' }}>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Letra (Tasa)</th>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Días</th>
+              {/* --- 💎 CORRECCIÓN 3: Cambiar título de columna --- */}
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>RD (ARS)</th>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Futuro (Hedge)</th>
+       <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TNA (USD)</th>
+      </tr>
+     </thead>
+     <tbody>
+      {!precioSpot && (
+        <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>Cargando precio Spot (DLR/SPOT) para calcular...</td></tr>
+      )}
+      {calculados.length > 0 ? (
+       calculados.map((item) => (
+        <tr key={item.tickerLecap} style={{ borderTop: '1px solid #e5e7eb' }}>
+         <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.tickerLecap}</td>
+         <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.dias}</td>
+                {/* Esta línea ahora formatea el RD que le pasamos */}
+         <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tnaLecap)}</td>
+         <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{item.tickerFuturo}</td>
+         <td style={{ padding: '0.75rem 1rem', fontWeight: 700, background: item.tnaUsd && item.tnaUsd > 0 ? '#f0fdf4' : '#fef2f2', color: item.tnaUsd && item.tnaUsd > 0 ? '#059669' : '#ef4444' }}>
+          {formatValue(item.tnaUsd)}
+         </td>
+        </tr>
+       ))
+      ) : (
+       <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No hay letras con RD para calcular.</td></tr>
+      )}
+     </tbody>
+    </table>
+   </div>
+  </div>
+ );
 };
-// --- FIN NUEVO COMPONENTE ---
 
 
 // ==================================================================
 // COMPONENTE PRINCIPAL DE LA PÁGINA (ACTUALIZADO)
 // ==================================================================
 export default function LecapsPage() {
-    const [bonosLecaps, setBonosLecaps] = useState<Bono[]>([]);
-    const [estado, setEstado] = useState('Cargando...');
-    const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
-    const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
+  const [bonosLecaps, setBonosLecaps] = useState<Bono[]>([]);
+  const [estado, setEstado] = useState('Cargando...');
+  const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
+  const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
     const [datosSinteticos, setDatosSinteticos] = useState<Map<string, DlrfxData>>(new Map());
-    const segmentosDeEstaPagina = ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'];
-    const manana = new Date();
-    manana.setDate(manana.getDate() + 1)
+  const segmentosDeEstaPagina = ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'];
+  const manana = new Date();
+  manana.setDate(manana.getDate() + 1)
 
    useEffect(() => {
         const segmentosRequeridos = segmentosDeEstaPagina;
