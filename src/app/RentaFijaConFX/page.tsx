@@ -426,7 +426,7 @@ export default function LecapsPage() {
   const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
   const segmentosDeEstaPagina = ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'];
   const manana = new Date();
-  manana.setDate(manana.getDate() + 1)
+  manana.setDate(manana.getDate() + 1);
 
    useEffect(() => {
         const segmentosRequeridos = segmentosDeEstaPagina;
