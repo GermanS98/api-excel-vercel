@@ -7,6 +7,7 @@ import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import { format, parseISO, parse, differenceInDays, endOfMonth } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
+import { es } from 'date-fns/locale';
 // ==================================================================
 // DEFINICIÓN DE TIPOS (ACTUALIZADA)
 // ==================================================================
@@ -174,8 +175,18 @@ const TablaSinteticos = ({ datos }: { datos: Map<string, DlrfxData> }) => {
   const calculados: SinteticoCalculado[] = [];
   
   datos.forEach((valor, ticker) => {
-    // Omitir el spot mismo o tickers sin precio
-    if (ticker === 'DLR/SPOT' || !valor.l) return; 
+    // Filtramos:
+    // 1. El propio SPOT
+    // 2. Tickers sin precio (NULL)
+    // 3. Tickers que no son 'DLR/' (ej. ORO/NOV25)
+    // 4. Tickers que contienen espacios (ej. DLR/DIC25 A)
+    if (ticker === 'DLR/SPOT' || 
+         !valor.l || 
+         !ticker.startsWith('DLR/') ||
+         ticker.includes(' ')
+        ) {
+           return; 
+        }
 
     const { diasVto } = getVtoInfo(ticker);
     // Omitir CI, 24hs, o errores de parseo
@@ -283,7 +294,7 @@ const TablaSinteticosUSD = ({ bonos, futuros }: { bonos: Bono[], futuros: Map<st
     try {
         const vtoDate = parseISO(bono.vto);
         // Formatear a 'MMMyy' (ej. OCT24)
-        const mesFuturo = format(vtoDate, 'MMMyy').toUpperCase(); 
+        const mesFuturo = format(vtoDate, 'MMMyy', { locale: es }).toUpperCase();
         tickerFuturo = `DLR/${mesFuturo}`;
     } catch(e) {
         return; // Fecha de bono inválida
