@@ -557,11 +557,11 @@ export default function LecapsPage() {
                 {/* --- LAYOUT ACTUALIZADO --- */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '2rem' }}>
                     <TablaGeneral titulo="Renta fija" datos={datosParaTabla} />
-                    
-                    <TablaSinteticos datos={datosSinteticos} />
-
                     {/* --- 💎 NUEVA TABLA AÑADIDA AQUÍ 💎 --- */}
                     <TablaSinteticosUSD bonos={datosParaTabla} futuros={datosSinteticos} />
+
+                    <TablaSinteticos datos={datosSinteticos} />
+
                 </div>
             </div>
         </Layout>
