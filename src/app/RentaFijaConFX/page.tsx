@@ -173,7 +173,9 @@ type SinteticoCalculado = {
 // Función para parsear el ticker y obtener la fecha de vto
 // "DLR/OCT24" -> 31 de Octubre 2024
 // "DLR/SPOT" -> 0 días
-const getVtoInfo = (ticker: string): { diasVto: number, vtoString: string } => {
+const getVtoInfo = (ticker: string,
+  vencimientos: Map<string, string>
+): { diasVto: number, vtoString: string } => {
   const hoy = new Date();
   const partes = ticker.split('/');
   if (partes.length < 2 || partes[1] === 'SPOT') { // <--- CORREGIDO
@@ -183,19 +185,35 @@ const getVtoInfo = (ticker: string): { diasVto: number, vtoString: string } => {
     return { diasVto: 1, vtoString: '24hs' };
   }
 
-  try {
-    // Parsea "OCT24" a una fecha (ej. 1 Oct 2024)
-    const fechaVto = parse(partes[1], 'MMMyy', new Date(), { locale: es });
-    // Los futuros Rofex vencen el último día hábil del mes.
-    // Usamos endOfMonth como una aproximación simple.
-    const finDeMes = endOfMonth(fechaVto);
-    const dias = differenceInDays(finDeMes, hoy);
-    return { diasVto: dias > 0 ? dias : 0, vtoString: format(finDeMes, 'dd/MM/yy') };
+
+try {
+    const tickerMes = partes[1]; // ej. "DIC25"
+    
+    let fechaVto: Date;
+    // 1. Buscamos el ticker en el mapa que vino de Supabase
+    const fechaExactaStr = vencimientos.get(tickerMes); 
+
+    if (fechaExactaStr) {
+      // 2. SI LO ENCONTRAMOS: Usamos la fecha exacta de la DB
+      // parseISO se usa para "YYYY-MM-DD"
+      fechaVto = parseISO(fechaExactaStr);
+    } else {
+      // 3. SI NO LO ENCONTRAMOS: Usamos la lógica vieja (fin de mes) como fallback
+      console.warn(`Vencimiento exacto para ${tickerMes} no encontrado en DB. Usando fin de mes.`);
+      const fechaParseada = parse(tickerMes, 'MMMyy', new Date(), { locale: es });
+      fechaVto = endOfMonth(fechaParseada);
+    }
+    
+    // 4. El resto del cálculo es idéntico
+    const dias = differenceInDays(fechaVto, hoy);
+    return { diasVto: dias > 0 ? dias : 0, vtoString: format(fechaVto, 'dd/MM/yy') };
+
   } catch (e) {
-    return { diasVto: -1, vtoString: 'Error' }; // Ticker no parseable
+      console.error(`Error parseando ticker: ${ticker}`, e);
+      return { diasVto: -1, vtoString: 'Error' }; 
   }
 };
-const TablaSinteticos = ({ datos }: { datos: Map<string, DlrfxData> }) => {
+const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData>, vencimientos: Map<string, string> }) => {
   
   // 1. Encontrar el precio SPOT (Contado Inmediato)
   // 🚨 ASUNCIÓN: Tu ticker de spot se llama 'DLR/CI'
@@ -219,7 +237,7 @@ const TablaSinteticos = ({ datos }: { datos: Map<string, DlrfxData> }) => {
            return; 
         }
 
-    const { diasVto } = getVtoInfo(ticker);
+    const { diasVto } = getVtoInfo(ticker, vencimientos);
     // Omitir CI, 24hs, o errores de parseo
     if (diasVto <= 1) return; 
 
@@ -432,13 +450,31 @@ export default function LecapsPage() {
   const [estado, setEstado] = useState('Cargando...');
   const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
   const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
-    const [datosSinteticos, setDatosSinteticos] = useState<Map<string, DlrfxData>>(new Map());
-    const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
+  const [datosSinteticos, setDatosSinteticos] = useState<Map<string, DlrfxData>>(new Map());
+  const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
+  const [vencimientosMap, setVencimientosMap] = useState<Map<string, string>>(new Map());
   const segmentosDeEstaPagina = ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'];
   const manana = new Date();
   manana.setDate(manana.getDate() + 1)
 
    useEffect(() => {
+      const fetchVencimientos = async () => {
+      const { data, error } = await supabase
+        .from('vencimientos_roſex')
+        .select('ticker, fecha_vto');
+
+      if (error) {
+        console.error("Error fetching vencimientos rofex:", error);
+      } else if (data) {
+        const newMap = new Map<string, string>();
+        data.forEach(v => {
+          if (v.ticker && v.fecha_vto) {
+            newMap.set(v.ticker, v.fecha_vto);
+          }
+        });
+        setVencimientosMap(newMap);
+      }
+    };
         const segmentosRequeridos = segmentosDeEstaPagina;
         
         const fetchInitialData = async () => {
@@ -541,7 +577,7 @@ export default function LecapsPage() {
         // ... (código de fetch/suscripción inicial sin cambios) ...
         fetchInitialData();
         fetchInitialDlrfx(); 
-        
+        fetchVencimientos();
         ({ bondChannel, dlrfxChannel, tipoDeCambioChannel } = setupSuscripciones());
 
         // ... (código de 'handleVisibilityChange' sin cambios) ...
@@ -645,7 +681,10 @@ export default function LecapsPage() {
                     {/* --- 💎 NUEVA TABLA AÑADIDA AQUÍ 💎 --- */}
                     <TablaSinteticosUSD bonos={datosParaTabla} futuros={datosSinteticos} />
 
-                    <TablaSinteticos datos={datosSinteticos} />
+                    <TablaSinteticos datos={datosSinteticos} 
+                    vencimientos={vencimientosMap}
+                    />
+
 
                 </div>
             </div>
