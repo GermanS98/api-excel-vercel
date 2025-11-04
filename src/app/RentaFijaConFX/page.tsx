@@ -187,7 +187,7 @@ const getVtoInfo = (ticker: string,
 
 
 try {
-    const tickerMes = partes[1]; // ej. "DIC25"
+    const tickerMes = partes[1].toUpperCase(); // ej. "DIC25"
     
     let fechaVto: Date;
     // 1. Buscamos el ticker en el mapa que vino de Supabase
@@ -198,6 +198,7 @@ try {
       // parseISO se usa para "YYYY-MM-DD"
       fechaVto = parseISO(fechaExactaStr);
     } else {
+      console.log("Busco:", tickerMes, "→ clave exacta existe?", vencimientos.has(tickerMes));
       // 3. SI NO LO ENCONTRAMOS: Usamos la lógica vieja (fin de mes) como fallback
       console.warn(`Vencimiento exacto para ${tickerMes} no encontrado en DB. Usando fin de mes.`);
       const fechaParseada = parse(tickerMes, 'MMMyy', new Date(), { locale: es });
@@ -469,7 +470,7 @@ export default function LecapsPage() {
         const newMap = new Map<string, string>();
         data.forEach(v => {
           if (v.ticker && v.fecha_vto) {
-            newMap.set(v.ticker, v.fecha_vto);
+            newMap.set(v.ticker.toUpperCase(), v.fecha_vto);
           }
         });
         console.log("Mapa de Vencimientos Creado:", newMap);
