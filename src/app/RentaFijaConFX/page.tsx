@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-import { format, parseISO, parse, differenceInDays, endOfMonth } from 'date-fns';
+import { format, parseISO, parse, differenceInDays, endOfMonth, startOfDay } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
 // ==================================================================
@@ -176,7 +176,7 @@ type SinteticoCalculado = {
 const getVtoInfo = (ticker: string,
   vencimientos: Map<string, string>
 ): { diasVto: number, vtoString: string } => {
-  const hoy = new Date();
+  const hoy = startOfDay(new Date());
   const partes = ticker.split('/');
   if (partes.length < 2 || partes[1] === 'SPOT') { // <--- CORREGIDO
     return { diasVto: 0, vtoString: 'SPOT' };
