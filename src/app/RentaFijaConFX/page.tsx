@@ -223,39 +223,42 @@ const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData
   // 2. Calcular rendimientos
   const calculados: SinteticoCalculado[] = [];
   
-  datos.forEach((valor, ticker) => {
-    // Filtramos:
-    // 1. El propio SPOT
-    // 2. Tickers sin precio (NULL)
-    // 3. Tickers que no son 'DLR/' (ej. ORO/NOV25)
-    // 4. Tickers que contienen espacios (ej. DLR/DIC25 A)
-    if (ticker === 'DLR/SPOT' || 
-         !valor.l || 
-         !ticker.startsWith('DLR/') ||
-         ticker.includes(' ')
-        ) {
-           return; 
-        }
+  // 💎 --- INICIO DE LA CORRECCIÓN --- 💎
+  // Solo ejecutar los cálculos si el mapa de vencimientos ya se cargó
+  if (vencimientos.size > 0) {
+    datos.forEach((valor, ticker) => {
+      // Filtramos:
+      // 1. El propio SPOT
+      // 2. Tickers sin precio (NULL)
+      // 3. Tickers que no son 'DLR/' (ej. ORO/NOV25)
+      // 4. Tickers que contienen espacios (ej. DLR/DIC25 A)
+      if (ticker === 'DLR/SPOT' || 
+           !valor.l || 
+           !ticker.startsWith('DLR/') ||
+           ticker.includes(' ')
+          ) {
+             return; 
+          }
 
-    const { diasVto } = getVtoInfo(ticker, vencimientos);
-    // Omitir CI, 24hs, o errores de parseo
-    if (diasVto <= 1) return; 
+      const { diasVto } = getVtoInfo(ticker, vencimientos);
+      // Omitir CI, 24hs, o errores de parseo
+      if (diasVto <= 1) return; 
 
-    let tna: number | null = null;
-    if (precioSpot && valor.l && diasVto > 0) {
-      // TNA = ((Precio_Futuro / Precio_Spot) - 1) * (365 / Dias_Vto)
-      tna = ((valor.l / precioSpot) - 1) * (365 / diasVto);
-    }
+      let tna: number | null = null;
+      if (precioSpot && valor.l && diasVto > 0) {
+        // TNA = ((Precio_Futuro / Precio_Spot) - 1) * (365 / Dias_Vto)
+        tna = ((valor.l / precioSpot) - 1) * (365 / diasVto);
+      }
 
-    calculados.push({
-      ticker: ticker,
-      precio: valor.l,
-      diasVto: diasVto,
-      tna: tna,
-      actualizado: formatTimestamp(valor.ts), // Formatear el timestamp
+      calculados.push({
+        ticker: ticker,
+        precio: valor.l,
+        diasVto: diasVto,
+        tna: tna,
+        actualizado: formatTimestamp(valor.ts), // Formatear el timestamp
+      });
     });
-  });
-
+  }
   // 3. Ordenar por días al vencimiento
   calculados.sort((a, b) => a.diasVto - b.diasVto);
 
