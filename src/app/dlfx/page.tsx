@@ -1,15 +1,13 @@
 'use client';
 import Layout from '@/components/layout/Layout';
-import { useState, useEffect, useMemo } from 'react'; // <--- IMPORTADO useMemo
+import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
-// import Sidebar from '@/components/ui/Sidebar'; // <-- No se usa
-// import Link from 'next/link'; // <-- No se usa
-import { format, parseISO, parse, differenceInDays, endOfMonth, startOfDay } from 'date-fns'; // <--- IMPORTS AÑADIDOS
+import { format, parseISO, parse, differenceInDays, endOfMonth, startOfDay } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
-import { es } from 'date-fns/locale'; // <--- IMPORT AÑADIDO
+import { es } from 'date-fns/locale'; 
 
 // ==================================================================
 // DEFINICIÓN DE TIPOS
@@ -28,7 +26,6 @@ type Bono = {
   ua: string | null; // ultimo_anuncio
 };
 
-// --- 💎 TIPO AÑADIDO ---
 type DlrfxData = {
   t: string;
   l: number | null;  // last price
@@ -36,7 +33,6 @@ type DlrfxData = {
   ts: number | null; // timestamp
 };
 
-// --- 💎 TIPO AÑADIDO ---
 type TipoDeCambio = {
   valor_ccl: number;
   valor_mep: number;
@@ -78,7 +74,6 @@ const formatDateTime = (dateString: string | null) => {
   }
 };
 
-// --- 💎 FUNCIÓN AÑADIDA ---
 const formatTimestamp = (ts: number | null) => {
   if (!ts) return '-';
   try {
@@ -88,7 +83,6 @@ const formatTimestamp = (ts: number | null) => {
   }
 };
 
-// --- 💎 FUNCIÓN AÑADIDA ---
 const getVtoInfo = (ticker: string,
   vencimientos: Map<string, string>
 ): { diasVto: number, vtoString: string } => {
@@ -125,7 +119,7 @@ const getVtoInfo = (ticker: string,
 
 
 // ==================================================================
-// 💎 COMPONENTE AÑADIDO 💎
+// COMPONENTE InfoCard (Sin cambios)
 // ==================================================================
 const InfoCard = ({ title, value }: { title: string, value: number | null | undefined }) => {
     const formattedValue = value 
@@ -151,17 +145,13 @@ const InfoCard = ({ title, value }: { title: string, value: number | null | unde
 };
 
 // ==================================================================
-// COMPONENTE DE TABLA (Respetando tu estilo original)
+// COMPONENTE TablaGeneral (Sin cambios)
 // ==================================================================
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>
           {titulo}
         </h2>
-      {/* NOTA: He quitado el 'maxHeight: 400px' para que la tabla se expanda 
-        si así lo prefieres, como en el ejemplo anterior. 
-        Si quieres limitarla, vuelve a añadir: maxHeight: '400px' 
-      */}
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ position: 'sticky', top: 0 }}>
@@ -197,7 +187,6 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                 </tr>
               ))
             ) : (
-              // --- COLSPAN CORREGIDO A 8 ---
               <tr><td colSpan={8} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
             )}
           </tbody>
@@ -207,7 +196,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
 );
 
 // ==================================================================
-// 💎 COMPONENTE AÑADIDO (Futuros vs Spot) 💎
+// COMPONENTE TablaSinteticos (Futuros vs Spot) (Sin cambios)
 // ==================================================================
 const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData>, vencimientos: Map<string, string> }) => {
   const { spot, calculados } = useMemo(() => {
@@ -289,7 +278,7 @@ const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData
 
 
 // ==================================================================
-// 💎 💎 NUEVO COMPONENTE CON TU FÓRMULA 💎 💎
+// 💎 💎 COMPONENTE TablaSinteticosDL (ACTUALIZADO CON TEM) 💎 💎
 // ==================================================================
 type SinteticoDL = {
   tickerLecap: string;
@@ -298,6 +287,7 @@ type SinteticoDL = {
   precioLetra: number | null;
   precioFuturo: number | null;
   tnaCalculada: number | null;
+  temSintetica: number | null; // <-- 💎 CAMBIO 1: Añadido el tipo
 };
 
 const TablaSinteticosDL = ({ bonos, futuros, vencimientos }: { 
@@ -306,46 +296,47 @@ const TablaSinteticosDL = ({ bonos, futuros, vencimientos }: {
   vencimientos: Map<string, string>
 }) => {
   
-  // 1. Calcular rendimientos
   const calculados: SinteticoDL[] = [];
  
   bonos.forEach((bono) => {
-    // Filtro 1: Datos básicos del bono (Precio, días, vto)
+    // Filtros 1, 2, 3, 4 (sin cambios)
     if (bono.p === null || bono.p <= 0 || !bono.dv || bono.dv <= 0 || !bono.vto) {
         return;
     }
-
-    // Filtro 2: Encontrar el futuro correspondiente
     let tickerFuturo = '';
     let mesTicker = '';
     try {
       const vtoDate = parseISO(bono.vto);
-      mesTicker = format(vtoDate, 'MMMyy', { locale: es }).toUpperCase(); // ej: "ENE26"
-      tickerFuturo = `DLR/${mesTicker}`; // ej: "DLR/ENE26"
+      mesTicker = format(vtoDate, 'MMMyy', { locale: es }).toUpperCase();
+      tickerFuturo = `DLR/${mesTicker}`;
     } catch(e) {
-      return; // Fecha de bono inválida
+      return;
     }
-
-    // Filtro 3: ¿Existe el futuro y tiene precio?
     const futuro = futuros.get(tickerFuturo);
     const precioFuturo = futuro?.l;
     if (!futuro || !precioFuturo || precioFuturo <= 0) {
       return;
     }
-
-    // Filtro 4: ¿Coinciden las fechas de vencimiento exactas?
     const vtoFuturoExacta = vencimientos.get(mesTicker); 
     if (!vtoFuturoExacta || bono.vto !== vtoFuturoExacta) {
-        // La fecha de vto del bono (ej. 16/01) NO es igual a la vto del futuro (ej. 30/01)
         return;
     }
 
-    // --- 💎 CÁLCULO DE LA NUEVA FÓRMULA 💎 ---
+    // --- Cálculo TNA (sin cambios) ---
     let tnaCalc: number | null = null;
+    let temCalc: number | null = null; // <-- 💎 CAMBIO 2: Inicializar TEM
     const precio_letra_base_100 = bono.p / 100;
     
     tnaCalc = ((precioFuturo / precio_letra_base_100) - 1) * (365 / bono.dv);
-    // --- Fin del Cálculo ---
+    
+    // --- 💎 CAMBIO 3: CÁLCULO DE LA NUEVA FÓRMULA TEM 💎 ---
+    if (tnaCalc !== null && bono.dv > 0) {
+        // Formula: ((tna * dias / 365) + 1)^(30 / dias) - 1
+        const factorTasa = (tnaCalc * bono.dv / 365) + 1;
+        const exponente = 30 / bono.dv;
+        temCalc = Math.pow(factorTasa, exponente) - 1;
+    }
+    // --- Fin del Cálculo TEM ---
   
     calculados.push({
       tickerLecap: bono.t,
@@ -354,13 +345,12 @@ const TablaSinteticosDL = ({ bonos, futuros, vencimientos }: {
       precioLetra: bono.p,
       precioFuturo: precioFuturo,
       tnaCalculada: tnaCalc,
+      temSintetica: temCalc, // <-- 💎 CAMBIO 4: Añadir al objeto
     });
   });
 
-  // 3. Ordenar por días al vencimiento
   calculados.sort((a, b) => a.dias - b.dias);
 
-  // 4. Renderizar la tabla
   return (
   <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
     <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 , textAlign: 'center'}}>
@@ -376,6 +366,7 @@ const TablaSinteticosDL = ({ bonos, futuros, vencimientos }: {
         <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Futuro (Hedge)</th>
         <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Precio Futuro</th>
         <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TNA (Sintética)</th>
+        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TEM (Sintética)</th> {/* <-- 💎 CAMBIO 5: Header añadido */}
       </tr>
       </thead>
       <tbody>
@@ -390,10 +381,14 @@ const TablaSinteticosDL = ({ bonos, futuros, vencimientos }: {
           <td style={{ padding: '0.75rem 1rem', fontWeight: 700, background: item.tnaCalculada && item.tnaCalculada > 0 ? '#f0fdf4' : '#fef2f2', color: item.tnaCalculada && item.tnaCalculada > 0 ? '#059669' : '#ef4444', textAlign: 'center' }}>
             {formatValue(item.tnaCalculada)}
           </td>
+          {/* --- 💎 CAMBIO 6: Celda añadida --- */}
+          <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', textAlign: 'center' }}>
+            {formatValue(item.temSintetica)}
+          </td>
         </tr>
         ))
       ) : (
-        <tr><td colSpan={6} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No hay bonos DL con vencimiento coincidente al de un futuro.</td></tr>
+        <tr><td colSpan={7} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No hay bonos DL con vencimiento coincidente al de un futuro.</td></tr> /* <-- 💎 CAMBIO 7: colSpan a 7 */
       )}
       </tbody>
     </table>
@@ -404,22 +399,19 @@ const TablaSinteticosDL = ({ bonos, futuros, vencimientos }: {
 
 
 // ==================================================================
-// COMPONENTE PRINCIPAL (LÓGICA DE 'useEffect' ACTUALIZADA)
+// COMPONENTE PRINCIPAL (Sin cambios)
 // ==================================================================
 export default function DollarLinkedPage() {
     const [bonosDL, setBonosDL] = useState<Bono[]>([]);
     const [estado, setEstado] = useState('Cargando...');
-    // const [menuAbierto, setMenuAbierto] = useState(false); // No se usa
     const [rangoDias, setRangoDias] = useState<[number, number]>([0, 0]);
     const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
     const segmentosDeEstaPagina = ['DL', 'ON DL'];
 
-    // --- 💎 ESTADOS AÑADIDOS ---
     const [datosSinteticos, setDatosSinteticos] = useState<Map<string, DlrfxData>>(new Map());
     const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
     const [vencimientosMap, setVencimientosMap] = useState<Map<string, string> | null>(null);
     
-    // --- 💎 FUNCIONES DE FETCH AÑADIDAS (fuera de useEffect) ---
     const fetchVencimientos = async (): Promise<Map<string, string> | null> => {
       const { data, error } = await supabase
         .from('vencimientos_rofex')
@@ -441,11 +433,10 @@ export default function DollarLinkedPage() {
         manana.setDate(manana.getDate() + 1);
         const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua';
         
-        // 1. Fetch Bonos (DL)
         const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosDeEstaPagina);
         if (bonosError) console.error("Error fetching bonds:", bonosError);
         else if (bonosData) {
-            setBonosDL(bonosData as Bono[]); // <-- USA setBonosDL
+            setBonosDL(bonosData as Bono[]);
             if (bonosData.length > 0) { 
               const maxUA = bonosData.reduce((latestUA, bono) => {
                   if (!bono.ua) return latestUA;
@@ -459,7 +450,6 @@ export default function DollarLinkedPage() {
             setEstado('Datos cargados'); 
         }
 
-        // 2. 💎 Fetch Tipo de Cambio (AÑADIDO)
         const { data: tipoDeCambioData, error: tipoDeCambioError } = await supabase
           .from('tipodecambio')
           .select('datos')
@@ -486,20 +476,17 @@ export default function DollarLinkedPage() {
       }
     };
 
-
-    // --- 💎 LÓGICA DE useEffect REEMPLAZADA POR LA VERSIÓN COMPLEJA ---
     useEffect(() => {
       let bondChannel: any = null;
       let dlrfxChannel: any = null;
       let tipoDeCambioChannel: any = null;
   
       const setupSuscripciones = (segmentosRequeridos: string[]) => {
-        // Suscripción 1: Bonos (DL)
         const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
-        bondChannel = supabase.channel('realtime-datosbonos-dl') // Canal renombrado para evitar conflictos
+        bondChannel = supabase.channel('realtime-datosbonos-dl')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
             const bonoActualizado = payload.new as Bono;
-            setBonosDL(prev => { // <-- USA setBonosDL
+            setBonosDL(prev => {
               const existe = prev.some(b => b.t === bonoActualizado.t);
               return existe ? prev.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...prev, bonoActualizado];
             });
@@ -507,8 +494,7 @@ export default function DollarLinkedPage() {
           })
           .subscribe();
   
-        // Suscripción 2: DLRFX (AÑADIDO)
-        dlrfxChannel = supabase.channel('realtime-dlrfx-dl') // Canal renombrado
+        dlrfxChannel = supabase.channel('realtime-dlrfx-dl')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'dlrfx2' }, payload => {
             const nuevoDato = payload.new as DlrfxData;
             if (nuevoDato && nuevoDato.t) {
@@ -521,8 +507,7 @@ export default function DollarLinkedPage() {
           })
           .subscribe();
   
-        // Suscripción 3: Tipo de Cambio (AÑADIDO)
-        tipoDeCambioChannel = supabase.channel('tipodecambio-changes-dl') // Canal renombrado
+        tipoDeCambioChannel = supabase.channel('tipodecambio-changes-dl')
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, (payload) => {
             if (payload.new && payload.new.datos) {
               setTipoDeCambio(payload.new.datos);
@@ -536,29 +521,21 @@ export default function DollarLinkedPage() {
   
       (async () => {
         const segmentosRequeridos = segmentosDeEstaPagina;
-  
-        // 1) Cargar vencimientos primero
         await fetchVencimientos();
-  
-        // 2) Cargar los demás recursos
-        await fetchInitialData();    // Carga Bonos (DL) y Tipo de Cambio
-        await fetchInitialDlrfx();   // Carga Futuros
-  
-        // 3) Setear suscripciones
+        await fetchInitialData();
+        await fetchInitialDlrfx();
         const channels = setupSuscripciones(segmentosRequeridos);
         bondChannel = channels.bondChannel;
         dlrfxChannel = channels.dlrfxChannel;
         tipoDeCambioChannel = channels.tipoDeCambioChannel;
   
-        // 4) Listener visibilidad
         const handleVisibilityChange = () => {
           if (document.hidden) {
             if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
             if (dlrfxChannel?.unsubscribe) dlrfxChannel.unsubscribe();
             if (tipoDeCambioChannel?.unsubscribe) tipoDeCambioChannel.unsubscribe();
           } else {
-            // Recargar datos y re-suscribir
-            fetchVencimientos(); // Re-fetch vencimientos por si acaso
+            fetchVencimientos();
             fetchInitialData();
             fetchInitialDlrfx();
             if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
@@ -573,7 +550,6 @@ export default function DollarLinkedPage() {
         };
         document.addEventListener("visibilitychange", handleVisibilityChange);
   
-        // Cleanup
         return () => {
           document.removeEventListener("visibilitychange", handleVisibilityChange);
           if (bondChannel) supabase.removeChannel(bondChannel);
@@ -582,9 +558,8 @@ export default function DollarLinkedPage() {
         };
       })();
   
-    }, []); // Dependencia vacía para que corra 1 vez
+    }, []);
       
-    // --- Lógica de filtrado (sin cambios, usa bonosDL) ---
     const maxDiasDelSegmento = (() => {
       if (bonosDL.length === 0) return 1000;
       const maxDias = Math.max(...bonosDL.map(b => b.dv));
@@ -612,7 +587,6 @@ export default function DollarLinkedPage() {
                   )}
                 </div>
 
-                {/* --- 💎 SECCIÓN DE InfoCards AÑADIDA 💎 --- */}
                 <div
                     style={{
                         display: 'flex',
@@ -626,7 +600,6 @@ export default function DollarLinkedPage() {
                     <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
                 </div>
                 
-                {/* --- Gráfico y Slider (sin cambios) --- */}
                 <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
                     <div style={{ padding: '0 10px', marginBottom: '20px' }}>
                         <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
@@ -648,24 +621,19 @@ export default function DollarLinkedPage() {
                     />
                 </div>
 
-                {/* --- 💎 LAYOUT DE TABLAS ACTUALIZADO 💎 --- */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '2rem' }}>
                     
                     <TablaGeneral titulo="Dollar Linked" datos={datosParaTabla} />
 
-                    {/* Renderizado condicional de las nuevas tablas */}
                     {vencimientosMap === null ? (
                       <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>Cargando vencimientos...</div>
                     ) : (
                       <>
-                        {/* 💎 TU NUEVA TABLA CON FÓRMULA 💎 */}
                         <TablaSinteticosDL 
                           bonos={datosParaTabla} 
                           futuros={datosSinteticos} 
                           vencimientos={vencimientosMap} 
                         />
-
-                        {/* 💎 TABLA DE FUTUROS VS SPOT 💎 */}
                         <TablaSinteticos 
                           datos={datosSinteticos} 
                           vencimientos={vencimientosMap} 
