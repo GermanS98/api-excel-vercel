@@ -460,7 +460,7 @@ export default function LecapsPage() {
    useEffect(() => {
       const fetchVencimientos = async () => {
       const { data, error } = await supabase
-        .from('vencimientos_roſex')
+        .from('vencimientos_rofex')
         .select('ticker, fecha_vto');
 
       if (error) {
