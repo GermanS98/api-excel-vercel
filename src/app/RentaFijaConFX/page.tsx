@@ -9,7 +9,7 @@ import { format, parseISO, parse, differenceInDays, endOfMonth, startOfDay } fro
 import { toZonedTime } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
 // ==================================================================
-// DEFINICIÓN DE TIPOS (ACTUALIZADA)
+// DEFINICIÓN DE TIPOS (Sin cambios)
 // ==================================================================
 type Bono = {
   t: string;     // ticker
@@ -25,14 +25,12 @@ type Bono = {
   mb: number | null; // mep_breakeven
   ua: string | null; // ultimo_anuncio
 };
-// --- NUEVO TIPO para datos de DLRFX ---
 type DlrfxData = {
   t: string;
   l: number | null;  // last price
   ld: number | null; // last date
   ts: number | null; // timestamp
 };
-// --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
 type TipoDeCambio = {
   valor_ccl: number;
   valor_mep: number;
@@ -40,7 +38,7 @@ type TipoDeCambio = {
 };
 
 // ==================================================================
-// CONFIGURACIONES GLOBALES
+// CONFIGURACIONES GLOBALES (Sin cambios)
 // ==================================================================
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,7 +46,7 @@ const supabase = createClient(
 );
 
 // ==================================================================
-// FUNCIONES AUXILIARES
+// FUNCIONES AUXILIARES (Sin cambios)
 // ==================================================================
 const formatValue = (value: number | null | undefined, unit: string = '%', decimals: number = 2) => {
     if (value === null || typeof value === 'undefined' || !isFinite(value)) return '-';
@@ -67,26 +65,20 @@ const formatDate = (dateString: string) => {
 const formatDateTime = (dateString: string | null) => {
   if (!dateString) return '-';
   try {
-    // parseISO convierte el string ISO (que viene de la base de datos) a un objeto Date
     const date = parseISO(dateString); 
-    // format() lo mostrará en la zona horaria local del usuario
     return format(date, 'dd/MM/yy HH:mm:ss'); 
   } catch (e) {
-    return 'Fecha inv.'; // En caso de que la fecha sea inválida
+    return 'Fecha inv.';
   }
 };
-// --- NUEVA FUNCIÓN AUXILIAR para formatear timestamp de Rofex ---
 const formatTimestamp = (ts: number | null) => {
   if (!ts) return '-';
   try {
-    // El timestamp de Rofex viene en milisegundos
     return format(new Date(ts), 'HH:mm:ss');
   } catch (e) {
     return '-';
   }
 };
-
-// --- 💎 AÑADIR ESTE COMPONENTE 💎 ---
 const InfoCard = ({ title, value }: { title: string, value: number | null | undefined }) => {
     const formattedValue = value 
       ? `$${value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
@@ -110,14 +102,13 @@ const InfoCard = ({ title, value }: { title: string, value: number | null | unde
   );
 };
 // ==================================================================
-// COMPONENTE TablaGeneral (Actualizado para nombres cortos)
+// COMPONENTE TablaGeneral (Sin cambios)
 // ==================================================================
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center'}}>
           {titulo}
         </h2>
-      {/* 💎 CAMBIO ANTERIOR: Se eliminó 'maxHeight' de este div 💎 */}
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ position: 'sticky', top: 0 }}>
@@ -141,11 +132,11 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatDate(item.vto)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.p,'',2)}</td> 
                   <td style={{ 
-                      padding: '0.75rem 1rem', 
-                      color: item.v >= 0 ? '#22c55e' : '#ef4444',
-                      fontWeight: 500,
-                      textAlign: 'center'
-                      }}>
+                        padding: '0.75rem 1rem', 
+                        color: item.v >= 0 ? '#22c55e' : '#ef4444',
+                        fontWeight: 500,
+                        textAlign: 'center'
+                        }}>
                     {formatValue(item.v)}
                   </td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tir)}</td>
@@ -163,53 +154,32 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
       </div>
     </div>
 );
-type SinteticoCalculado = {
-  ticker: string;
-  precio: number | null;
-  diasVto: number;
-  tna: number | null;
-  actualizado: string | null; // Usando 'ts'
-};
 
-// Función para parsear el ticker y obtener la fecha de vto
-// "DLR/OCT24" -> 31 de Octubre 2024
-// "DLR/SPOT" -> 0 días
+// --- Función getVtoInfo (Sin cambios) ---
 const getVtoInfo = (ticker: string,
   vencimientos: Map<string, string>
 ): { diasVto: number, vtoString: string } => {
   const hoy = startOfDay(new Date());
   const partes = ticker.split('/');
-  if (partes.length < 2 || partes[1] === 'SPOT') { // <--- CORREGIDO
+  if (partes.length < 2 || partes[1] === 'SPOT') {
     return { diasVto: 0, vtoString: 'SPOT' };
   }
   if (partes[1] === '24hs') {
     return { diasVto: 1, vtoString: '24hs' };
   }
-
-
-try {
-    const tickerMes = partes[1].toUpperCase(); // ej. "DIC25"
-   
+  try {
+    const tickerMes = partes[1].toUpperCase();
     let fechaVto: Date;
-    // 1. Buscamos el ticker en el mapa que vino de Supabase
     const fechaExactaStr = vencimientos.get(tickerMes); 
-
     if (fechaExactaStr) {
-      // 2. SI LO ENCONTRAMOS: Usamos la fecha exacta de la DB
-      // parseISO se usa para "YYYY-MM-DD"
       fechaVto = parseISO(fechaExactaStr);
     } else {
-      console.log("Busco:", tickerMes, "→ clave exacta existe?", vencimientos.has(tickerMes));
-      // 3. SI NO LO ENCONTRAMOS: Usamos la lógica vieja (fin de mes) como fallback
-      console.warn(`Vencimiento exacto para ${tickerMes} no encontrado en DB. Usando fin de mes.`);
+      console.warn(`Vencimiento exacto para ${tickerMes} no encontrado. Usando fin de mes.`);
       const fechaParseada = parse(tickerMes, 'MMMyy', new Date(), { locale: es });
       fechaVto = endOfMonth(fechaParseada);
     }
-   
-    // 4. El resto del cálculo es idéntico
     const dias = differenceInDays(fechaVto, hoy);
     return { diasVto: dias > 0 ? dias : 0, vtoString: format(fechaVto, 'dd/MM/yy') };
-
   } catch (e) {
       console.error(`Error parseando ticker: ${ticker}`, e);
       return { diasVto: -1, vtoString: 'Error' }; 
@@ -217,68 +187,41 @@ try {
 };
 
 // ==================================================================
-// --- 💎 COMPONENTE TablaSinteticos (Sin cambios) 💎 ---
+// COMPONENTE TablaSinteticos (Sin cambios)
 // ==================================================================
 const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData>, vencimientos: Map<string, string> }) => {
  
-  // --- PASO 5: CÁLCULOS MOVIDOS A useMemo ---
   const { spot, calculados } = useMemo(() => {
-    // 1. Encontrar el precio SPOT (Contado Inmediato)
     const spot = datos.get('DLR/SPOT');
     const precioSpot = spot?.l;
-
-    // 2. Calcular rendimientos
     const lista: SinteticoCalculado[] = [];
-   
-    // Si vencimientos aún no cargó (null) o está vacío (size 0), no calculamos
-    // Nota: El chequeo de 'null' se hace en el render de LecapsPage (Paso 4)
-    // pero dejamos este por robustez.
+    
     if (!vencimientos || vencimientos.size === 0) {
       return { spot, calculados: lista };
     }
 
     datos.forEach((valor, ticker) => {
-      // Filtramos:
-      // 1. El propio SPOT
-      // 2. Tickers sin precio (NULL)
-      // 3. Tickers que no son 'DLR/' (ej. ORO/NOV25)
-      // 4. Tickers que contienen espacios (ej. DLR/DIC25 A)
-      if (ticker === 'DLR/SPOT' || 
-          !valor.l || 
-          !ticker.startsWith('DLR/') ||
-          ticker.includes(' ')
-         ) {
+      if (ticker === 'DLR/SPOT' || !valor.l || !ticker.startsWith('DLR/') || ticker.includes(' ')) {
           return; 
         }
-
       const { diasVto } = getVtoInfo(ticker, vencimientos);
-      // Omitir CI, 24hs, o errores de parseo
       if (diasVto <= 1) return; 
-
       let tna: number | null = null;
       if (precioSpot && valor.l && diasVto > 0) {
-        // TNA = ((Precio_Futuro / Precio_Spot) - 1) * (365 / Dias_Vto)
         tna = ((valor.l / precioSpot) - 1) * (365 / diasVto);
       }
-
       lista.push({
         ticker: ticker,
         precio: valor.l,
         diasVto: diasVto,
         tna: tna,
-        actualizado: formatTimestamp(valor.ts), // Formatear el timestamp
+        actualizado: formatTimestamp(valor.ts),
       });
     });
-
-    // 3. Ordenar por días al vencimiento
     lista.sort((a, b) => a.diasVto - b.diasVto);
-
     return { spot, calculados: lista };
+  }, [datos, vencimientos]);
 
-  }, [datos, vencimientos]); // Dependencias del useMemo
-  // --- FIN PASO 5 ---
-
-  // 4. Renderizar la tabla (usando 'spot' y 'calculados' del useMemo)
   return (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden'}}>
       <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 , textAlign: 'center'}}>
@@ -296,7 +239,6 @@ const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData
             </tr>
           </thead>
           <tbody>
-            {/* Fila especial para el SPOT */}
             {spot ? (
               <tr style={{ borderTop: '1px solid #e5e7eb', background: '#f9fafb' }}>
                 <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#111827', textAlign: 'center'}}>{spot.t} (Spot)</td>
@@ -308,8 +250,6 @@ const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData
             ) : (
               <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>Cargando precio Spot (DLR/SPOT)...</td></tr>
             )}
-           
-            {/* Filas para los futuros calculados */}
             {calculados.length > 0 ? (
               calculados.map((item) => (
                 <tr key={item.ticker} style={{ borderTop: '1px solid #e5e7eb' }}>
@@ -334,113 +274,142 @@ const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData
 
 
 // ==================================================================
-// --- 💎 NUEVO COMPONENTE: TablaSinteticosUSD (Tasa en Dólares) 💎 ---
+// --- 💎 COMPONENTE TablaSinteticosUSD (ACTUALIZADO CON BOTONES) 💎 ---
 // ==================================================================
 type SinteticoUSD = {
   tickerLecap: string;
   tickerFuturo: string;
   dias: number;
   rdArs: number;
-  tnaUsd: number | null; // Reutilizaremos este campo para pasar el RD
+  tnaUsd: number | null;
   rdUsd: number | null;
   tci: number | null;
 };
 
-// ==================================================================
-// 💎 CAMBIO 1: Añadir 'vencimientos' a las props
-// ==================================================================
-const TablaSinteticosUSD = ({ bonos, futuros, vencimientos }: { 
+// --- 💎 CAMBIO 1: AÑADIR NUEVAS PROPS ---
+const TablaSinteticosUSD = ({ bonos, futuros, vencimientos, tipoCalculo, setTipoCalculo, precioMEP }: { 
   bonos: Bono[], 
   futuros: Map<string, DlrfxData>,
-  vencimientos: Map<string, string> // <-- AÑADIDO
+  vencimientos: Map<string, string>,
+  tipoCalculo: 'SPOT' | 'MEP', // <-- Prop de estado
+  setTipoCalculo: (tipo: 'SPOT' | 'MEP') => void, // <-- Prop de setter
+  precioMEP: number | null | undefined // <-- Prop de precio MEP
 }) => {
  
-  // 1. Encontrar el precio SPOT (Contado Inmediato)
+  // --- 💎 CAMBIO 2: LÓGICA DE SELECCIÓN DE PRECIO BASE ---
   const spot = futuros.get('DLR/SPOT');
   const precioSpot = spot?.l;
+
+  // Determinar el precio base según el botón seleccionado
+  const precioBase = tipoCalculo === 'SPOT' ? precioSpot : precioMEP;
+  const nombreBase = tipoCalculo === 'SPOT' ? 'Spot' : 'MEP';
+  // --- Fin Cambio 2 ---
 
   // 2. Calcular rendimientos
   const calculados: SinteticoUSD[] = [];
  
   bonos.forEach((bono) => {
-    // Filtro 1: Datos básicos del bono (RD, días, vto)
+    // ... (Filtros 1, 2, 3 sin cambios) ...
     if (bono.RD === null || bono.RD === undefined || !bono.dv || bono.dv <= 0 || !bono.vto) {
         return;
     }
-
-    // Buscar el futuro correspondiente
     let tickerFuturo = '';
-    let mesTicker = ''; // <-- Necesito esta variable
+    let mesTicker = '';
     try {
       const vtoDate = parseISO(bono.vto);
-      mesTicker = format(vtoDate, 'MMMyy', { locale: es }).toUpperCase(); // ej: "ENE26"
-      tickerFuturo = `DLR/${mesTicker}`; // ej: "DLR/ENE26"
+      mesTicker = format(vtoDate, 'MMMyy', { locale: es }).toUpperCase();
+      tickerFuturo = `DLR/${mesTicker}`;
     } catch(e) {
-      return; // Fecha de bono inválida
+      return;
     }
-
-    // Filtro 2: ¿Existe el futuro y tiene precio?
     const futuro = futuros.get(tickerFuturo);
     const precioFuturo = futuro?.l;
     if (!futuro || !precioFuturo || precioFuturo <= 0) {
-      // No hay futuro con ese nombre o no tiene precio
       return;
     }
-
-    // ==================================================================
-    // 💎 CAMBIO 2: Filtro de coincidencia de fecha EXACTA
-    // ==================================================================
-    // bono.vto (de la DB de bonos) ej: "2026-01-16"
-    // vencimientos.get(mesTicker) (de la DB de rofex) ej: "2026-01-30"
-    
     const vtoFuturoExacta = vencimientos.get(mesTicker); 
-    
     if (!vtoFuturoExacta || bono.vto !== vtoFuturoExacta) {
-        // Si no encontramos la fecha de vto del futuro en el mapa, o
-        // si la fecha de vto del bono (S16E6) NO es igual a la vto del futuro (DLR/ENE26)
-        // entonces, no incluir esta fila.
         return;
     }
-    // --- 💎 FIN CAMBIO 2 💎 ---
 
-
-    // Si pasa todos los filtros, calcular...
+    // --- 💎 CAMBIO 3: USAR precioBase EN EL CÁLCULO ---
     let tnaUsd: number | null = null;
     let rdUsd: number | null = null;
     let tci: number | null = null;
     
-    // Ya chequeamos precioFuturo, así que solo falta precioSpot
-    if (precioSpot && bono.dv > 0) {
+    // Usar el 'precioBase' seleccionado (Spot o MEP)
+    if (precioBase && precioFuturo && precioFuturo > 0 && bono.dv > 0) {
       const rd_lecap = bono.RD; 
       const dias_lecap = bono.dv;
       const te_lecap_factor = (1 + rd_lecap);
-      const te_deval_factor = (precioFuturo / precioSpot);
+      
+      // La Tasa de devaluación ahora usa el precioBase
+      const te_deval_factor = (precioFuturo / precioBase); // <-- ÚNICO CAMBIO AQUÍ
+      
       const te_usd = (te_lecap_factor / te_deval_factor) - 1;
       rdUsd = te_usd;
       tnaUsd = te_usd * (365 / dias_lecap);
       tci = precioFuturo / te_lecap_factor;
     }
-  
+    // --- Fin Cambio 3 ---
+ 
     calculados.push({
       tickerLecap: bono.t,
       tickerFuturo: tickerFuturo,
       dias: bono.dv,
-      rdArs: bono.RD,    // <-- Pasamos el RD
+      rdArs: bono.RD,
       rdUsd: rdUsd,
       tnaUsd: tnaUsd,
       tci: tci,
     });
   });
 
-  // 3. Ordenar por días al vencimiento
   calculados.sort((a, b) => a.dias - b.dias);
 
   // 4. Renderizar la tabla
   return (
   <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 , textAlign: 'center'}}>
+    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '0', margin: 0 , textAlign: 'center'}}>
     Sintético Tasa en Dólares (Lecap + Venta Futuro)
     </h2>
+
+    {/* --- 💎 CAMBIO 4: BOTONES DE TOGGLE AÑADIDOS --- */}
+    <div style={{ padding: '0 1rem 1rem 1rem', background: '#f9fafb', display: 'flex', justifyContent: 'center', gap: '1rem', borderBottom: '1px solid #e5e7eb' }}>
+        <span style={{fontWeight: 600, alignSelf: 'center'}}>Calcular Tasa USD vs:</span>
+        <button
+            onClick={() => setTipoCalculo('SPOT')}
+            style={{
+                padding: '0.5rem 1rem',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                background: tipoCalculo === 'SPOT' ? '#021751' : '#e5e7eb',
+                color: tipoCalculo === 'SPOT' ? 'white' : '#374151',
+                fontWeight: tipoCalculo === 'SPOT' ? 700 : 400
+            }}
+        >
+            Dólar Spot
+        </button>
+        <button
+            onClick={() => setTipoCalculo('MEP')}
+            disabled={!precioMEP} // Deshabilitar si MEP no ha cargado
+            style={{
+                padding: '0.5rem 1rem',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: !precioMEP ? 'not-allowed' : 'pointer',
+                background: tipoCalculo === 'MEP' ? '#021751' : '#e5e7eb',
+                color: tipoCalculo === 'MEP' ? 'white' : '#374151',
+                fontWeight: tipoCalculo === 'MEP' ? 700 : 400,
+                opacity: !precioMEP ? 0.6 : 1
+            }}
+        >
+            Dólar MEP
+        </button>
+    </div>
+    {/* --- Fin Cambio 4 --- */}
+
+
     <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead style={{ position: 'sticky', top: 0 }}>
@@ -454,9 +423,11 @@ const TablaSinteticosUSD = ({ bonos, futuros, vencimientos }: {
       </tr>
       </thead>
       <tbody>
-      {!precioSpot && (
-        <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>Cargando precio Spot (DLR/SPOT) para calcular...</td></tr>
+      {/* --- 💎 CAMBIO 5: MENSAJE DE CARGA DINÁMICO --- */}
+      {!precioBase && (
+        <tr><td colSpan={6} style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>Cargando precio {nombreBase} para calcular...</td></tr>
       )}
+      {/* --- Fin Cambio 5 --- */}
       {calculados.length > 0 ? (
         calculados.map((item) => (
         <tr key={item.tickerLecap} style={{ borderTop: '1px solid #e5e7eb' }}>
@@ -471,7 +442,7 @@ const TablaSinteticosUSD = ({ bonos, futuros, vencimientos }: {
         </tr>
         ))
       ) : (
-        <tr><td colSpan={5} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No hay letras con vencimiento coincidente al de un futuro.</td></tr>
+        <tr><td colSpan={6} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No hay letras con vencimiento coincidente al de un futuro.</td></tr>
       )}
       </tbody>
     </table>
@@ -482,7 +453,7 @@ const TablaSinteticosUSD = ({ bonos, futuros, vencimientos }: {
 
 
 // ==================================================================
-// COMPONENTE PRINCIPAL DE LA PÁGINA (ACTUALIZADO)
+// COMPONENTE PRINCIPAL DE LA PÁGINA (ACTUALIZADO CON NUEVO ESTADO)
 // ==================================================================
 export default function LecapsPage() {
   const [bonosLecaps, setBonosLecaps] = useState<Bono[]>([]);
@@ -491,13 +462,14 @@ export default function LecapsPage() {
   const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
   const [datosSinteticos, setDatosSinteticos] = useState<Map<string, DlrfxData>>(new Map());
   const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
-  // --- PASO 1 ---
   const [vencimientosMap, setVencimientosMap] = useState<Map<string, string> | null>(null);
   const segmentosDeEstaPagina = ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'];
-  const manana = new Date();
-  manana.setDate(manana.getDate() + 1)
+  
+  // --- 💎 CAMBIO 6: AÑADIR NUEVO ESTADO PARA EL TOGGLE ---
+  const [tipoCalculoTasa, setTipoCalculoTasa] = useState<'SPOT' | 'MEP'>('SPOT');
+  // --- Fin Cambio 6 ---
 
-  // --- PASO 2: Nueva función fetchVencimientos (movida fuera de useEffect) ---
+  // --- Funciones de Fetch (sin cambios) ---
   const fetchVencimientos = async (): Promise<Map<string, string> | null> => {
     const { data, error } = await supabase
       .from('vencimientos_rofex')
@@ -516,14 +488,10 @@ export default function LecapsPage() {
         newMap.set(String(v.ticker).toUpperCase(), v.fecha_vto);
       }
     });
-    console.log("Mapa de Vencimientos Creado:", newMap);
     setVencimientosMap(newMap);
     return newMap;
   };
-
-  // --- PASO 3: Funciones movidas fuera de useEffect para que el IIFE pueda llamarlas ---
   const fetchInitialData = async () => {
-    // ... (código de fetch bonos sin cambios) ...
     const manana = new Date();
     manana.setDate(manana.getDate() + 1);
     const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua, mb';
@@ -556,9 +524,7 @@ export default function LecapsPage() {
         }
   }
   };
-
   const fetchInitialDlrfx = async () => {
-    // ... (código de fetch dlrfx sin cambios) ...
     const { data, error } = await supabase.from('dlrfx2').select('t, l, ld, ts');
     if (error) {
       console.error("Error fetching dlrfx:", error);
@@ -570,8 +536,8 @@ export default function LecapsPage() {
       setDatosSinteticos(initialMap);
     }
   };
-
-  // --- PASO 3: Lógica de useEffect Reordenada ---
+  
+  // --- useEffect (sin cambios) ---
   useEffect(() => {
     let bondChannel: any = null;
     let dlrfxChannel: any = null;
@@ -618,33 +584,26 @@ export default function LecapsPage() {
     (async () => {
       const segmentosRequeridos = segmentosDeEstaPagina;
  
-      // 1) Cargar vencimientos y esperar que termine
       const map = await fetchVencimientos();
  
-      // Si falló la carga de vencimientos, opcional: seguir o abortar.
       if (!map) {
         console.warn("No se pudieron cargar vencimientos; la UI seguirá intentando.");
-        // Podés elegir return aquí si preferís no continuar sin vencimientos.
       }
  
-      // 2) Una vez que tenemos vencimientos, cargar los demás recursos (bonos, dlrfx, tipo de cambio)
-      await fetchInitialData();    // tu función existente que hace setBonosLecaps()
-      await fetchInitialDlrfx();   // setDatosSinteticos(...)
+      await fetchInitialData();   
+      await fetchInitialDlrfx();  
  
-      // 3) Luego setear suscripciones (ahora que vencimientos están disponibles)
       const channels = setupSuscripciones(segmentosRequeridos);
       bondChannel = channels.bondChannel;
       dlrfxChannel = channels.dlrfxChannel;
       tipoDeCambioChannel = channels.tipoDeCambioChannel;
  
-      // 4) Listener visibilidad (igual que antes)
       const handleVisibilityChange = () => {
         if (document.hidden) {
           if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
           if (dlrfxChannel?.unsubscribe) dlrfxChannel.unsubscribe();
           if (tipoDeCambioChannel?.unsubscribe) tipoDeCambioChannel.unsubscribe();
         } else {
-          // recargar datos y re-suscribir
           fetchInitialData();
           fetchInitialDlrfx();
           if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
@@ -657,7 +616,6 @@ export default function LecapsPage() {
       };
       document.addEventListener("visibilitychange", handleVisibilityChange);
  
-      // cleanup
       return () => {
         document.removeEventListener("visibilitychange", handleVisibilityChange);
         if (bondChannel) supabase.removeChannel(bondChannel);
@@ -666,11 +624,10 @@ export default function LecapsPage() {
       };
     })();
  
-    // nota: el cleanup interior se maneja arriba en el return del IIFE
   }, []);
-    // --- FIN PASO 3 ---
- 
-    // ... (código de 'maxDiasDelSegmento' y 'useEffect' para el slider sin cambios) ...
+
+    
+  // --- Lógica de filtrado (sin cambios) ---
     const maxDiasDelSegmento = (() => {
         if (bonosLecaps.length === 0) return 1000;
         const maxDias = Math.max(...bonosLecaps.map(b => b.dv));
@@ -687,7 +644,6 @@ export default function LecapsPage() {
     return (
         <Layout>
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-                {/* ... (código del título y estado sin cambios) ... */}
                 <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Renta fija Ars</h1>
                 <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                     {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
@@ -698,7 +654,6 @@ export default function LecapsPage() {
                     <span>Estado: <strong>{estado}</strong></span>
                     )}
                 </div>
-                            {/* --- CONTENEDOR PARA LAS TARJETAS DE TIPO DE CAMBIO --- */}
                 <div
                     style={{
                         display: 'flex',
@@ -711,8 +666,7 @@ export default function LecapsPage() {
                     <InfoCard title="Dólar MEP" value={tipoDeCambio?.valor_mep} />
                     <InfoCard title="Dólar CCL" value={tipoDeCambio?.valor_ccl} />
                 </div>
-               
-                {/* ... (código del slider y gráfico sin cambios) ... */}
+                
                 <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
                   <div style={{ padding: '0 10px', marginBottom: '20px' }}>
                       <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
@@ -726,32 +680,32 @@ export default function LecapsPage() {
                     <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
                   </div>
                 </div>
-               
+                
                 <CurvaRendimientoChart 
                   data={datosParaGrafico} 
                   segmentoActivo="LECAPs y Similares" 
                   xAxisKey="dv"
                 />
             </div>
-               
-                {/* --- LAYOUT ACTUALIZADO --- */}
+                
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '2rem' }}>
                     <TablaGeneral titulo="Renta fija" datos={datosParaTabla} />
 
-                    {/* ==================================================================
-                      💎 CAMBIO 3: Mover las dos tablas que dependen de 
-                         vencimientosMap dentro del renderizado condicional 
-                    ==================================================================
-                    */}
                     {vencimientosMap === null ? (
                       <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>Cargando vencimientos...</div>
                     ) : (
                       <>
+                        {/* --- 💎 CAMBIO 7: PASAR LAS NUEVAS PROPS 💎 --- */}
                         <TablaSinteticosUSD 
                           bonos={datosParaTabla} 
                           futuros={datosSinteticos} 
                           vencimientos={vencimientosMap} 
+                          tipoCalculo={tipoCalculoTasa} // <-- Prop de estado
+                          setTipoCalculo={setTipoCalculoTasa} // <-- Prop de setter
+                          precioMEP={tipoDeCambio?.valor_mep} // <-- Prop de precio MEP
                         />
+                        {/* --- Fin Cambio 7 --- */}
+                        
                         <TablaSinteticos 
                           datos={datosSinteticos} 
                           vencimientos={vencimientosMap} 
