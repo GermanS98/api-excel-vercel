@@ -2,14 +2,14 @@
 import Layout from '@/components/layout/Layout';
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
+import CurvaRendimentoChart from '@/components/ui/CurvaRendimentoChart';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import { format, parseISO, parse, differenceInDays, endOfMonth, startOfDay } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { es } from 'date-fns/locale';
 // ==================================================================
-// DEFINICIÓN DE TIPOS (Sin cambios)
+// DEFINICIÓN DE TIPOS (ACTUALIZADA)
 // ==================================================================
 type Bono = {
   t: string;     // ticker
@@ -25,12 +25,14 @@ type Bono = {
   mb: number | null; // mep_breakeven
   ua: string | null; // ultimo_anuncio
 };
+// --- TIPO para datos de DLRFX ---
 type DlrfxData = {
   t: string;
   l: number | null;  // last price
   ld: number | null; // last date
   ts: number | null; // timestamp
 };
+// --- TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
 type TipoDeCambio = {
   valor_ccl: number;
   valor_mep: number;
@@ -38,7 +40,19 @@ type TipoDeCambio = {
 };
 
 // ==================================================================
-// CONFIGURACIONES GLOBALES (Sin cambios)
+// 💎 💎 CORRECCIÓN: TIPO FALTANTE AÑADIDO 💎 💎
+// ==================================================================
+type SinteticoCalculado = {
+  ticker: string;
+  precio: number | null;
+  diasVto: number;
+  tna: number | null;
+  actualizado: string | null; // Usando 'ts'
+};
+// ==================================================================
+
+// ==================================================================
+// CONFIGURACIONES GLOBALES
 // ==================================================================
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,7 +60,7 @@ const supabase = createClient(
 );
 
 // ==================================================================
-// FUNCIONES AUXILIARES (Sin cambios)
+// FUNCIONES AUXILIARES
 // ==================================================================
 const formatValue = (value: number | null | undefined, unit: string = '%', decimals: number = 2) => {
     if (value === null || typeof value === 'undefined' || !isFinite(value)) return '-';
@@ -194,6 +208,7 @@ const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData
   const { spot, calculados } = useMemo(() => {
     const spot = datos.get('DLR/SPOT');
     const precioSpot = spot?.l;
+    // Esta es la línea que fallaba (197), ahora 'SinteticoCalculado' está definido
     const lista: SinteticoCalculado[] = [];
     
     if (!vencimientos || vencimientos.size === 0) {
@@ -274,7 +289,7 @@ const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData
 
 
 // ==================================================================
-// --- 💎 COMPONENTE TablaSinteticosUSD (ACTUALIZADO CON BOTONES) 💎 ---
+// COMPONENTE TablaSinteticosUSD (Con botones)
 // ==================================================================
 type SinteticoUSD = {
   tickerLecap: string;
@@ -286,30 +301,24 @@ type SinteticoUSD = {
   tci: number | null;
 };
 
-// --- 💎 CAMBIO 1: AÑADIR NUEVAS PROPS ---
 const TablaSinteticosUSD = ({ bonos, futuros, vencimientos, tipoCalculo, setTipoCalculo, precioMEP }: { 
   bonos: Bono[], 
   futuros: Map<string, DlrfxData>,
   vencimientos: Map<string, string>,
-  tipoCalculo: 'SPOT' | 'MEP', // <-- Prop de estado
-  setTipoCalculo: (tipo: 'SPOT' | 'MEP') => void, // <-- Prop de setter
-  precioMEP: number | null | undefined // <-- Prop de precio MEP
+  tipoCalculo: 'SPOT' | 'MEP',
+  setTipoCalculo: (tipo: 'SPOT' | 'MEP') => void,
+  precioMEP: number | null | undefined
 }) => {
  
-  // --- 💎 CAMBIO 2: LÓGICA DE SELECCIÓN DE PRECIO BASE ---
   const spot = futuros.get('DLR/SPOT');
   const precioSpot = spot?.l;
 
-  // Determinar el precio base según el botón seleccionado
   const precioBase = tipoCalculo === 'SPOT' ? precioSpot : precioMEP;
   const nombreBase = tipoCalculo === 'SPOT' ? 'Spot' : 'MEP';
-  // --- Fin Cambio 2 ---
 
-  // 2. Calcular rendimientos
   const calculados: SinteticoUSD[] = [];
  
   bonos.forEach((bono) => {
-    // ... (Filtros 1, 2, 3 sin cambios) ...
     if (bono.RD === null || bono.RD === undefined || !bono.dv || bono.dv <= 0 || !bono.vto) {
         return;
     }
@@ -332,26 +341,20 @@ const TablaSinteticosUSD = ({ bonos, futuros, vencimientos, tipoCalculo, setTipo
         return;
     }
 
-    // --- 💎 CAMBIO 3: USAR precioBase EN EL CÁLCULO ---
     let tnaUsd: number | null = null;
     let rdUsd: number | null = null;
     let tci: number | null = null;
     
-    // Usar el 'precioBase' seleccionado (Spot o MEP)
     if (precioBase && precioFuturo && precioFuturo > 0 && bono.dv > 0) {
       const rd_lecap = bono.RD; 
       const dias_lecap = bono.dv;
       const te_lecap_factor = (1 + rd_lecap);
-      
-      // La Tasa de devaluación ahora usa el precioBase
-      const te_deval_factor = (precioFuturo / precioBase); // <-- ÚNICO CAMBIO AQUÍ
-      
+      const te_deval_factor = (precioFuturo / precioBase);
       const te_usd = (te_lecap_factor / te_deval_factor) - 1;
       rdUsd = te_usd;
       tnaUsd = te_usd * (365 / dias_lecap);
       tci = precioFuturo / te_lecap_factor;
     }
-    // --- Fin Cambio 3 ---
  
     calculados.push({
       tickerLecap: bono.t,
@@ -366,14 +369,12 @@ const TablaSinteticosUSD = ({ bonos, futuros, vencimientos, tipoCalculo, setTipo
 
   calculados.sort((a, b) => a.dias - b.dias);
 
-  // 4. Renderizar la tabla
   return (
   <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
     <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '0', margin: 0 , textAlign: 'center'}}>
     Sintético Tasa en Dólares (Lecap + Venta Futuro)
     </h2>
 
-    {/* --- 💎 CAMBIO 4: BOTONES DE TOGGLE AÑADIDOS --- */}
     <div style={{ padding: '0 1rem 1rem 1rem', background: '#f9fafb', display: 'flex', justifyContent: 'center', gap: '1rem', borderBottom: '1px solid #e5e7eb' }}>
         <span style={{fontWeight: 600, alignSelf: 'center'}}>Calcular Tasa USD vs:</span>
         <button
@@ -392,7 +393,7 @@ const TablaSinteticosUSD = ({ bonos, futuros, vencimientos, tipoCalculo, setTipo
         </button>
         <button
             onClick={() => setTipoCalculo('MEP')}
-            disabled={!precioMEP} // Deshabilitar si MEP no ha cargado
+            disabled={!precioMEP}
             style={{
                 padding: '0.5rem 1rem',
                 border: 'none',
@@ -407,7 +408,6 @@ const TablaSinteticosUSD = ({ bonos, futuros, vencimientos, tipoCalculo, setTipo
             Dólar MEP
         </button>
     </div>
-    {/* --- Fin Cambio 4 --- */}
 
 
     <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
@@ -423,11 +423,9 @@ const TablaSinteticosUSD = ({ bonos, futuros, vencimientos, tipoCalculo, setTipo
       </tr>
       </thead>
       <tbody>
-      {/* --- 💎 CAMBIO 5: MENSAJE DE CARGA DINÁMICO --- */}
       {!precioBase && (
         <tr><td colSpan={6} style={{ padding: '1rem', textAlign: 'center', color: '#ef4444' }}>Cargando precio {nombreBase} para calcular...</td></tr>
       )}
-      {/* --- Fin Cambio 5 --- */}
       {calculados.length > 0 ? (
         calculados.map((item) => (
         <tr key={item.tickerLecap} style={{ borderTop: '1px solid #e5e7eb' }}>
@@ -453,7 +451,7 @@ const TablaSinteticosUSD = ({ bonos, futuros, vencimientos, tipoCalculo, setTipo
 
 
 // ==================================================================
-// COMPONENTE PRINCIPAL DE LA PÁGINA (ACTUALIZADO CON NUEVO ESTADO)
+// COMPONENTE PRINCIPAL DE LA PÁGINA (Sin cambios)
 // ==================================================================
 export default function LecapsPage() {
   const [bonosLecaps, setBonosLecaps] = useState<Bono[]>([]);
@@ -465,11 +463,8 @@ export default function LecapsPage() {
   const [vencimientosMap, setVencimientosMap] = useState<Map<string, string> | null>(null);
   const segmentosDeEstaPagina = ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'];
   
-  // --- 💎 CAMBIO 6: AÑADIR NUEVO ESTADO PARA EL TOGGLE ---
   const [tipoCalculoTasa, setTipoCalculoTasa] = useState<'SPOT' | 'MEP'>('SPOT');
-  // --- Fin Cambio 6 ---
 
-  // --- Funciones de Fetch (sin cambios) ---
   const fetchVencimientos = async (): Promise<Map<string, string> | null> => {
     const { data, error } = await supabase
       .from('vencimientos_rofex')
@@ -537,7 +532,6 @@ export default function LecapsPage() {
     }
   };
   
-  // --- useEffect (sin cambios) ---
   useEffect(() => {
     let bondChannel: any = null;
     let dlrfxChannel: any = null;
@@ -627,7 +621,6 @@ export default function LecapsPage() {
   }, []);
 
     
-  // --- Lógica de filtrado (sin cambios) ---
     const maxDiasDelSegmento = (() => {
         if (bonosLecaps.length === 0) return 1000;
         const maxDias = Math.max(...bonosLecaps.map(b => b.dv));
@@ -681,7 +674,7 @@ export default function LecapsPage() {
                   </div>
                 </div>
                 
-                <CurvaRendimientoChart 
+                <CurvaRendimentoChart 
                   data={datosParaGrafico} 
                   segmentoActivo="LECAPs y Similares" 
                   xAxisKey="dv"
@@ -695,17 +688,14 @@ export default function LecapsPage() {
                       <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>Cargando vencimientos...</div>
                     ) : (
                       <>
-                        {/* --- 💎 CAMBIO 7: PASAR LAS NUEVAS PROPS 💎 --- */}
                         <TablaSinteticosUSD 
                           bonos={datosParaTabla} 
                           futuros={datosSinteticos} 
                           vencimientos={vencimientosMap} 
-                          tipoCalculo={tipoCalculoTasa} // <-- Prop de estado
-                          setTipoCalculo={setTipoCalculoTasa} // <-- Prop de setter
-                          precioMEP={tipoDeCambio?.valor_mep} // <-- Prop de precio MEP
+                          tipoCalculo={tipoCalculoTasa}
+                          setTipoCalculo={setTipoCalculoTasa}
+                          precioMEP={tipoDeCambio?.valor_mep}
                         />
-                        {/* --- Fin Cambio 7 --- */}
-                        
                         <TablaSinteticos 
                           datos={datosSinteticos} 
                           vencimientos={vencimientosMap} 
