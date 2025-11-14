@@ -2,7 +2,7 @@
 import Layout from '@/components/layout/Layout';
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import CurvaRendimentoChart from '@/components/ui/CurvaRendimentoChart';
+import CurvaRendimentoChart from '@/components/ui/CurvaRendimientoChart';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import { format, parseISO, parse, differenceInDays, endOfMonth, startOfDay } from 'date-fns';
