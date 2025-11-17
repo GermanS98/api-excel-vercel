@@ -219,6 +219,9 @@ const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData
       if (ticker === 'DLR/SPOT' || !valor.l || !ticker.startsWith('DLR/') || ticker.includes(' ')) {
           return; 
         }
+      if (ticker.split('/').length > 2) {
+          return;
+      }
       const { diasVto } = getVtoInfo(ticker, vencimientos);
       if (diasVto <= 1) return; 
       let tna: number | null = null;
@@ -331,10 +334,6 @@ const TablaSinteticosUSD = ({ bonos, futuros, vencimientos, tipoCalculo, setTipo
     } catch(e) {
       return;
     }
-    if (tickerFuturo.split('/').length > 2) {
-        // Excluye formatos como DLR/NOV25/DIC25 (más de dos partes)
-        return;
-    }
     const futuro = futuros.get(tickerFuturo);
     const precioFuturo = futuro?.l;
     if (!futuro || !precioFuturo || precioFuturo <= 0) {
