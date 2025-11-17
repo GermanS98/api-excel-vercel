@@ -331,6 +331,10 @@ const TablaSinteticosUSD = ({ bonos, futuros, vencimientos, tipoCalculo, setTipo
     } catch(e) {
       return;
     }
+    if (tickerFuturo.split('/').length > 2) {
+        // Excluye formatos como DLR/NOV25/DIC25 (más de dos partes)
+        return;
+    }
     const futuro = futuros.get(tickerFuturo);
     const precioFuturo = futuro?.l;
     if (!futuro || !precioFuturo || precioFuturo <= 0) {
