@@ -22,6 +22,7 @@ type Bono = {
   mb: number | null;
   RD: number | null; // Nuevo campo
   ua: string | null; // Nuevo campo
+  pc: boolean; // Nuevo campo para indicar si el precio es del Cierre Anterior
 };
 
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
@@ -92,7 +93,17 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.p,'',2)}</td>
+                                                      <td 
+                    style={{ 
+                        padding: '0.75rem 1rem', 
+                        color: '#4b5563', 
+                        textAlign: 'center',
+                        // Si item.pc es TRUE (usó cierre ant.), pinta de celeste claro (#e0f7fa)
+                        backgroundColor: item.pc ? '#e0f7fa' : 'transparent', 
+                    }}
+                  >
+                    {formatValue(item.p,'',2)}
+                  </td>
                   <td style={{ 
                                 padding: '0.75rem 1rem', 
                                 color: item.v >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
@@ -134,7 +145,7 @@ export default function LecapsPage() {
         const fetchInitialData = async () => {
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
-            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua,mb';
+            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua,mb, pc';
             
             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
             if (bonosError) console.error("Error fetching bonds:", bonosError);
@@ -247,6 +258,10 @@ export default function LecapsPage() {
                           xAxisKey="dv" // <-- Añadir esta línea
                         />                        
                     </div>
+                    <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#e0f7fa', borderLeft: '5px solid #00bcd4', borderRadius: '4px', color: '#006064', fontWeight: 600, fontSize: '0.9rem' }}>
+                      <span style={{ marginRight: '8px' }}>ⓘ</span>
+                      El fondo <strong>celeste</strong> en el precio indica que se utilizó el <strong>Cierre Anterior</strong> en lugar del Último Precio.
+                   </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
                         <TablaGeneral titulo="Instrumentos CER" datos={datosParaTabla} />
