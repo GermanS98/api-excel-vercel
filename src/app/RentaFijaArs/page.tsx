@@ -23,6 +23,7 @@ type Bono = {
   RD: number | null;
   mb: number | null; // mep_breakeven
   ua: string | null; // ultimo_anuncio
+  pc: boolean; // indica si el precio es Cierre Anterior
 };
 
 // ==================================================================
@@ -90,7 +91,17 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                 <tr key={item.t} style={{ borderTop: '1px solid #e5e7eb' }}>
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.p,'',2)}</td> 
+                  <td 
+                    style={{ 
+                        padding: '0.75rem 1rem', 
+                        color: '#4b5563', 
+                        textAlign: 'center',
+                        // Si item.pc es TRUE (usó cierre ant.), pinta de celeste claro (#e0f7fa)
+                        backgroundColor: item.pc ? '#e0f7fa' : 'transparent', 
+                    }}
+                  >
+                    {formatValue(item.p,'',2)}
+                  </td>
                   <td style={{ 
                       padding: '0.75rem 1rem', 
                       color: item.v >= 0 ? '#22c55e' : '#ef4444',
@@ -130,7 +141,7 @@ export default function LecapsPage() {
         const fetchInitialData = async () => {
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
-            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua, mb';
+            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua, mb, pc';
             
             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
             if (bonosError) console.error("Error fetching bonds:", bonosError);
@@ -240,7 +251,10 @@ export default function LecapsPage() {
                         xAxisKey="dv"
                     />
                 </div>
-
+                <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#e0f7fa', borderLeft: '5px solid #00bcd4', borderRadius: '4px', color: '#006064', fontWeight: 600, fontSize: '0.9rem' }}>
+                    <span style={{ marginRight: '8px' }}>ⓘ</span>
+                    El fondo <strong>celeste</strong> en el precio indica que se utilizó el <strong>Cierre Anterior</strong> en lugar del Último Precio.
+                </div>     
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
                     <TablaGeneral titulo="Renta fija" datos={datosParaTabla} />
                 </div>
