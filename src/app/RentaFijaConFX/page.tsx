@@ -24,6 +24,7 @@ type Bono = {
   RD: number | null;
   mb: number | null; // mep_breakeven
   ua: string | null; // ultimo_anuncio
+  pc: boolean;
 };
 // --- TIPO para datos de DLRFX ---
 type DlrfxData = {
@@ -144,7 +145,17 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                 <tr key={item.t} style={{ borderTop: '1px solid #e5e7eb' }}>
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', textAlign: 'center' }}>{item.t}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatDate(item.vto)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.p,'',2)}</td> 
+                  <td 
+                    style={{ 
+                        padding: '0.75rem 1rem', 
+                        color: '#4b5563', 
+                        textAlign: 'center',
+                        // Si item.pc es TRUE (usó cierre ant.), pinta de celeste claro (#e0f7fa)
+                        backgroundColor: item.pc ? '#e0f7fa' : 'transparent', 
+                    }}
+                  >
+                    {formatValue(item.p,'',2)}
+                  </td>
                   <td style={{ 
                         padding: '0.75rem 1rem', 
                         color: item.v >= 0 ? '#22c55e' : '#ef4444',
