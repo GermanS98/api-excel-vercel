@@ -93,7 +93,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                 <tr key={item.t} style={{ borderTop: '1px solid #e5e7eb' }}>
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                   <td 
+                  <td 
                     style={{ 
                         padding: '0.75rem 1rem', 
                         color: '#4b5563', 
@@ -102,10 +102,13 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                         backgroundColor: item.pc ? '#e0f7fa' : 'transparent', 
                     }}
                   >
+                    {formatValue(item.p,'',2)}
+                  </td>
                   <td style={{ 
                       padding: '0.75rem 1rem', 
                       color: item.v >= 0 ? '#22c55e' : '#ef4444',
-                      fontWeight: 500
+                      fontWeight: 500,
+                      textAlign: 'left'
                       }}>
                     {formatValue(item.v)}
                   </td>
