@@ -26,6 +26,7 @@ type Bono = {
    // Nuevo campo mb: number | null;
   pd: number | null; // Nuevo campo para Paridad
   ua?: string;
+  pc: boolean; // Verdadero si uso el precio de cierre anterior
 };
 // --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
 type TipoDeCambio = {
@@ -146,7 +147,17 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
                                     <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.p,'',2)}</td>
+                                                      <td 
+                                    style={{ 
+                                        padding: '0.75rem 1rem', 
+                                        color: '#4b5563', 
+                                        textAlign: 'center',
+                                        // Si item.pc es TRUE (usó cierre ant.), pinta de celeste claro (#e0f7fa)
+                                        backgroundColor: item.pc ? '#e0f7fa' : 'transparent', 
+                                    }}
+                                >
+                                    {formatValue(item.p,'',2)}
+                                </td>
                                     <td style={{ 
                                         padding: '0.75rem 1rem', 
                                         color: item.v >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
@@ -211,12 +222,32 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
                                     <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.p,'',2)}</td>
+                                    <td 
+                                        style={{ 
+                                            padding: '0.75rem 1rem', 
+                                            color: '#4b5563', 
+                                            textAlign: 'center',
+                                            // Si item.pc es TRUE (usó cierre ant.), pinta de celeste claro (#e0f7fa)
+                                            backgroundColor: item.pc ? '#e0f7fa' : 'transparent', 
+                                        }}
+                                    >
+                                        {formatValue(item.p,'',2)}
+                                    </td>
                                     <td style={{ padding: '0.75rem 1rem', color: item.v >= 0 ? '#22c55e' : '#ef4444', fontWeight: 500 }}>
                                         {formatValue(item.v)}
                                     </td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
-                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.pd, '', 2)}</td>
+                                    <td 
+                                                    style={{ 
+                                                        padding: '0.75rem 1rem', 
+                                                        color: '#4b5563', 
+                                                        textAlign: 'center',
+                                                        // Si item.pc es TRUE (usó cierre ant.), pinta de celeste claro (#e0f7fa)
+                                                        backgroundColor: item.pc ? '#e0f7fa' : 'transparent', 
+                                                    }}
+                                                >
+                                                    {formatValue(item.p,'',2)}
+                                                </td>
                                 </tr>
                             ))
                         ) : (
@@ -259,7 +290,7 @@ useEffect(() => {
         setEstado('Actualizando datos...');
         const manana = new Date();
         manana.setDate(manana.getDate() + 1);
-        const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd';
+        const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd, pc';
 
         const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString());
         if (bonosError) {
@@ -505,6 +536,11 @@ useEffect(() => {
                         segmentoActivo={segmentoSeleccionado}
                         xAxisKey={isBonaresSegment ? 'md' : 'dv'}
                     />
+                </div>
+
+                <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#e0f7fa', borderLeft: '5px solid #00bcd4', borderRadius: '4px', color: '#006064', fontWeight: 600, fontSize: '0.9rem' }}>
+                    <span style={{ marginRight: '8px' }}>ⓘ</span>
+                    El fondo <strong>celeste</strong> en el precio indica que se utilizó el <strong>Cierre Anterior</strong> (CIERRE ANT.) en lugar del Último Precio (ULTIMO), usualmente porque ULTIMO era cero.
                 </div>
 
                 {/* --- CONTENEDOR DE LAS TABLAS --- */}
