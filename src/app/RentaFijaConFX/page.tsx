@@ -694,12 +694,12 @@ export default function LecapsPage() {
                   xAxisKey="dv"
                 />
             </div>
-                      
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '2rem' }}>
                    <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#e0f7fa', borderLeft: '5px solid #00bcd4', borderRadius: '4px', color: '#006064', fontWeight: 600, fontSize: '0.9rem' }}>
                         <span style={{ marginRight: '8px' }}>ⓘ</span>
-                            El fondo **celeste** en el precio indica que se utilizó el **Cierre Anterior** ($\text{CIERRE ANT.}$) en lugar del Último Precio ($\text{ULTIMO}$), usualmente porque $\text{ULTIMO}$ era cero.
-                      </div>
+                            El fondo <strong>celeste</strong> en el precio indica que se utilizó el <strong>Cierre Anterior</strong> (CIERRE ANT.) en lugar del Último Precio (ULTIMO), usualmente porque ULTIMO era cero.
+                </div>
                     
                     <TablaGeneral titulo="Renta fija" datos={datosParaTabla} />
 
