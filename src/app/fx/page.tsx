@@ -144,7 +144,6 @@ const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
 
               // 4. Formato estricto y limpieza de datos
               formatter={(value: any, name: string, props: any) => {
-                 // Si por alguna razón entra 'date', lo ignoramos, pero Recharts no debería pasarlo aquí.
                  if (name === 'precioFuturo' && props.payload.ticker) {
                     return [`$${value}`, `Futuro (${props.payload.ticker})`];
                  }
@@ -154,7 +153,7 @@ const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
               }}
             />
             
-            {/* Hemos quitado <Legend /> aquí */}
+            {/* Sin leyenda */}
 
             {/* Líneas de Bandas: Finas (width 1) y Punteadas (dasharray 4 4) */}
             <Line 
@@ -178,15 +177,15 @@ const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
                 activeDot={false} 
             />
             
-            {/* Futuros: Usamos Line con stroke="none" para controlar mejor el tamaño del punto (r:3) */}
+            {/* Futuros: Usamos Line con stroke="none" para puntos finos */}
             <Line
                 type="monotone"
                 dataKey="precioFuturo"
                 stroke="none"
                 name="Precio Futuro"
                 dot={{ r: 3, fill: '#1036E2', strokeWidth: 0 }} // Punto fino y sólido
-                activeDot={{ r: 5, fill: '#1036E2' }} // Un poco más grande al pasar el mouse
-                connectNulls={false} // No unir los puntos con líneas invisibles
+                activeDot={{ r: 5, fill: '#1036E2' }} 
+                connectNulls={false} 
             />
 
           </ComposedChart>
@@ -197,7 +196,7 @@ const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
 };
 
 // ==================================================================
-// 4. COMPONENTES DE TABLA (Sin cambios, solo renderizado)
+// 4. COMPONENTES DE TABLA
 // ==================================================================
 const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: FuturoCalculado[], spotPrice: number | undefined }) => (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -337,7 +336,6 @@ export default function DolarFuturoPage() {
         if (error) {
           console.error('Error cargando bandas:', error);
         } else if (data) {
-          console.log('bandas raw', data);
           setRawBandas(data as any[]);
           // Normalizar nombres posibles de columnas y forzar números
           const normalized: BandaRow[] = (data as any[]).map(d => {
@@ -479,26 +477,14 @@ export default function DolarFuturoPage() {
             <div style={{ maxWidth: '1400px', margin: 'auto', padding: '1.5rem' }}>
                 <h1 style={{ fontSize: '1.8rem', fontWeight: 700, textAlign: 'center', color: '#111827' }}>Monitor de Futuros</h1>
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                     <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '4px 12px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 600 }}>
-                        {estado}
-                     </span>
+                      <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '4px 12px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 600 }}>
+                         {estado}
+                      </span>
                 </div>
 
-                {/* AQUÍ INICIA EL GRÁFICO DE BANDAS */}
+                {/* AQUÍ INICIA EL GRÁFICO DE BANDAS (Sin debug) */}
                 {chartData.length > 0 && (
-                   <>
-                     <ChartBandas data={chartData} />
-                     <div style={{ background: '#fff', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem', border: '1px dashed #e5e7eb' }}>
-                       <div style={{ fontSize: '0.9rem', color: '#374151', marginBottom: '0.5rem' }}>
-                         <strong>Depuración:</strong> bandas: <strong>{bandas.length}</strong>, futuros: <strong>{dlrCalculados.length}</strong>, puntos en chart: <strong>{chartData.length}</strong>
-                       </div>
-                       <div style={{ maxHeight: '180px', overflow: 'auto', background: '#f8fafc', padding: '8px', borderRadius: '6px' }}>
-                         <pre style={{ margin: 0, fontSize: '0.75rem', color: '#111827' }}>
-{JSON.stringify({ bandas: bandas.slice(0,6), primerosFuturos: dlrCalculados.slice(0,6).map(f=>({ticker:f.ticker,last:f.last,expirationDate: f.expirationDate ? f.expirationDate.toISOString().split('T')[0] : null})), chartData: chartData.slice(0,6) }, null, 2)}
-                         </pre>
-                       </div>
-                     </div>
-                   </>
+                    <ChartBandas data={chartData} />
                 )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px', alignItems: 'start' }}>
