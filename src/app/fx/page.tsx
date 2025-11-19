@@ -133,7 +133,7 @@ export default function DolarFuturoPage() {
             
             // 1. Carga inicial completa
             const { data, error } = await supabase
-                .from(TABLE_NAME)
+                .from(dlrfx2)
                 .select('t, l, ts');
 
             if (error) {
