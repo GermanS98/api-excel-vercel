@@ -2,8 +2,19 @@
 import Layout from '@/components/layout/Layout';
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { format, differenceInDays, startOfDay, endOfMonth } from 'date-fns';
+import { format, differenceInDays, startOfDay, endOfMonth, isSameDay, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import {
+  ComposedChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Scatter
+} from 'recharts';
 
 // ==================================================================
 // 1. DEFINICIÓN DE TIPOS
@@ -15,12 +26,28 @@ type MarketDataItem = {
   expirationDate?: Date; 
 };
 
-// Agregamos teaImplicita al tipo
 type FuturoCalculado = MarketDataItem & {
   diasVto: number;
   tnaImplicita: number | null;
-  teaImplicita: number | null; // <--- NUEVO CAMPO
+  teaImplicita: number | null;
   tasaForward: number | null;
+};
+
+// Nuevo tipo para la tabla de Bandas
+type BandaRow = {
+  fc: string; // Fecha cierre (YYYY-MM-DD)
+  bi: number; // Banda inferior
+  bs: number; // Banda superior
+};
+
+// Tipo para el gráfico (fusión de bandas + futuro)
+type ChartDataPoint = {
+  date: string;      // Para el eje X
+  dateObj: Date;     // Para ordenamiento
+  bi: number;
+  bs: number;
+  precioFuturo: number | null; // Será null si no hay vto ese día
+  ticker?: string;   // Para el tooltip
 };
 
 const supabase = createClient(
@@ -72,10 +99,60 @@ const getExpirationDate = (ticker: string): Date | undefined => {
 };
 
 // ==================================================================
-// 3. COMPONENTES DE TABLA
+// 3. COMPONENTE DE GRÁFICO (NUEVO)
 // ==================================================================
+const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
+  if (!data || data.length === 0) return null;
 
-// A. Tabla Específica para Futuros (Con TEA agregada)
+  return (
+    <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', padding: '1rem', marginBottom: '20px', border: '1px solid #e5e7eb' }}>
+      <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#374151', textAlign: 'center' }}>
+        Proyección de Bandas vs. Futuros
+      </h3>
+      <div style={{ width: '100%', height: 400 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+            <XAxis 
+              dataKey="date" 
+              tickFormatter={(val) => format(parseISO(val), 'MMM yy', { locale: es })}
+              minTickGap={30}
+              tick={{ fontSize: 12, fill: '#6b7280' }}
+            />
+            <YAxis 
+              domain={['auto', 'auto']} 
+              tick={{ fontSize: 12, fill: '#6b7280' }}
+              tickFormatter={(val) => `$${val}`}
+            />
+            <Tooltip 
+              labelFormatter={(label) => format(parseISO(label as string), 'dd MMMM yyyy', { locale: es })}
+              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+              formatter={(value: any, name: string, props: any) => {
+                 if (name === 'precioFuturo' && props.payload.ticker) {
+                    return [`$${value}`, `Futuro (${props.payload.ticker})`];
+                 }
+                 if (name === 'bi') return [`$${value}`, 'Banda Inferior'];
+                 if (name === 'bs') return [`$${value}`, 'Banda Superior'];
+                 return [value, name];
+              }}
+            />
+            <Legend />
+            {/* Bandas como Líneas */}
+            <Line type="monotone" dataKey="bs" stroke="#93c5fd" strokeWidth={2} dot={false} name="Banda Superior" activeDot={false} />
+            <Line type="monotone" dataKey="bi" stroke="#93c5fd" strokeWidth={2} dot={false} name="Banda Inferior" activeDot={false} />
+            
+            {/* Futuros como Puntos (Scatter) superpuestos */}
+            <Scatter name="Precio Futuro" dataKey="precioFuturo" fill="#ef4444" shape="circle" />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
+// ==================================================================
+// 4. COMPONENTES DE TABLA (Sin cambios, solo renderizado)
+// ==================================================================
 const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: FuturoCalculado[], spotPrice: number | undefined }) => (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -94,7 +171,7 @@ const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: Fut
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Precio</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Días</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#03206b' }}>TNA Impl.</th>
-              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#042b8a' }}>TEA Impl.</th> {/* Columna Nueva */}
+              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#042b8a' }}>TEA Impl.</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>T. Fwd (Mes)</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Hora</th>
             </tr>
@@ -104,26 +181,12 @@ const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: Fut
               datos.map((item) => (
                 <tr key={item.ticker} style={{ borderTop: '1px solid #e5e7eb' }}>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 500, color: '#374151' }}>{item.ticker}</td>
-                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 700, color: '#111827' }}>
-                    {formatPrice(item.last)}
-                  </td>
-                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#6b7280' }}>
-                    {item.diasVto > 0 ? item.diasVto : '-'}
-                  </td>
-                  {/* TNA */}
-                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 600, color: (item.tnaImplicita || 0) > 0 ? '#059669' : '#ef4444', background: '#f9fafb' }}>
-                    {formatPercent(item.tnaImplicita)}
-                  </td>
-                  {/* TEA (Nueva) */}
-                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 600, color: (item.teaImplicita || 0) > 0 ? '#059669' : '#ef4444', background: '#f0fdfa' }}>
-                    {formatPercent(item.teaImplicita)}
-                  </td>
-                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#4b5563', fontSize: '0.85rem' }}>
-                    {formatPercent(item.tasaForward)}
-                  </td>
-                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.8rem' }}>
-                    {formatTimestamp(item.timestamp)}
-                  </td>
+                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 700, color: '#111827' }}>{formatPrice(item.last)}</td>
+                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#6b7280' }}>{item.diasVto > 0 ? item.diasVto : '-'}</td>
+                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 600, color: (item.tnaImplicita || 0) > 0 ? '#059669' : '#ef4444', background: '#f9fafb' }}>{formatPercent(item.tnaImplicita)}</td>
+                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 600, color: (item.teaImplicita || 0) > 0 ? '#059669' : '#ef4444', background: '#f0fdfa' }}>{formatPercent(item.teaImplicita)}</td>
+                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#4b5563', fontSize: '0.85rem' }}>{formatPercent(item.tasaForward)}</td>
+                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.8rem' }}>{formatTimestamp(item.timestamp)}</td>
                 </tr>
               ))
             ) : (
@@ -135,12 +198,9 @@ const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: Fut
     </div>
 );
 
-// B. Tabla Genérica
 const TablaSimple = ({ titulo, datos }: { titulo: string, datos: MarketDataItem[] }) => (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>
-          {titulo}
-        </h2>
+        <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -166,13 +226,15 @@ const TablaSimple = ({ titulo, datos }: { titulo: string, datos: MarketDataItem[
 );
 
 // ==================================================================
-// 4. COMPONENTE PRINCIPAL
+// 5. COMPONENTE PRINCIPAL
 // ==================================================================
 export default function DolarFuturoPage() {
     const [marketData, setMarketData] = useState<{ [key: string]: MarketDataItem }>({});
+    const [bandas, setBandas] = useState<BandaRow[]>([]); // Estado para las bandas
     const [estado, setEstado] = useState('Conectando...');
-    const TABLE_NAME = 'dlrfx2'; // Tabla correcta
+    const TABLE_NAME = 'dlrfx2';
 
+    // Fetch de datos de mercado (Futuros)
     useEffect(() => {
         const fetchData = async () => {
             setEstado('Obteniendo precios...');
@@ -214,10 +276,39 @@ export default function DolarFuturoPage() {
         fetchData();
     }, []);
 
+    // Fetch de BANDAS (Solo una vez al cargar)
+    useEffect(() => {
+      const fetchBandas = async () => {
+        const hoy = new Date().toISOString().split('T')[0];
+        // Traemos las bandas desde hoy en adelante
+        const { data, error } = await supabase
+          .from('bandas')
+          .select('*')
+          .gte('fc', hoy)
+          .order('fc', { ascending: true });
+        
+        if (error) {
+          console.error('Error cargando bandas:', error);
+        } else if (data) {
+          setBandas(data as BandaRow[]);
+        }
+      };
+      fetchBandas();
+    }, []);
+
     // ==================================================================
-    // LÓGICA DE CÁLCULO (Agregada TEA)
+    // LÓGICA DE CÁLCULO Y PREPARACIÓN DEL CHART
     // ==================================================================
-    const { dlrCalculados, dlrComplejos, oroData, ypfGgalData, al30Data, rfx20Data, precioSpot } = useMemo(() => {
+    const { 
+      dlrCalculados, 
+      dlrComplejos, 
+      oroData, 
+      ypfGgalData, 
+      al30Data, 
+      rfx20Data, 
+      precioSpot,
+      chartData // Datos combinados para el gráfico
+    } = useMemo(() => {
         const allData = Object.values(marketData);
         const hoy = startOfDay(new Date());
 
@@ -233,7 +324,7 @@ export default function DolarFuturoPage() {
             .filter(d => d.ticker.startsWith('DLR/') && !d.ticker.includes('SPOT') && (d.ticker.match(/\//g) || []).length <= 1)
             .sort(sortByDate);
 
-        const dlrCalculados: FuturoCalculado[] = [];
+        const calculados: FuturoCalculado[] = [];
         
         rawFuturos.forEach((item, index) => {
             let dias = 0;
@@ -242,20 +333,17 @@ export default function DolarFuturoPage() {
             }
             
             let tna: number | null = null;
-            let tea: number | null = null; // Variable para TEA
+            let tea: number | null = null;
 
             if (spotPrice && item.last && dias > 0) {
-                // A. TNA
                 tna = ((item.last / spotPrice) - 1) * (365 / dias);
-                
-                // B. TEA: Formula (PrecioFut / PrecioSpot)^(365/dias) - 1
                 const ratio = item.last / spotPrice;
                 tea = Math.pow(ratio, 365 / dias) - 1;
             }
 
             let fwd: number | null = null;
             if (index > 0) {
-                const prevItem = dlrCalculados[index - 1]; 
+                const prevItem = calculados[index - 1]; 
                 const prevPrice = prevItem.last;
                 const prevDays = prevItem.diasVto;
                 const deltaDias = dias - prevDays;
@@ -267,14 +355,42 @@ export default function DolarFuturoPage() {
                 fwd = tna;
             }
 
-            dlrCalculados.push({
+            calculados.push({
                 ...item,
                 diasVto: dias > 0 ? dias : 0,
                 tnaImplicita: tna,
-                teaImplicita: tea, // Asignamos TEA
+                teaImplicita: tea,
                 tasaForward: fwd
             });
         });
+
+        // --- PREPARACIÓN DATOS DEL CHART ---
+        // 1. Tomamos las bandas como base
+        // 2. Buscamos si hay un futuro que venza en esa fecha (o muy cerca)
+        let dataForChart: ChartDataPoint[] = [];
+        
+        if (bandas.length > 0) {
+          // Mapeamos los futuros a un diccionario por fecha string YYYY-MM-DD para búsqueda rápida
+          const futurosMap = new Map<string, { price: number, ticker: string }>();
+          calculados.forEach(f => {
+            if (f.expirationDate) {
+              const fechaStr = format(f.expirationDate, 'yyyy-MM-dd');
+              futurosMap.set(fechaStr, { price: f.last, ticker: f.ticker });
+            }
+          });
+
+          dataForChart = bandas.map(banda => {
+            const futuroEnFecha = futurosMap.get(banda.fc);
+            return {
+              date: banda.fc,
+              dateObj: parseISO(banda.fc),
+              bi: banda.bi,
+              bs: banda.bs,
+              precioFuturo: futuroEnFecha ? futuroEnFecha.price : null,
+              ticker: futuroEnFecha ? futuroEnFecha.ticker : undefined
+            };
+          });
+        }
 
         const dlrComplejos = allData.filter(d => d.ticker.startsWith('DLR/') && (d.ticker.match(/\//g) || []).length >= 2).sort(sortByDate);
         const oroData = allData.filter(d => d.ticker.includes('ORO')).sort((a,b) => a.ticker.localeCompare(b.ticker));
@@ -282,8 +398,17 @@ export default function DolarFuturoPage() {
         const al30Data = allData.filter(d => d.ticker.includes('AL30')).sort((a,b) => a.ticker.localeCompare(b.ticker));
         const rfx20Data = allData.filter(d => d.ticker.toLowerCase().includes('rfx20')).sort(sortByDate);
 
-        return { dlrCalculados, dlrComplejos, oroData, ypfGgalData, al30Data, rfx20Data, precioSpot: spotPrice };
-    }, [marketData]);
+        return { 
+          dlrCalculados: calculados, 
+          dlrComplejos, 
+          oroData, 
+          ypfGgalData, 
+          al30Data, 
+          rfx20Data, 
+          precioSpot: spotPrice,
+          chartData: dataForChart
+        };
+    }, [marketData, bandas]);
 
     return (
         <Layout>
@@ -294,6 +419,11 @@ export default function DolarFuturoPage() {
                         {estado}
                      </span>
                 </div>
+
+                {/* AQUÍ INICIA EL GRÁFICO DE BANDAS */}
+                {chartData.length > 0 && (
+                   <ChartBandas data={chartData} />
+                )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px', alignItems: 'start' }}>
                     
