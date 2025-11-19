@@ -390,6 +390,10 @@ export default function DolarFuturoPage() {
           }
         });
 
+        // Usamos exclusivamente las bandas que vienen de la base de datos.
+        // Para cada fila de `bandas` intentamos adjuntar el precio del futuro
+        // que venza en la misma fecha (si existe). No generamos bandas a partir
+        // de los futuros en ningún caso.
         if (bandas.length > 0) {
           dataForChart = bandas.map(bandasItem => {
             const futuroEnFecha = futurosMap.get(bandasItem.fc);
@@ -402,27 +406,8 @@ export default function DolarFuturoPage() {
               ticker: futuroEnFecha ? futuroEnFecha.ticker : undefined
             };
           });
-        } else if (calculados.length > 0) {
-          // Sin bandas: generamos puntos a partir de los futuros disponibles.
-          // Para mostrar algo útil, asignamos banda superior/inferior alrededor del precio (±1%)
-          const generated: ChartDataPoint[] = [];
-          calculados.forEach(f => {
-            if (!f.expirationDate) return;
-            const fechaStr = format(f.expirationDate, 'yyyy-MM-dd');
-            const precio = f.last ?? null;
-            if (precio === null) return;
-            const delta = Math.max(0.01 * precio, 0.01); // mínimo 0.01
-            generated.push({
-              date: fechaStr,
-              dateObj: f.expirationDate,
-              bi: precio - delta,
-              bs: precio + delta,
-              precioFuturo: precio,
-              ticker: f.ticker
-            });
-          });
-          // Ordenar por fecha
-          dataForChart = generated.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
+        } else {
+          dataForChart = [];
         }
 
         const dlrComplejos = allData.filter(d => d.ticker.startsWith('DLR/') && (d.ticker.match(/\//g) || []).length >= 2).sort(sortByDate);
