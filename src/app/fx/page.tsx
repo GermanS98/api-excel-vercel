@@ -231,6 +231,7 @@ const TablaSimple = ({ titulo, datos }: { titulo: string, datos: MarketDataItem[
 export default function DolarFuturoPage() {
     const [marketData, setMarketData] = useState<{ [key: string]: MarketDataItem }>({});
     const [bandas, setBandas] = useState<BandaRow[]>([]); // Estado para las bandas
+    const [rawBandas, setRawBandas] = useState<any[]>([]);
     const [estado, setEstado] = useState('Conectando...');
     const TABLE_NAME = 'dlrfx2';
 
@@ -290,7 +291,18 @@ export default function DolarFuturoPage() {
         if (error) {
           console.error('Error cargando bandas:', error);
         } else if (data) {
-          setBandas(data as BandaRow[]);
+          console.log('bandas raw', data);
+          setRawBandas(data as any[]);
+          // Normalizar nombres posibles de columnas y forzar números
+          const normalized: BandaRow[] = (data as any[]).map(d => {
+            const fc = String(d.fc || d.fecha || d.fecha_cierre || d.date);
+            const biRaw = d.bi ?? d.b_inf ?? d.b_inferior ?? d.banda_inferior ?? d.bandaInf ?? d.banda_inferior_val;
+            const bsRaw = d.bs ?? d.b_sup ?? d.b_superior ?? d.banda_superior ?? d.bandaSup ?? d.banda_superior_val;
+            const bi = biRaw !== undefined && biRaw !== null ? Number(biRaw) : NaN;
+            const bs = bsRaw !== undefined && bsRaw !== null ? Number(bsRaw) : NaN;
+            return { fc, bi, bs } as BandaRow;
+          });
+          setBandas(normalized);
         }
       };
       fetchBandas();
@@ -443,7 +455,19 @@ export default function DolarFuturoPage() {
 
                 {/* AQUÍ INICIA EL GRÁFICO DE BANDAS */}
                 {chartData.length > 0 && (
-                   <ChartBandas data={chartData} />
+                   <>
+                     <ChartBandas data={chartData} />
+                     <div style={{ background: '#fff', borderRadius: '8px', padding: '0.75rem 1rem', marginBottom: '1rem', border: '1px dashed #e5e7eb' }}>
+                       <div style={{ fontSize: '0.9rem', color: '#374151', marginBottom: '0.5rem' }}>
+                         <strong>Depuración:</strong> bandas: <strong>{bandas.length}</strong>, futuros: <strong>{dlrCalculados.length}</strong>, puntos en chart: <strong>{chartData.length}</strong>
+                       </div>
+                       <div style={{ maxHeight: '180px', overflow: 'auto', background: '#f8fafc', padding: '8px', borderRadius: '6px' }}>
+                         <pre style={{ margin: 0, fontSize: '0.75rem', color: '#111827' }}>
+{JSON.stringify({ bandas: bandas.slice(0,6), primerosFuturos: dlrCalculados.slice(0,6).map(f=>({ticker:f.ticker,last:f.last,expirationDate: f.expirationDate ? f.expirationDate.toISOString().split('T')[0] : null})), chartData: chartData.slice(0,6) }, null, 2)}
+                         </pre>
+                       </div>
+                     </div>
+                   </>
                 )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px', alignItems: 'start' }}>
