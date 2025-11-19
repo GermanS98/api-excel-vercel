@@ -2,7 +2,7 @@
 import Layout from '@/components/layout/Layout';
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { format, differenceInDays, startOfDay, endOfMonth, parseISO } from 'date-fns';
+import { format, differenceInDays, startOfDay, endOfMonth, isSameDay, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   ComposedChart,
@@ -17,7 +17,7 @@ import {
 } from 'recharts';
 
 // ==================================================================
-// 1. TIPOS
+// 1. DEFINICIÓN DE TIPOS
 // ==================================================================
 type MarketDataItem = {
   ticker: string;
@@ -33,19 +33,21 @@ type FuturoCalculado = MarketDataItem & {
   tasaForward: number | null;
 };
 
+// Nuevo tipo para la tabla de Bandas
 type BandaRow = {
-  fc: string; 
-  bi: number; 
-  bs: number; 
+  fc: string; // Fecha cierre (YYYY-MM-DD)
+  bi: number; // Banda inferior
+  bs: number; // Banda superior
 };
 
+// Tipo para el gráfico (fusión de bandas + futuro)
 type ChartDataPoint = {
-  date: string;      
-  dateObj: Date;     
+  date: string;      // Para el eje X
+  dateObj: Date;     // Para ordenamiento
   bi: number;
   bs: number;
-  precioFuturo: number | null; 
-  ticker?: string;   
+  precioFuturo: number | null; // Será null si no hay vto ese día
+  ticker?: string;   // Para el tooltip
 };
 
 const supabase = createClient(
@@ -54,8 +56,9 @@ const supabase = createClient(
 );
 
 // ==================================================================
-// 2. AUXILIARES
+// 2. FUNCIONES AUXILIARES
 // ==================================================================
+
 const formatPrice = (value: number) => {
   if (value === null || typeof value === 'undefined') return '-';
   return value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -96,39 +99,49 @@ const getExpirationDate = (ticker: string): Date | undefined => {
 };
 
 // ==================================================================
-// 3. COMPONENTE DE GRÁFICO (Con altura forzada)
+// 3. COMPONENTE DE GRÁFICO (NUEVO)
 // ==================================================================
 const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
+  if (!data || data.length === 0) return null;
+
   return (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', padding: '1rem', marginBottom: '20px', border: '1px solid #e5e7eb' }}>
       <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', color: '#374151', textAlign: 'center' }}>
         Proyección de Bandas vs. Futuros
       </h3>
-      {/* Altura forzada de 400px */}
-      <div style={{ width: '100%', height: '400px', minHeight: '400px' }}>
+      <div style={{ width: '100%', height: 400 }}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
             <XAxis 
               dataKey="date" 
-              tickFormatter={(val) => { try { return format(parseISO(val), 'MMM yy', { locale: es }) } catch(e) { return val } }}
+              tickFormatter={(val) => format(parseISO(val), 'MMM yy', { locale: es })}
               minTickGap={30}
               tick={{ fontSize: 12, fill: '#6b7280' }}
             />
             <YAxis 
               domain={['auto', 'auto']} 
               tick={{ fontSize: 12, fill: '#6b7280' }}
-              width={80}
-              tickFormatter={(val) => `$${Math.round(val)}`}
+              tickFormatter={(val) => `$${val}`}
             />
             <Tooltip 
-              labelFormatter={(label) => { try { return format(parseISO(label as string), 'dd/MM/yyyy') } catch(e) { return label } }}
+              labelFormatter={(label) => format(parseISO(label as string), 'dd MMMM yyyy', { locale: es })}
               contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
-              formatter={(value: any, name: string) => [value.toLocaleString('es-AR'), name === 'precioFuturo' ? 'Futuro' : name]}
+              formatter={(value: any, name: string, props: any) => {
+                 if (name === 'precioFuturo' && props.payload.ticker) {
+                    return [`$${value}`, `Futuro (${props.payload.ticker})`];
+                 }
+                 if (name === 'bi') return [`$${value}`, 'Banda Inferior'];
+                 if (name === 'bs') return [`$${value}`, 'Banda Superior'];
+                 return [value, name];
+              }}
             />
-            <Legend verticalAlign="top" height={36}/>
-            <Line type="monotone" dataKey="bs" stroke="#93c5fd" strokeWidth={2} dot={false} name="Banda Sup." />
-            <Line type="monotone" dataKey="bi" stroke="#93c5fd" strokeWidth={2} dot={false} name="Banda Inf." />
+            <Legend />
+            {/* Bandas como Líneas */}
+            <Line type="monotone" dataKey="bs" stroke="#93c5fd" strokeWidth={2} dot={false} name="Banda Superior" activeDot={false} />
+            <Line type="monotone" dataKey="bi" stroke="#93c5fd" strokeWidth={2} dot={false} name="Banda Inferior" activeDot={false} />
+            
+            {/* Futuros como Puntos (Scatter) superpuestos */}
             <Scatter name="Precio Futuro" dataKey="precioFuturo" fill="#ef4444" shape="circle" />
           </ComposedChart>
         </ResponsiveContainer>
@@ -138,7 +151,7 @@ const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
 };
 
 // ==================================================================
-// 4. COMPONENTE DE TABLA
+// 4. COMPONENTES DE TABLA (Sin cambios, solo renderizado)
 // ==================================================================
 const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: FuturoCalculado[], spotPrice: number | undefined }) => (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -157,9 +170,9 @@ const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: Fut
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Ticker</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Precio</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Días</th>
-              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#03206b' }}>TNA</th>
-              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#042b8a' }}>TEA</th>
-              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>T. Fwd</th>
+              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#03206b' }}>TNA Impl.</th>
+              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#042b8a' }}>TEA Impl.</th>
+              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>T. Fwd (Mes)</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Hora</th>
             </tr>
           </thead>
@@ -194,6 +207,7 @@ const TablaSimple = ({ titulo, datos }: { titulo: string, datos: MarketDataItem[
             <tr style={{ background: '#021751', color: 'white' }}>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Ticker</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Precio</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Hora</th>
             </tr>
           </thead>
           <tbody>
@@ -201,9 +215,10 @@ const TablaSimple = ({ titulo, datos }: { titulo: string, datos: MarketDataItem[
                 <tr key={item.ticker} style={{ borderTop: '1px solid #e5e7eb' }}>
                   <td style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
                   <td style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#111827', fontWeight: 'bold' }}>{formatPrice(item.last)}</td>
+                  <td style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#6b7280' }}>{formatTimestamp(item.timestamp)}</td>
                 </tr>
             ))}
-            {datos.length === 0 && <tr><td colSpan={2} style={{textAlign:'center', padding: '1rem', color: '#9ca3af'}}>Sin datos</td></tr>}
+            {datos.length === 0 && <tr><td colSpan={3} style={{textAlign:'center', padding: '1rem', color: '#9ca3af'}}>Sin datos</td></tr>}
           </tbody>
         </table>
       </div>
@@ -211,21 +226,20 @@ const TablaSimple = ({ titulo, datos }: { titulo: string, datos: MarketDataItem[
 );
 
 // ==================================================================
-// 5. PÁGINA PRINCIPAL
+// 5. COMPONENTE PRINCIPAL
 // ==================================================================
 export default function DolarFuturoPage() {
     const [marketData, setMarketData] = useState<{ [key: string]: MarketDataItem }>({});
-    const [bandas, setBandas] = useState<BandaRow[]>([]);
-    const [estado, setEstado] = useState('Iniciando...');
-    const [errorBandas, setErrorBandas] = useState<string | null>(null);
-    const TABLE_NAME = 'dlfx2';
+    const [bandas, setBandas] = useState<BandaRow[]>([]); // Estado para las bandas
+    const [estado, setEstado] = useState('Conectando...');
+    const TABLE_NAME = 'dlrfx2';
 
-    // 1. Cargar FUTUROS
+    // Fetch de datos de mercado (Futuros)
     useEffect(() => {
         const fetchData = async () => {
-            setEstado('Obteniendo futuros...');
+            setEstado('Obteniendo precios...');
             const { data, error } = await supabase.from(TABLE_NAME).select('t, l, ts');
-            if (error) { setEstado('Error Supabase Futuros'); return; }
+            if (error) { setEstado('Error conexión'); return; }
 
             if (data) {
                 const initialMap: { [key: string]: MarketDataItem } = {};
@@ -238,14 +252,22 @@ export default function DolarFuturoPage() {
                    };
                 });
                 setMarketData(initialMap);
-                setEstado('Datos cargados');
+                setEstado('Mercado en vivo');
             }
 
             const channel = supabase.channel(`realtime-${TABLE_NAME}`)
                 .on('postgres_changes', { event: '*', schema: 'public', table: TABLE_NAME }, (payload) => {
                         const newRow = payload.new as any;
                         if (newRow && newRow.t) {
-                            setMarketData(prev => ({ ...prev, [newRow.t]: { ticker: newRow.t, last: newRow.l, timestamp: newRow.ts, expirationDate: getExpirationDate(newRow.t) }}));
+                            setMarketData(prev => ({
+                                ...prev,
+                                [newRow.t]: {
+                                    ticker: newRow.t,
+                                    last: newRow.l,
+                                    timestamp: newRow.ts,
+                                    expirationDate: getExpirationDate(newRow.t)
+                                }
+                            }));
                         }
                     }
                 ).subscribe();
@@ -254,34 +276,42 @@ export default function DolarFuturoPage() {
         fetchData();
     }, []);
 
-    // 2. Cargar BANDAS (Con debug)
+    // Fetch de BANDAS (Solo una vez al cargar)
     useEffect(() => {
       const fetchBandas = async () => {
-        // Ponemos una fecha muy antigua para asegurar que traiga algo si hay datos
-        const fechaInicio = '2024-01-01'; 
-        
+        const hoy = new Date().toISOString().split('T')[0];
+        // Traemos las bandas desde hoy en adelante
         const { data, error } = await supabase
           .from('bandas')
           .select('*')
-          .gte('fc', fechaInicio) 
+          .gte('fc', hoy)
           .order('fc', { ascending: true });
         
         if (error) {
-          console.error("Error Bandas:", error);
-          setErrorBandas(error.message);
-        } else if (data && data.length > 0) {
+          console.error('Error cargando bandas:', error);
+        } else if (data) {
           setBandas(data as BandaRow[]);
-        } else {
-          setErrorBandas('Consulta exitosa pero array vacío (0 filas)');
         }
       };
       fetchBandas();
     }, []);
 
-    // 3. Cálculos
-    const { dlrCalculados, dlrComplejos, oroData, ypfGgalData, al30Data, rfx20Data, precioSpot, chartData } = useMemo(() => {
+    // ==================================================================
+    // LÓGICA DE CÁLCULO Y PREPARACIÓN DEL CHART
+    // ==================================================================
+    const { 
+      dlrCalculados, 
+      dlrComplejos, 
+      oroData, 
+      ypfGgalData, 
+      al30Data, 
+      rfx20Data, 
+      precioSpot,
+      chartData // Datos combinados para el gráfico
+    } = useMemo(() => {
         const allData = Object.values(marketData);
         const hoy = startOfDay(new Date());
+
         const spotItem = allData.find(d => d.ticker === 'DLR/SPOT');
         const spotPrice = spotItem?.last;
 
@@ -295,12 +325,16 @@ export default function DolarFuturoPage() {
             .sort(sortByDate);
 
         const calculados: FuturoCalculado[] = [];
+        
         rawFuturos.forEach((item, index) => {
             let dias = 0;
-            if (item.expirationDate) dias = differenceInDays(item.expirationDate, hoy);
+            if (item.expirationDate) {
+                dias = differenceInDays(item.expirationDate, hoy);
+            }
             
             let tna: number | null = null;
             let tea: number | null = null;
+
             if (spotPrice && item.last && dias > 0) {
                 tna = ((item.last / spotPrice) - 1) * (365 / dias);
                 const ratio = item.last / spotPrice;
@@ -310,37 +344,73 @@ export default function DolarFuturoPage() {
             let fwd: number | null = null;
             if (index > 0) {
                 const prevItem = calculados[index - 1]; 
-                const deltaDias = dias - prevItem.diasVto;
-                if (prevItem.last && item.last && deltaDias > 0) {
-                    fwd = ((item.last / prevItem.last) - 1) * (365 / deltaDias);
+                const prevPrice = prevItem.last;
+                const prevDays = prevItem.diasVto;
+                const deltaDias = dias - prevDays;
+
+                if (prevPrice && item.last && deltaDias > 0) {
+                    fwd = ((item.last / prevPrice) - 1) * (365 / deltaDias);
                 }
             } else {
                 fwd = tna;
             }
-            calculados.push({ ...item, diasVto: dias > 0 ? dias : 0, tnaImplicita: tna, teaImplicita: tea, tasaForward: fwd });
+
+            calculados.push({
+                ...item,
+                diasVto: dias > 0 ? dias : 0,
+                tnaImplicita: tna,
+                teaImplicita: tea,
+                tasaForward: fwd
+            });
         });
 
-        // Chart Data Logic
+        // --- PREPARACIÓN DATOS DEL CHART ---
+        // Intentamos priorizar las `bandas` (si existen). Si no hay bandas, construimos
+        // puntos de gráfico a partir de los futuros calculados para que el chart siempre muestre datos.
         let dataForChart: ChartDataPoint[] = [];
+
+        // Mapeamos los futuros a un diccionario por fecha string YYYY-MM-DD para búsqueda rápida
+        const futurosMap = new Map<string, { price: number, ticker: string }>();
+        calculados.forEach(f => {
+          if (f.expirationDate) {
+            const fechaStr = format(f.expirationDate, 'yyyy-MM-dd');
+            futurosMap.set(fechaStr, { price: f.last, ticker: f.ticker });
+          }
+        });
+
         if (bandas.length > 0) {
-          const futurosMap = new Map<string, { price: number, ticker: string }>();
-          calculados.forEach(f => {
-            if (f.expirationDate) {
-              const fechaStr = format(f.expirationDate, 'yyyy-MM-dd');
-              futurosMap.set(fechaStr, { price: f.last, ticker: f.ticker });
-            }
-          });
-          dataForChart = bandas.map(banda => {
-            const futuroEnFecha = futurosMap.get(banda.fc);
+          dataForChart = bandas.map(bandasItem => {
+            const futuroEnFecha = futurosMap.get(bandasItem.fc);
             return {
-              date: banda.fc,
-              dateObj: parseISO(banda.fc),
-              bi: banda.bi,
-              bs: banda.bs,
+              date: bandasItem.fc,
+              dateObj: parseISO(bandasItem.fc),
+              bi: bandasItem.bi,
+              bs: bandasItem.bs,
               precioFuturo: futuroEnFecha ? futuroEnFecha.price : null,
               ticker: futuroEnFecha ? futuroEnFecha.ticker : undefined
             };
           });
+        } else if (calculados.length > 0) {
+          // Sin bandas: generamos puntos a partir de los futuros disponibles.
+          // Para mostrar algo útil, asignamos banda superior/inferior alrededor del precio (±1%)
+          const generated: ChartDataPoint[] = [];
+          calculados.forEach(f => {
+            if (!f.expirationDate) return;
+            const fechaStr = format(f.expirationDate, 'yyyy-MM-dd');
+            const precio = f.last ?? null;
+            if (precio === null) return;
+            const delta = Math.max(0.01 * precio, 0.01); // mínimo 0.01
+            generated.push({
+              date: fechaStr,
+              dateObj: f.expirationDate,
+              bi: precio - delta,
+              bs: precio + delta,
+              precioFuturo: precio,
+              ticker: f.ticker
+            });
+          });
+          // Ordenar por fecha
+          dataForChart = generated.sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
         }
 
         const dlrComplejos = allData.filter(d => d.ticker.startsWith('DLR/') && (d.ticker.match(/\//g) || []).length >= 2).sort(sortByDate);
@@ -349,38 +419,49 @@ export default function DolarFuturoPage() {
         const al30Data = allData.filter(d => d.ticker.includes('AL30')).sort((a,b) => a.ticker.localeCompare(b.ticker));
         const rfx20Data = allData.filter(d => d.ticker.toLowerCase().includes('rfx20')).sort(sortByDate);
 
-        return { dlrCalculados, dlrComplejos, oroData, ypfGgalData, al30Data, rfx20Data, precioSpot: spotPrice, chartData: dataForChart };
+        return { 
+          dlrCalculados: calculados, 
+          dlrComplejos, 
+          oroData, 
+          ypfGgalData, 
+          al30Data, 
+          rfx20Data, 
+          precioSpot: spotPrice,
+          chartData: dataForChart
+        };
     }, [marketData, bandas]);
 
     return (
         <Layout>
             <div style={{ maxWidth: '1400px', margin: 'auto', padding: '1.5rem' }}>
                 <h1 style={{ fontSize: '1.8rem', fontWeight: 700, textAlign: 'center', color: '#111827' }}>Monitor de Futuros</h1>
-                
-                {/* --- DEBUG AREA (Cuadro Azul) --- */}
-                {bandas.length === 0 && (
-                  <div style={{ background: '#eff6ff', border: '1px solid #1d4ed8', color: '#1e3a8a', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' }}>
-                    <strong>Diagnóstico de Bandas:</strong> <br/>
-                    Status: {errorBandas || 'Cargando...'} <br/>
-                    Filas cargadas: {bandas.length} <br/>
-                    Si ves "Consulta exitosa pero array vacío", significa que Supabase responde bien pero la tabla 'bandas' no tiene datos posteriores a 2024-01-01 o el RLS está bloqueando la lectura.
-                  </div>
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                     <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '4px 12px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 600 }}>
+                        {estado}
+                     </span>
+                </div>
+
+                {/* AQUÍ INICIA EL GRÁFICO DE BANDAS */}
+                {chartData.length > 0 && (
+                   <ChartBandas data={chartData} />
                 )}
 
-                {/* GRÁFICO */}
-                {chartData.length > 0 ? (
-                   <ChartBandas data={chartData} />
-                ) : null}
-
-                {/* GRILLA */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px', alignItems: 'start' }}>
+                    
+                    {/* TABLA PRINCIPAL */}
                     <div style={{ gridColumn: '1 / -1' }}> 
-                        <TablaFuturos titulo="Curva Dólar Futuro (Rofex)" datos={dlrCalculados} spotPrice={precioSpot} />
+                        <TablaFuturos 
+                            titulo="Curva Dólar Futuro (Rofex)" 
+                            datos={dlrCalculados} 
+                            spotPrice={precioSpot}
+                        />
                     </div>
-                    <TablaSimple titulo="Dólar (Spreads)" datos={dlrComplejos} />
+
+                    {/* TABLAS SECUNDARIAS */}
+                    <TablaSimple titulo="Dólar (Spreads/Pases)" datos={dlrComplejos} />
                     <TablaSimple titulo="Índice RFX20" datos={rfx20Data} />
                     <TablaSimple titulo="Bonos (AL30)" datos={al30Data} />
-                    <TablaSimple titulo="Acciones (YPF/GGAL)" datos={ypfGgalData} />
+                    <TablaSimple titulo="Acciones (YPF / GGAL)" datos={ypfGgalData} />
                     <TablaSimple titulo="Metales (ORO)" datos={oroData} />
                 </div>
             </div>
