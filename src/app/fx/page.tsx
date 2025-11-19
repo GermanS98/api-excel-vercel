@@ -165,7 +165,7 @@ const TablaSimple = ({ titulo, datos }: { titulo: string, datos: MarketDataItem[
 export default function DolarFuturoPage() {
     const [marketData, setMarketData] = useState<{ [key: string]: MarketDataItem }>({});
     const [estado, setEstado] = useState('Conectando...');
-    const TABLE_NAME = 'dlfx2';
+    const TABLE_NAME = 'dlrfx2';
 
     useEffect(() => {
         const fetchData = async () => {
