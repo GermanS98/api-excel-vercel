@@ -189,7 +189,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                 </tr>
               ))
             ) : (
-              <tr><td colSpan={9} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280', textAlign: 'center' }}>No se encontraron datos.</td></tr>
+              <tr><td colSpan={9} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
             )}
           </tbody>
         </table>
