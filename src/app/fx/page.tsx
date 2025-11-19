@@ -15,9 +15,11 @@ type MarketDataItem = {
   expirationDate?: Date; 
 };
 
+// Agregamos teaImplicita al tipo
 type FuturoCalculado = MarketDataItem & {
   diasVto: number;
   tnaImplicita: number | null;
+  teaImplicita: number | null; // <--- NUEVO CAMPO
   tasaForward: number | null;
 };
 
@@ -70,10 +72,10 @@ const getExpirationDate = (ticker: string): Date | undefined => {
 };
 
 // ==================================================================
-// 3. COMPONENTES DE TABLA (Estilos actualizados: Centrados)
+// 3. COMPONENTES DE TABLA
 // ==================================================================
 
-// A. Tabla Específica para Futuros
+// A. Tabla Específica para Futuros (Con TEA agregada)
 const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: FuturoCalculado[], spotPrice: number | undefined }) => (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -88,11 +90,11 @@ const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: Fut
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
           <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
             <tr style={{ background: '#021751', color: 'white' }}>
-              {/* Todos los headers con textAlign: 'center' */}
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Ticker</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Precio</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Días</th>
-              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#03206b' }}>T. Imp. (TNA)</th>
+              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#03206b' }}>TNA Impl.</th>
+              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#042b8a' }}>TEA Impl.</th> {/* Columna Nueva */}
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>T. Fwd (Mes)</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Hora</th>
             </tr>
@@ -101,7 +103,6 @@ const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: Fut
             {datos.length > 0 ? (
               datos.map((item) => (
                 <tr key={item.ticker} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  {/* Todos los datos con textAlign: 'center' */}
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 500, color: '#374151' }}>{item.ticker}</td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 700, color: '#111827' }}>
                     {formatPrice(item.last)}
@@ -109,8 +110,13 @@ const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: Fut
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#6b7280' }}>
                     {item.diasVto > 0 ? item.diasVto : '-'}
                   </td>
+                  {/* TNA */}
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 600, color: (item.tnaImplicita || 0) > 0 ? '#059669' : '#ef4444', background: '#f9fafb' }}>
                     {formatPercent(item.tnaImplicita)}
+                  </td>
+                  {/* TEA (Nueva) */}
+                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 600, color: (item.teaImplicita || 0) > 0 ? '#059669' : '#ef4444', background: '#f0fdfa' }}>
+                    {formatPercent(item.teaImplicita)}
                   </td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#4b5563', fontSize: '0.85rem' }}>
                     {formatPercent(item.tasaForward)}
@@ -121,7 +127,7 @@ const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: Fut
                 </tr>
               ))
             ) : (
-              <tr><td colSpan={6} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>Esperando datos...</td></tr>
+              <tr><td colSpan={7} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>Esperando datos...</td></tr>
             )}
           </tbody>
         </table>
@@ -129,7 +135,7 @@ const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: Fut
     </div>
 );
 
-// B. Tabla Genérica (Centrada)
+// B. Tabla Genérica
 const TablaSimple = ({ titulo, datos }: { titulo: string, datos: MarketDataItem[] }) => (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
         <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>
@@ -165,7 +171,7 @@ const TablaSimple = ({ titulo, datos }: { titulo: string, datos: MarketDataItem[
 export default function DolarFuturoPage() {
     const [marketData, setMarketData] = useState<{ [key: string]: MarketDataItem }>({});
     const [estado, setEstado] = useState('Conectando...');
-    const TABLE_NAME = 'dlrfx2';
+    const TABLE_NAME = 'dlrfx2'; // Tabla correcta
 
     useEffect(() => {
         const fetchData = async () => {
@@ -209,7 +215,7 @@ export default function DolarFuturoPage() {
     }, []);
 
     // ==================================================================
-    // LÓGICA DE CÁLCULO (Igual que antes)
+    // LÓGICA DE CÁLCULO (Agregada TEA)
     // ==================================================================
     const { dlrCalculados, dlrComplejos, oroData, ypfGgalData, al30Data, rfx20Data, precioSpot } = useMemo(() => {
         const allData = Object.values(marketData);
@@ -236,8 +242,15 @@ export default function DolarFuturoPage() {
             }
             
             let tna: number | null = null;
+            let tea: number | null = null; // Variable para TEA
+
             if (spotPrice && item.last && dias > 0) {
+                // A. TNA
                 tna = ((item.last / spotPrice) - 1) * (365 / dias);
+                
+                // B. TEA: Formula (PrecioFut / PrecioSpot)^(365/dias) - 1
+                const ratio = item.last / spotPrice;
+                tea = Math.pow(ratio, 365 / dias) - 1;
             }
 
             let fwd: number | null = null;
@@ -258,6 +271,7 @@ export default function DolarFuturoPage() {
                 ...item,
                 diasVto: dias > 0 ? dias : 0,
                 tnaImplicita: tna,
+                teaImplicita: tea, // Asignamos TEA
                 tasaForward: fwd
             });
         });
