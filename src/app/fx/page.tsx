@@ -379,13 +379,13 @@ export default function DolarFuturoPage() {
             }
           });
 
-          dataForChart = bandas.map(banda => {
-            const futuroEnFecha = futurosMap.get(banda.fc);
+          dataForChart = bandas.map(bandas => {
+            const futuroEnFecha = futurosMap.get(bandas.fc);
             return {
-              date: banda.fc,
-              dateObj: parseISO(banda.fc),
-              bi: banda.bi,
-              bs: banda.bs,
+              date: bandas.fc,
+              dateObj: parseISO(bandas.fc),
+              bi: bandas.bi,
+              bs: bandas.bs,
               precioFuturo: futuroEnFecha ? futuroEnFecha.price : null,
               ticker: futuroEnFecha ? futuroEnFecha.ticker : undefined
             };
