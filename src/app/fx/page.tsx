@@ -99,7 +99,7 @@ const getExpirationDate = (ticker: string): Date | undefined => {
 };
 
 // ==================================================================
-// 3. COMPONENTE DE GRÁFICO (NUEVO)
+// 3. COMPONENTE DE GRÁFICO (CORREGIDO)
 // ==================================================================
 const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
   if (!data || data.length === 0) return null;
@@ -125,8 +125,20 @@ const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
               tickFormatter={(val) => `$${val}`}
             />
             <Tooltip 
+              // Formato del encabezado (la fecha)
               labelFormatter={(label) => format(parseISO(label as string), 'dd MMMM yyyy', { locale: es })}
-              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+              
+              // Estilos de la cajita
+              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.15)' }}
+              
+              // Lógica para forzar el orden: 1. Superior, 2. Inferior, 3. Futuro
+              itemSorter={(item) => {
+                if (item.name === 'Banda Superior') return -1; // Va primero
+                if (item.name === 'Banda Inferior') return 0;  // Va segundo
+                return 1; // El resto (futuros) al final
+              }}
+
+              // Formateo de los valores (sin repetir Date)
               formatter={(value: any, name: string, props: any) => {
                  if (name === 'precioFuturo' && props.payload.ticker) {
                     return [`$${value}`, `Futuro (${props.payload.ticker})`];
@@ -137,12 +149,13 @@ const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
               }}
             />
             <Legend />
-            {/* Bandas como Líneas */}
-            <Line type="monotone" dataKey="bs" stroke="#93c5fd" strokeWidth={2} dot={false} name="Banda Superior" activeDot={false} />
-            <Line type="monotone" dataKey="bi" stroke="#93c5fd" strokeWidth={2} dot={false} name="Banda Inferior" activeDot={false} />
             
-            {/* Futuros como Puntos (Scatter) superpuestos */}
-            <Scatter name="Precio Futuro" dataKey="precioFuturo" fill="#ef4444" shape="circle" />
+            {/* Bandas: Color #021751 */}
+            <Line type="monotone" dataKey="bs" stroke="#021751" strokeWidth={2} dot={false} name="Banda Superior" activeDot={false} />
+            <Line type="monotone" dataKey="bi" stroke="#021751" strokeWidth={2} dot={false} name="Banda Inferior" activeDot={false} />
+            
+            {/* Futuros: Color #1036E2 */}
+            <Scatter name="Precio Futuro" dataKey="precioFuturo" fill="#1036E2" shape="circle" />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
