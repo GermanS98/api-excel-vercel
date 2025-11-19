@@ -15,11 +15,10 @@ type MarketDataItem = {
   expirationDate?: Date; 
 };
 
-// Tipo extendido para la tabla de Futuros con cálculos financieros
 type FuturoCalculado = MarketDataItem & {
   diasVto: number;
-  tnaImplicita: number | null; // Tasa vs Spot
-  tasaForward: number | null;  // Tasa vs Mes Anterior
+  tnaImplicita: number | null;
+  tasaForward: number | null;
 };
 
 const supabase = createClient(
@@ -46,12 +45,10 @@ const formatTimestamp = (ts: number) => {
   try { return format(new Date(ts), 'HH:mm:ss'); } catch (e) { return '-'; }
 };
 
-// Calcula fecha de vencimiento (Estimada al fin de mes si no hay tabla de feriados)
 const getExpirationDate = (ticker: string): Date | undefined => {
   try {
     if (ticker.includes('SPOT')) return undefined;
     const parts = ticker.split('/');
-    // Busca el código de mes (ej: DIC25)
     const mesCode = parts.find(p => /^[A-Z]{3}\d{2}$/.test(p));
     if (!mesCode) return undefined;
 
@@ -66,9 +63,6 @@ const getExpirationDate = (ticker: string): Date | undefined => {
     const anio = 2000 + parseInt(anioStr);
 
     if (mes === undefined || isNaN(anio)) return undefined;
-
-    // ROFEX suele vencer el último día hábil del mes. 
-    // Usamos fin de mes para aproximar el cálculo de días.
     return endOfMonth(new Date(anio, mes, 1));
   } catch (e) {
     return undefined;
@@ -76,10 +70,10 @@ const getExpirationDate = (ticker: string): Date | undefined => {
 };
 
 // ==================================================================
-// 3. COMPONENTES DE TABLA
+// 3. COMPONENTES DE TABLA (Estilos actualizados: Centrados)
 // ==================================================================
 
-// A. Tabla Específica para Futuros (Con Tasas)
+// A. Tabla Específica para Futuros
 const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: FuturoCalculado[], spotPrice: number | undefined }) => (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
         <div style={{ padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -94,34 +88,34 @@ const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: Fut
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
           <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
             <tr style={{ background: '#021751', color: 'white' }}>
-              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'left', fontWeight: 600 }}>Ticker</th>
-              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', fontWeight: 600 }}>Precio</th>
+              {/* Todos los headers con textAlign: 'center' */}
+              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Ticker</th>
+              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Precio</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Días</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#03206b' }}>T. Imp. (TNA)</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>T. Fwd (Mes)</th>
-              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right', fontWeight: 600 }}>Hora</th>
+              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Hora</th>
             </tr>
           </thead>
           <tbody>
             {datos.length > 0 ? (
               datos.map((item) => (
                 <tr key={item.ticker} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.6rem 0.5rem', fontWeight: 500, color: '#374151' }}>{item.ticker}</td>
-                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'right', fontWeight: 700, color: '#111827' }}>
+                  {/* Todos los datos con textAlign: 'center' */}
+                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 500, color: '#374151' }}>{item.ticker}</td>
+                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 700, color: '#111827' }}>
                     {formatPrice(item.last)}
                   </td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#6b7280' }}>
                     {item.diasVto > 0 ? item.diasVto : '-'}
                   </td>
-                  {/* Tasa Implícita */}
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 600, color: (item.tnaImplicita || 0) > 0 ? '#059669' : '#ef4444', background: '#f9fafb' }}>
                     {formatPercent(item.tnaImplicita)}
                   </td>
-                  {/* Tasa Forward (Marginal) */}
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#4b5563', fontSize: '0.85rem' }}>
                     {formatPercent(item.tasaForward)}
                   </td>
-                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'right', color: '#9ca3af', fontSize: '0.8rem' }}>
+                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.8rem' }}>
                     {formatTimestamp(item.timestamp)}
                   </td>
                 </tr>
@@ -135,7 +129,7 @@ const TablaFuturos = ({ titulo, datos, spotPrice }: { titulo: string, datos: Fut
     </div>
 );
 
-// B. Tabla Genérica (Para Bonos, Acciones, etc.)
+// B. Tabla Genérica (Centrada)
 const TablaSimple = ({ titulo, datos }: { titulo: string, datos: MarketDataItem[] }) => (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%' }}>
         <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>
@@ -145,17 +139,17 @@ const TablaSimple = ({ titulo, datos }: { titulo: string, datos: MarketDataItem[
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#021751', color: 'white' }}>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Ticker</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600 }}>Precio</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600 }}>Hora</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Ticker</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Precio</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Hora</th>
             </tr>
           </thead>
           <tbody>
             {datos.map((item) => (
                 <tr key={item.ticker} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#111827', textAlign: 'right', fontWeight: 'bold' }}>{formatPrice(item.last)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#6b7280', textAlign: 'right' }}>{formatTimestamp(item.timestamp)}</td>
+                  <td style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 500, color: '#4b5563' }}>{item.ticker}</td>
+                  <td style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#111827', fontWeight: 'bold' }}>{formatPrice(item.last)}</td>
+                  <td style={{ padding: '0.75rem 1rem', textAlign: 'center', color: '#6b7280' }}>{formatTimestamp(item.timestamp)}</td>
                 </tr>
             ))}
             {datos.length === 0 && <tr><td colSpan={3} style={{textAlign:'center', padding: '1rem', color: '#9ca3af'}}>Sin datos</td></tr>}
@@ -215,60 +209,48 @@ export default function DolarFuturoPage() {
     }, []);
 
     // ==================================================================
-    // LÓGICA DE CÁLCULO DE TASAS Y FILTRADO
+    // LÓGICA DE CÁLCULO (Igual que antes)
     // ==================================================================
     const { dlrCalculados, dlrComplejos, oroData, ypfGgalData, al30Data, rfx20Data, precioSpot } = useMemo(() => {
         const allData = Object.values(marketData);
         const hoy = startOfDay(new Date());
 
-        // 1. Encontrar Spot
         const spotItem = allData.find(d => d.ticker === 'DLR/SPOT');
         const spotPrice = spotItem?.last;
 
-        // Helper de ordenamiento
         const sortByDate = (a: MarketDataItem, b: MarketDataItem) => {
             if (a.expirationDate && b.expirationDate) return a.expirationDate.getTime() - b.expirationDate.getTime();
             return a.ticker.localeCompare(b.ticker);
         };
 
-        // 2. Filtrar y Ordenar Futuros Simples
         const rawFuturos = allData
             .filter(d => d.ticker.startsWith('DLR/') && !d.ticker.includes('SPOT') && (d.ticker.match(/\//g) || []).length <= 1)
             .sort(sortByDate);
 
-        // 3. Calcular Tasas (Implícita y Forward)
         const dlrCalculados: FuturoCalculado[] = [];
         
         rawFuturos.forEach((item, index) => {
-            // Cálculos básicos
             let dias = 0;
             if (item.expirationDate) {
                 dias = differenceInDays(item.expirationDate, hoy);
             }
             
-            // A. Tasa Implícita (vs SPOT)
             let tna: number | null = null;
             if (spotPrice && item.last && dias > 0) {
                 tna = ((item.last / spotPrice) - 1) * (365 / dias);
             }
 
-            // B. Tasa Forward (vs Mes Anterior)
-            // Si es el primero, comparamos vs Spot (igual que implícita). Si no, comparamos vs el futuro anterior.
             let fwd: number | null = null;
-            
             if (index > 0) {
-                const prevItem = dlrCalculados[index - 1]; // El item ya procesado anterior
+                const prevItem = dlrCalculados[index - 1]; 
                 const prevPrice = prevItem.last;
                 const prevDays = prevItem.diasVto;
                 const deltaDias = dias - prevDays;
 
-                // Calculamos forward solo si los precios existen y hay diferencia de días positiva
                 if (prevPrice && item.last && deltaDias > 0) {
-                    // Fórmula: (PrecioActual / PrecioAnterior - 1) * (365 / DiferenciaDías)
                     fwd = ((item.last / prevPrice) - 1) * (365 / deltaDias);
                 }
             } else {
-                // Para el primer contrato, la tasa Forward es la misma que la Implícita (vs Spot)
                 fwd = tna;
             }
 
@@ -280,7 +262,6 @@ export default function DolarFuturoPage() {
             });
         });
 
-        // 4. Resto de filtros (sin cambios mayores)
         const dlrComplejos = allData.filter(d => d.ticker.startsWith('DLR/') && (d.ticker.match(/\//g) || []).length >= 2).sort(sortByDate);
         const oroData = allData.filter(d => d.ticker.includes('ORO')).sort((a,b) => a.ticker.localeCompare(b.ticker));
         const ypfGgalData = allData.filter(d => d.ticker.includes('YPF') || d.ticker.includes('GGAL')).sort((a,b) => a.ticker.localeCompare(b.ticker));
@@ -300,11 +281,10 @@ export default function DolarFuturoPage() {
                      </span>
                 </div>
 
-                {/* GRILLA PRINCIPAL */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px', alignItems: 'start' }}>
                     
-                    {/* TABLA PRINCIPAL: DÓLAR FUTURO CON TASAS */}
-                    <div style={{ gridColumn: '1 / -1' }}> {/* Ocupa todo el ancho si es posible */}
+                    {/* TABLA PRINCIPAL */}
+                    <div style={{ gridColumn: '1 / -1' }}> 
                         <TablaFuturos 
                             titulo="Curva Dólar Futuro (Rofex)" 
                             datos={dlrCalculados} 
