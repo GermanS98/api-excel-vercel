@@ -99,7 +99,7 @@ const getExpirationDate = (ticker: string): Date | undefined => {
 };
 
 // ==================================================================
-// 3. COMPONENTE DE GRÁFICO (CORREGIDO)
+// 3. COMPONENTE DE GRÁFICO (ESTILO FINO Y LIMPIO)
 // ==================================================================
 const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
   if (!data || data.length === 0) return null;
@@ -113,6 +113,8 @@ const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+            
+            {/* Ejes */}
             <XAxis 
               dataKey="date" 
               tickFormatter={(val) => format(parseISO(val), 'MMM yy', { locale: es })}
@@ -124,22 +126,25 @@ const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
               tick={{ fontSize: 12, fill: '#6b7280' }}
               tickFormatter={(val) => `$${val}`}
             />
+
+            {/* Tooltip Limpio */}
             <Tooltip 
-              // Formato del encabezado (la fecha)
+              // 1. Fecha solo en el encabezado
               labelFormatter={(label) => format(parseISO(label as string), 'dd MMMM yyyy', { locale: es })}
               
-              // Estilos de la cajita
-              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.15)' }}
+              // 2. Estilo de la caja
+              contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.15)', fontSize: '0.9rem' }}
               
-              // Lógica para forzar el orden: 1. Superior, 2. Inferior, 3. Futuro
+              // 3. Ordenar: Primero Bandas, luego Futuro
               itemSorter={(item) => {
-                if (item.name === 'Banda Superior') return -1; // Va primero
-                if (item.name === 'Banda Inferior') return 0;  // Va segundo
-                return 1; // El resto (futuros) al final
+                if (item.name === 'Banda Superior') return -1;
+                if (item.name === 'Banda Inferior') return 0;
+                return 1;
               }}
 
-              // Formateo de los valores (sin repetir Date)
+              // 4. Formato estricto y limpieza de datos
               formatter={(value: any, name: string, props: any) => {
+                 // Si por alguna razón entra 'date', lo ignoramos, pero Recharts no debería pasarlo aquí.
                  if (name === 'precioFuturo' && props.payload.ticker) {
                     return [`$${value}`, `Futuro (${props.payload.ticker})`];
                  }
@@ -148,14 +153,42 @@ const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
                  return [value, name];
               }}
             />
-            <Legend />
             
-            {/* Bandas: Color #021751 */}
-            <Line type="monotone" dataKey="bs" stroke="#021751" strokeWidth={2} dot={false} name="Banda Superior" activeDot={false} />
-            <Line type="monotone" dataKey="bi" stroke="#021751" strokeWidth={2} dot={false} name="Banda Inferior" activeDot={false} />
+            {/* Hemos quitado <Legend /> aquí */}
+
+            {/* Líneas de Bandas: Finas (width 1) y Punteadas (dasharray 4 4) */}
+            <Line 
+                type="monotone" 
+                dataKey="bs" 
+                stroke="#021751" 
+                strokeWidth={1} 
+                strokeDasharray="4 4" 
+                dot={false} 
+                name="Banda Superior" 
+                activeDot={false} 
+            />
+            <Line 
+                type="monotone" 
+                dataKey="bi" 
+                stroke="#021751" 
+                strokeWidth={1} 
+                strokeDasharray="4 4" 
+                dot={false} 
+                name="Banda Inferior" 
+                activeDot={false} 
+            />
             
-            {/* Futuros: Color #1036E2 */}
-            <Scatter name="Precio Futuro" dataKey="precioFuturo" fill="#1036E2" shape="circle" />
+            {/* Futuros: Usamos Line con stroke="none" para controlar mejor el tamaño del punto (r:3) */}
+            <Line
+                type="monotone"
+                dataKey="precioFuturo"
+                stroke="none"
+                name="Precio Futuro"
+                dot={{ r: 3, fill: '#1036E2', strokeWidth: 0 }} // Punto fino y sólido
+                activeDot={{ r: 5, fill: '#1036E2' }} // Un poco más grande al pasar el mouse
+                connectNulls={false} // No unir los puntos con líneas invisibles
+            />
+
           </ComposedChart>
         </ResponsiveContainer>
       </div>
