@@ -359,7 +359,7 @@ export default function DolarFuturoPage() {
             const hoyStr = format(hoy, 'yyyy-MM-dd');
             const bandaHoy = bandas.find(b => b.fc === hoyStr);
             if (bandaHoy && bandaHoy.bs > 0) {
-                distTecho = (spotPrice / bandaHoy.bs) - 1;
+                distTecho = (bandaHoy.bs / spotPrice) - 1;
             }
         }
 
