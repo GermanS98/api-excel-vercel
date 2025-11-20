@@ -25,6 +25,7 @@ const Layout = ({ children, onDownloadPDF }: LayoutProps) => {
     { label: 'Obligaciones Negociables', href:'/ons'},
     { label: 'TAMAR', href:'/tamar'},
     { label: 'Bonares y Globales', href:'/soberanosrf'},
+    { label: 'Futuros', href:'/fx'},
     { label: 'Calculadora', href: '/bonos' },
   ];
 
