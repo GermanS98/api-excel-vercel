@@ -343,7 +343,7 @@ export default function DolarFuturoPage() {
       al30Data, 
       rfx20Data, 
       precioSpot,
-      distanciaTecho, // Nuevo dato calculado
+      distanciaTecho, 
       chartData 
     } = useMemo(() => {
         const allData = Object.values(marketData);
@@ -359,7 +359,7 @@ export default function DolarFuturoPage() {
             const hoyStr = format(hoy, 'yyyy-MM-dd');
             const bandaHoy = bandas.find(b => b.fc === hoyStr);
             if (bandaHoy && bandaHoy.bs > 0) {
-                distTecho = (bandaHoy.bs / spotPrice) - 1;
+                distTecho = (spotPrice / bandaHoy.bs) - 1;
             }
         }
 
@@ -396,8 +396,13 @@ export default function DolarFuturoPage() {
                 const prevDays = prevItem.diasVto;
                 const deltaDias = dias - prevDays;
 
-                if (prevPrice && item.last && deltaDias > 0) {
-                    fwd = ((item.last / prevPrice) - 1) * (365 / deltaDias);
+                if (tna !== null && prevItem.tnaImplicita !== null && deltaDias > 0) {
+                    // --- FÓRMULA ANTERIOR (Basada en Precios) ---
+                    // fwd = ((item.last / prevPrice) - 1) * (365 / deltaDias);
+                    
+                    // --- NUEVA FÓRMULA (Basada en Tasas / Bootstrapping Lineal) ---
+                    // (TasaLarga * DiasLargos - TasaCorta * DiasCortos) / (DiferenciaDias)
+                    fwd = ((tna * dias) - (prevItem.tnaImplicita * prevDays)) / deltaDias;
                 }
             } else {
                 fwd = tna;
@@ -450,7 +455,7 @@ export default function DolarFuturoPage() {
           al30Data, 
           rfx20Data, 
           precioSpot: spotPrice,
-          distanciaTecho: distTecho, // Retornamos el cálculo
+          distanciaTecho: distTecho, 
           chartData: dataForChart
         };
     }, [marketData, bandas]);
