@@ -117,20 +117,56 @@ const InfoCard = ({ title, value }: { title: string, value: number | null | unde
   );
 };
 // ==================================================================
-// COMPONENTE TablaGeneral (Sin cambios)
+// COMPONENTE TablaGeneral (ACTUALIZADO: Columna Días + Escala Color TIR)
 // ==================================================================
-const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
+const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
+  const hoy = startOfDay(new Date());
+
+  // 1. Lógica para la escala de colores de la TIR
+  // Obtenemos todas las TIR válidas para encontrar el rango (Min y Max)
+  const tirs = datos.map(d => d.tir).filter(t => t !== null && isFinite(t));
+  const minTir = tirs.length > 0 ? Math.min(...tirs) : 0;
+  const maxTir = tirs.length > 0 ? Math.max(...tirs) : 0;
+
+  // Función para obtener el color de fondo basado en el valor
+  const getTirColor = (val: number) => {
+    if (val === null || !isFinite(val)) return 'transparent';
+    if (maxTir === minTir) return 'transparent'; // Evitar división por cero
+
+    // Normalizamos el valor entre 0 y 1
+    const ratio = (val - minTir) / (maxTir - minTir);
+    
+    // HSL: 0 es Rojo, 60 es Amarillo, 120 es Verde
+    // Usamos una saturación del 75% y luminosidad del 90% para colores pastel suaves
+    const hue = ratio * 120; 
+    return `hsl(${hue}, 75%, 90%)`;
+  };
+
+  // Función para oscurecer un poco el texto si el fondo es muy claro (opcional, estético)
+  const getTirTextColor = (val: number) => {
+     // Usamos un verde muy oscuro para valores altos y rojo muy oscuro para bajos
+     // para mantener buen contraste
+     if (val === null || !isFinite(val)) return '#4b5563';
+     if (maxTir === minTir) return '#4b5563';
+     const ratio = (val - minTir) / (maxTir - minTir);
+     const hue = ratio * 120;
+     return `hsl(${hue}, 80%, 25%)`;
+  }
+
+  return (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-        <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center'}}>
-          {titulo}
-        </h2>
+      <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' }}>
+        {titulo}
+      </h2>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ position: 'sticky', top: 0 }}>
             <tr style={{ background: '#021751', color: 'white' }}>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Ticker</th>
+              {/* 🆕 Nueva Columna Días */}
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Días</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>VTO</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600}}>Precio</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Precio</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Var</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TIR</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TNA</th>
@@ -141,44 +177,72 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
           </thead>
           <tbody>
             {datos.length > 0 ? (
-              datos.map((item: Bono) => (
-                <tr key={item.t} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', textAlign: 'center' }}>{item.t}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatDate(item.vto)}</td>
-                  <td 
-                    style={{ 
-                        padding: '0.75rem 1rem', 
-                        color: '#4b5563', 
+              datos.map((item: Bono) => {
+                // Cálculo de días dinámico
+                let diasCalculados = 0;
+                try {
+                  const fechaVto = parseISO(item.vto);
+                  diasCalculados = differenceInDays(fechaVto, hoy);
+                } catch (e) {
+                  diasCalculados = item.dv;
+                }
+
+                return (
+                  <tr key={item.t} style={{ borderTop: '1px solid #e5e7eb' }}>
+                    <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', textAlign: 'center' }}>{item.t}</td>
+                    
+                    {/* 🆕 Nueva Celda Días */}
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{diasCalculados}</td>
+                    
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatDate(item.vto)}</td>
+                    
+                    {/* Precio con lógica de cierre anterior (azul) */}
+                    <td
+                      style={{
+                        padding: '0.75rem 1rem',
+                        color: '#4b5563',
                         textAlign: 'center',
-                        // Si item.pc es TRUE (usó cierre ant.), pinta de celeste claro (#e0f7fa)
-                        backgroundColor: item.pc ? '#e0f7fa' : 'transparent', 
-                    }}
-                  >
-                    {formatValue(item.p,'',2)}
-                  </td>
-                  <td style={{ 
+                        backgroundColor: item.pc ? '#e0f7fa' : 'transparent',
+                      }}
+                    >
+                      {formatValue(item.p, '', 2)}
+                    </td>
+
+                    <td style={{
+                      padding: '0.75rem 1rem',
+                      color: item.v >= 0 ? '#22c55e' : '#ef4444',
+                      fontWeight: 500, textAlign: 'center'
+                    }}>
+                      {formatValue(item.v)}
+                    </td>
+
+                    {/* 🆕 Columna TIR con Escala de Colores */}
+                    <td style={{ 
                         padding: '0.75rem 1rem', 
-                        color: item.v >= 0 ? '#22c55e' : '#ef4444',
-                        fontWeight: 500,
-                        textAlign: 'center'
-                        }}>
-                    {formatValue(item.v)}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tir)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tna)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tem)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.RD)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{item.mb ? `$${item.mb.toFixed(2)}` : '-'}</td>
-                </tr>
-              ))
+                        textAlign: 'center',
+                        fontWeight: 700,
+                        backgroundColor: getTirColor(item.tir), // Fondo calculado
+                        color: getTirTextColor(item.tir)        // Color texto calculado
+                    }}>
+                        {formatValue(item.tir)}
+                    </td>
+
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tna)}</td>
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tem)}</td>
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.RD)}</td>
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{item.mb ? `$${item.mb.toFixed(2)}` : '-'}</td>
+                  </tr>
+                );
+              })
             ) : (
-              <tr><td colSpan={9} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
+              <tr><td colSpan={10} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
             )}
           </tbody>
         </table>
       </div>
     </div>
-);
+  );
+};
 
 // --- Función getVtoInfo (Sin cambios) ---
 const getVtoInfo = (ticker: string,
