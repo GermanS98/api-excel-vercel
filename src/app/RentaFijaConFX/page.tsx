@@ -320,7 +320,7 @@ const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData
       <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 , textAlign: 'center'}}>
         Rendimiento Sintéticos (Dólar Futuro)
       </h2>
-      <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
+      <div style={{ overflowX: 'auto'}}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ position: 'sticky', top: 0 }}>
             <tr style={{ background: '#021751', color: 'white' }}>
