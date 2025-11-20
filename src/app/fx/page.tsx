@@ -2,7 +2,8 @@
 import Layout from '@/components/layout/Layout';
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { format, differenceInDays, startOfDay, endOfMonth, isSameDay, parseISO } from 'date-fns';
+// Agregamos getDaysInMonth para saber los días reales del mes de vto
+import { format, differenceInDays, startOfDay, endOfMonth, isSameDay, parseISO, getDaysInMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   ComposedChart,
@@ -31,6 +32,7 @@ type FuturoCalculado = MarketDataItem & {
   tnaImplicita: number | null;
   teaImplicita: number | null;
   tasaForward: number | null;
+  varMensual: number | null; // Variación mensual con tu fórmula lineal
 };
 
 // Tipo para la tabla de Bandas
@@ -160,7 +162,7 @@ const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
 };
 
 // ==================================================================
-// 4. COMPONENTES DE TABLA (CON DATO DE % TECHO)
+// 4. COMPONENTES DE TABLA
 // ==================================================================
 const TablaFuturos = ({ 
     titulo, 
@@ -181,7 +183,6 @@ const TablaFuturos = ({
                     <span style={{ fontSize: '0.85rem', color: '#059669', fontWeight: 600, background: '#ecfdf5', padding: '4px 8px', borderRadius: '4px' }}>
                         Spot: ${formatPrice(spotPrice)}
                     </span>
-                    {/* Nuevo indicador de % respecto al techo */}
                     {distanciaTecho !== undefined && distanciaTecho !== null && (
                         <span style={{ fontSize: '0.8rem', color: '#4b5563', fontWeight: 500, background: '#f3f4f6', padding: '4px 8px', borderRadius: '4px' }}>
                             {distanciaTecho > 0 ? '+' : ''}{formatPercent(distanciaTecho)} techo
@@ -197,9 +198,13 @@ const TablaFuturos = ({
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Ticker</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Precio</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Días</th>
+              
+              {/* Nueva Columna Var Mensual Linear */}
+              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#1e3a8a', color: '#bfdbfe' }}>Var. Mensual</th>
+              
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#03206b' }}>TNA Impl.</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#042b8a' }}>TEA Impl.</th>
-              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>T. Fwd (Mes)</th>
+              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>T. Fwd (Lineal)</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Hora</th>
             </tr>
           </thead>
@@ -210,6 +215,12 @@ const TablaFuturos = ({
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 500, color: '#374151' }}>{item.ticker}</td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 700, color: '#111827' }}>{formatPrice(item.last)}</td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#6b7280' }}>{item.diasVto > 0 ? item.diasVto : '-'}</td>
+                  
+                  {/* Valor Var Mensual (Fórmula Personalizada) */}
+                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 700, color: '#1e40af', background: '#eff6ff' }}>
+                    {formatPercent(item.varMensual)}
+                  </td>
+
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 600, color: (item.tnaImplicita || 0) > 0 ? '#059669' : '#ef4444', background: '#f9fafb' }}>{formatPercent(item.tnaImplicita)}</td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 600, color: (item.teaImplicita || 0) > 0 ? '#059669' : '#ef4444', background: '#f0fdfa' }}>{formatPercent(item.teaImplicita)}</td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#4b5563', fontSize: '0.85rem' }}>{formatPercent(item.tasaForward)}</td>
@@ -217,7 +228,7 @@ const TablaFuturos = ({
                 </tr>
               ))
             ) : (
-              <tr><td colSpan={7} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>Esperando datos...</td></tr>
+              <tr><td colSpan={8} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>Esperando datos...</td></tr>
             )}
           </tbody>
         </table>
@@ -376,17 +387,28 @@ export default function DolarFuturoPage() {
         
         rawFuturos.forEach((item, index) => {
             let dias = 0;
+            let diasMes = 30; // Default
+
             if (item.expirationDate) {
                 dias = differenceInDays(item.expirationDate, hoy);
+                // Obtenemos los días reales del mes de vencimiento (28, 30, 31)
+                diasMes = getDaysInMonth(item.expirationDate);
             }
             
             let tna: number | null = null;
             let tea: number | null = null;
+            let varMensual: number | null = null;
 
             if (spotPrice && item.last && dias > 0) {
+                // TNA Implícita (Lineal)
                 tna = ((item.last / spotPrice) - 1) * (365 / dias);
                 const ratio = item.last / spotPrice;
+                // TEA Implícita (Compuesta)
                 tea = Math.pow(ratio, 365 / dias) - 1;
+                
+                // NUEVA FORMULA PARA VAR MENSUAL (Tasa Nominal Mensual Directa ponderada por días del mes)
+                // (PrecioFuturo / Spot - 1) * (DiasDelMes / DiasVencimiento)
+                varMensual = ((item.last / spotPrice) - 1) * (diasMes / dias);
             }
 
             let fwd: number | null = null;
@@ -400,12 +422,12 @@ export default function DolarFuturoPage() {
                     // --- FÓRMULA ANTERIOR (Basada en Precios) ---
                     // fwd = ((item.last / prevPrice) - 1) * (365 / deltaDias);
                     
-                    // --- NUEVA FÓRMULA (Basada en Tasas / Bootstrapping Lineal) ---
-                    // (TasaLarga * DiasLargos - TasaCorta * DiasCortos) / (DiferenciaDias)
+                    // --- FÓRMULA ACTUAL (Bootstrapping Lineal de Tasas) ---
+                    // Se usa la TNA larga y la TNA corta para despejar la tasa implícita del período
                     fwd = ((tna * dias) - (prevItem.tnaImplicita * prevDays)) / deltaDias;
                 }
             } else {
-                fwd = tna;
+                fwd = tna; // Para el primer mes, la Forward es igual a la Tasa Spot
             }
 
             calculados.push({
@@ -413,7 +435,8 @@ export default function DolarFuturoPage() {
                 diasVto: dias > 0 ? dias : 0,
                 tnaImplicita: tna,
                 teaImplicita: tea,
-                tasaForward: fwd
+                tasaForward: fwd,
+                varMensual: varMensual
             });
         });
 
@@ -476,7 +499,7 @@ export default function DolarFuturoPage() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '20px', alignItems: 'start' }}>
                     
-                    {/* TABLA PRINCIPAL: Pasamos el nuevo dato */}
+                    {/* TABLA PRINCIPAL */}
                     <div style={{ gridColumn: '1 / -1' }}> 
                         <TablaFuturos 
                             titulo="Curva Dólar Futuro (Rofex)" 
