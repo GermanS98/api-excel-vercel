@@ -318,7 +318,7 @@ const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData
   return (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden'}}>
       <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 , textAlign: 'center'}}>
-        Rendimiento Sintéticos (Dólar Futuro)
+        Dólar Futuro
       </h2>
       <div style={{ overflowX: 'auto'}}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -450,7 +450,7 @@ const TablaSinteticosUSD = ({ bonos, futuros, vencimientos, tipoCalculo, setTipo
   return (
   <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
     <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '0', margin: 0 , textAlign: 'center'}}>
-    Sintético Tasa en Dólares (Lecap + Venta Futuro)
+    Sintético dollar linked
     </h2>
 
     <div style={{ padding: '0 1rem 1rem 1rem', background: '#f9fafb', display: 'flex', justifyContent: 'center', gap: '1rem', borderBottom: '1px solid #e5e7eb' }}>
