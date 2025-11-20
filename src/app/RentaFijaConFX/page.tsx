@@ -765,7 +765,7 @@ export default function LecapsPage() {
                             El fondo <strong>celeste</strong> en el precio indica que se utilizó el <strong>Cierre Anterior</strong>  en lugar del Último Precio.
                 </div>
                     
-                    <TablaGeneral titulo="Renta fija" datos={datosParaTabla} />
+                    <TablaGeneral titulo="Renta Fija" datos={datosParaTabla} />
 
                     {vencimientosMap === null ? (
                       <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>Cargando vencimientos...</div>

@@ -2,8 +2,8 @@
 import Layout from '@/components/layout/Layout';
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
-// Agregamos getDaysInMonth para saber los días reales del mes de vto
-import { format, differenceInDays, startOfDay, endOfMonth, isSameDay, parseISO, getDaysInMonth } from 'date-fns';
+// getDaysInMonth es vital para tu formula de Var Mensual
+import { format, differenceInDays, startOfDay, endOfMonth, parseISO, getDaysInMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   ComposedChart,
@@ -12,9 +12,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
-  Scatter
 } from 'recharts';
 
 // ==================================================================
@@ -32,17 +30,15 @@ type FuturoCalculado = MarketDataItem & {
   tnaImplicita: number | null;
   teaImplicita: number | null;
   tasaForward: number | null;
-  varMensual: number | null; // Variación mensual con tu fórmula lineal
+  varMensual: number | null;
 };
 
-// Tipo para la tabla de Bandas
 type BandaRow = {
-  fc: string; // Fecha cierre (YYYY-MM-DD)
-  bi: number; // Banda inferior
-  bs: number; // Banda superior
+  fc: string;
+  bi: number;
+  bs: number;
 };
 
-// Tipo para el gráfico
 type ChartDataPoint = {
   date: string;
   dateObj: Date;
@@ -76,7 +72,8 @@ const formatTimestamp = (ts: number) => {
   try { return format(new Date(ts), 'HH:mm:ss'); } catch (e) { return '-'; }
 };
 
-const getExpirationDate = (ticker: string): Date | undefined => {
+// Mantenemos esta función como "Fallback" (respaldo) por si no hay dato en base de datos
+const getFallbackExpirationDate = (ticker: string): Date | undefined => {
   try {
     if (ticker.includes('SPOT')) return undefined;
     const parts = ticker.split('/');
@@ -101,7 +98,7 @@ const getExpirationDate = (ticker: string): Date | undefined => {
 };
 
 // ==================================================================
-// 3. COMPONENTE DE GRÁFICO (ESTILO FINO Y LIMPIO)
+// 3. COMPONENTE DE GRÁFICO
 // ==================================================================
 const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
   if (!data || data.length === 0) return null;
@@ -129,15 +126,8 @@ const ChartBandas = ({ data }: { data: ChartDataPoint[] }) => {
             <Tooltip 
               labelFormatter={(label) => format(parseISO(label as string), 'dd MMMM yyyy', { locale: es })}
               contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.15)', fontSize: '0.9rem' }}
-              itemSorter={(item) => {
-                if (item.name === 'Banda Superior') return -1;
-                if (item.name === 'Banda Inferior') return 0;
-                return 1;
-              }}
               formatter={(value: any, name: string, props: any) => {
-                 if (name === 'precioFuturo' && props.payload.ticker) {
-                    return [`$${value}`, `Futuro (${props.payload.ticker})`];
-                 }
+                 if (name === 'precioFuturo' && props.payload.ticker) return [`$${value}`, `Futuro (${props.payload.ticker})`];
                  if (name === 'bi') return [`$${value}`, 'Banda Inferior'];
                  if (name === 'bs') return [`$${value}`, 'Banda Superior'];
                  return [value, name];
@@ -198,10 +188,7 @@ const TablaFuturos = ({
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Ticker</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Precio</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Días</th>
-              
-              {/* Nueva Columna Var Mensual Linear */}
-              
-              
+              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Vencimiento</th> {/* Nueva col fecha */}
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#03206b' }}>TNA Impl.</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#042b8a' }}>TEA Impl.</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>T. Fwd (Lineal)</th>
@@ -216,10 +203,9 @@ const TablaFuturos = ({
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 500, color: '#374151' }}>{item.ticker}</td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 700, color: '#111827' }}>{formatPrice(item.last)}</td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#6b7280' }}>{item.diasVto > 0 ? item.diasVto : '-'}</td>
-                  
-                  {/* Valor Var Mensual (Fórmula Personalizada) */}
-
-
+                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#6b7280', fontSize: '0.85rem' }}>
+                    {item.expirationDate ? format(item.expirationDate, 'dd/MM/yy') : '-'}
+                  </td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 600, color: (item.tnaImplicita || 0) > 0 ? '#059669' : '#ef4444', background: '#f9fafb' }}>{formatPercent(item.tnaImplicita)}</td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 600, color: (item.teaImplicita || 0) > 0 ? '#059669' : '#ef4444', background: '#f0fdfa' }}>{formatPercent(item.teaImplicita)}</td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#4b5563', fontSize: '0.85rem' }}>{formatPercent(item.tasaForward)}</td>
@@ -230,7 +216,7 @@ const TablaFuturos = ({
                 </tr>
               ))
             ) : (
-              <tr><td colSpan={8} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>Esperando datos...</td></tr>
+              <tr><td colSpan={9} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>Esperando datos...</td></tr>
             )}
           </tbody>
         </table>
@@ -271,9 +257,38 @@ const TablaSimple = ({ titulo, datos }: { titulo: string, datos: MarketDataItem[
 export default function DolarFuturoPage() {
     const [marketData, setMarketData] = useState<{ [key: string]: MarketDataItem }>({});
     const [bandas, setBandas] = useState<BandaRow[]>([]); 
-    const [rawBandas, setRawBandas] = useState<any[]>([]);
     const [estado, setEstado] = useState('Conectando...');
+    
+    // 1. NUEVO ESTADO: Mapa de Vencimientos (Ticker Mes -> Fecha Exacta)
+    const [vencimientosMap, setVencimientosMap] = useState<Map<string, string> | null>(null);
+    
     const TABLE_NAME = 'dlrfx2';
+
+    // 2. NUEVO FETCH: Obtener vencimientos de Rofex
+    useEffect(() => {
+        const fetchVencimientos = async () => {
+           const { data, error } = await supabase
+             .from('vencimientos_rofex')
+             .select('ticker, fecha_vto');
+        
+           if (error) {
+             console.error("Error fetching vencimientos rofex:", error);
+             return;
+           }
+        
+           if (data) {
+             const newMap = new Map<string, string>();
+             data.forEach((v: any) => {
+               if (v.ticker && v.fecha_vto) {
+                 // Normalizamos ticker a mayúsculas (ej: DIC24)
+                 newMap.set(String(v.ticker).toUpperCase(), v.fecha_vto);
+               }
+             });
+             setVencimientosMap(newMap);
+           }
+        };
+        fetchVencimientos();
+    }, []);
 
     // Fetch de datos de mercado (Futuros)
     useEffect(() => {
@@ -288,8 +303,9 @@ export default function DolarFuturoPage() {
                    initialMap[row.t] = {
                      ticker: row.t,
                      last: row.l,
-                     timestamp: row.ts,
-                     expirationDate: getExpirationDate(row.t)
+                     timestamp: row.ts
+                     // Nota: Ya no calculamos expirationDate aquí estáticamente
+                     // lo haremos dinámicamente en el useMemo con el Mapa
                    };
                 });
                 setMarketData(initialMap);
@@ -305,8 +321,7 @@ export default function DolarFuturoPage() {
                                 [newRow.t]: {
                                     ticker: newRow.t,
                                     last: newRow.l,
-                                    timestamp: newRow.ts,
-                                    expirationDate: getExpirationDate(newRow.t)
+                                    timestamp: newRow.ts
                                 }
                             }));
                         }
@@ -330,7 +345,6 @@ export default function DolarFuturoPage() {
         if (error) {
           console.error('Error cargando bandas:', error);
         } else if (data) {
-          setRawBandas(data as any[]);
           const normalized: BandaRow[] = (data as any[]).map(d => {
             const fc = String(d.fc || d.fecha || d.fecha_cierre || d.date);
             const biRaw = d.bi ?? d.b_inf ?? d.b_inferior ?? d.banda_inferior ?? d.bandaInf ?? d.banda_inferior_val;
@@ -366,7 +380,7 @@ export default function DolarFuturoPage() {
         const spotItem = allData.find(d => d.ticker === 'DLR/SPOT');
         const spotPrice = spotItem?.last;
 
-        // 2. Calcular Distancia al Techo (Usamos la banda de HOY)
+        // 2. Calcular Distancia al Techo
         let distTecho = null;
         if (spotPrice && bandas.length > 0) {
             const hoyStr = format(hoy, 'yyyy-MM-dd');
@@ -376,24 +390,55 @@ export default function DolarFuturoPage() {
             }
         }
 
-        const sortByDate = (a: MarketDataItem, b: MarketDataItem) => {
+        // 3. Procesar Futuros DLR
+        // Primero filtramos los tickers relevantes
+        const rawFuturos = allData
+            .filter(d => d.ticker.startsWith('DLR/') && !d.ticker.includes('SPOT') && (d.ticker.match(/\//g) || []).length <= 1);
+
+        // Creamos array temporal para calcular fechas antes de ordenar
+        const futurosConFechas = rawFuturos.map(item => {
+             let fechaVto: Date | undefined = undefined;
+             
+             // LÓGICA DE FECHA: Mapa vs Fallback
+             try {
+                 const parts = item.ticker.split('/');
+                 const mesCode = parts.find(p => /^[A-Z]{3}\d{2}$/.test(p)); // ej: DIC24
+                 
+                 if (mesCode && vencimientosMap) {
+                     // A. Buscar en DB (vencimientos_rofex)
+                     const fechaExactaStr = vencimientosMap.get(mesCode);
+                     if (fechaExactaStr) {
+                         fechaVto = parseISO(fechaExactaStr);
+                     } else {
+                         // B. Si no está en DB, usar Fallback (Fin de mes)
+                         fechaVto = getFallbackExpirationDate(item.ticker);
+                     }
+                 } else {
+                     // C. Si no hay mapa cargado aún, fallback
+                     fechaVto = getFallbackExpirationDate(item.ticker);
+                 }
+             } catch (e) {
+                 console.error("Error fecha", item.ticker);
+             }
+
+             return { ...item, expirationDate: fechaVto };
+        });
+
+        // Ordenar por Fecha
+        futurosConFechas.sort((a, b) => {
             if (a.expirationDate && b.expirationDate) return a.expirationDate.getTime() - b.expirationDate.getTime();
             return a.ticker.localeCompare(b.ticker);
-        };
-
-        const rawFuturos = allData
-            .filter(d => d.ticker.startsWith('DLR/') && !d.ticker.includes('SPOT') && (d.ticker.match(/\//g) || []).length <= 1)
-            .sort(sortByDate);
+        });
 
         const calculados: FuturoCalculado[] = [];
         
-        rawFuturos.forEach((item, index) => {
+        futurosConFechas.forEach((item, index) => {
             let dias = 0;
-            let diasMes = 30; // Default
+            let diasMes = 30; 
 
             if (item.expirationDate) {
                 dias = differenceInDays(item.expirationDate, hoy);
-                // Obtenemos los días reales del mes de vencimiento (28, 30, 31)
+                // Días reales del mes de vencimiento (para varMensual)
                 diasMes = getDaysInMonth(item.expirationDate);
             }
             
@@ -402,34 +447,28 @@ export default function DolarFuturoPage() {
             let varMensual: number | null = null;
 
             if (spotPrice && item.last && dias > 0) {
-                // TNA Implícita (Lineal)
+                // TNA Implícita
                 tna = ((item.last / spotPrice) - 1) * (365 / dias);
                 const ratio = item.last / spotPrice;
-                // TEA Implícita (Compuesta)
+                // TEA Implícita
                 tea = Math.pow(ratio, 365 / dias) - 1;
                 
-                // NUEVA FORMULA PARA VAR MENSUAL (Tasa Nominal Mensual Directa ponderada por días del mes)
-                // (PrecioFuturo / Spot - 1) * (DiasDelMes / DiasVencimiento)
+                // Var Mensual (Ponderada)
                 varMensual = ((item.last / spotPrice) - 1) * (diasMes / dias);
             }
 
             let fwd: number | null = null;
             if (index > 0) {
                 const prevItem = calculados[index - 1]; 
-                const prevPrice = prevItem.last;
                 const prevDays = prevItem.diasVto;
                 const deltaDias = dias - prevDays;
 
                 if (tna !== null && prevItem.tnaImplicita !== null && deltaDias > 0) {
-                    // --- FÓRMULA ANTERIOR (Basada en Precios) ---
-                    // fwd = ((item.last / prevPrice) - 1) * (365 / deltaDias);
-                    
-                    // --- FÓRMULA ACTUAL (Bootstrapping Lineal de Tasas) ---
-                    // Se usa la TNA larga y la TNA corta para despejar la tasa implícita del período
+                    // Tasa Forward (Bootstrapping Lineal)
                     fwd = ((tna * dias) - (prevItem.tnaImplicita * prevDays)) / deltaDias;
                 }
             } else {
-                fwd = tna; // Para el primer mes, la Forward es igual a la Tasa Spot
+                fwd = tna; 
             }
 
             calculados.push({
@@ -445,6 +484,7 @@ export default function DolarFuturoPage() {
         // --- CHART DATA ---
         let dataForChart: ChartDataPoint[] = [];
         const futurosMap = new Map<string, { price: number, ticker: string }>();
+        
         calculados.forEach(f => {
           if (f.expirationDate) {
             const fechaStr = format(f.expirationDate, 'yyyy-MM-dd');
@@ -454,6 +494,10 @@ export default function DolarFuturoPage() {
 
         if (bandas.length > 0) {
           dataForChart = bandas.map(bandasItem => {
+            // Aquí hay un detalle: Las bandas suelen tener fecha "yyyy-MM-dd".
+            // Si la fecha de vto Rofex coincide EXACTO con la banda, se une.
+            // Si Rofex vence el 30 y la banda es 31, no se unirán en el gráfico.
+            // Para el gráfico, a veces conviene buscar la banda más cercana, pero por ahora lo dejamos exacto.
             const futuroEnFecha = futurosMap.get(bandasItem.fc);
             return {
               date: bandasItem.fc,
@@ -466,11 +510,11 @@ export default function DolarFuturoPage() {
           });
         }
 
-        const dlrComplejos = allData.filter(d => d.ticker.startsWith('DLR/') && (d.ticker.match(/\//g) || []).length >= 2).sort(sortByDate);
+        const dlrComplejos = allData.filter(d => d.ticker.startsWith('DLR/') && (d.ticker.match(/\//g) || []).length >= 2).sort((a,b) => a.ticker.localeCompare(b.ticker));
         const oroData = allData.filter(d => d.ticker.includes('ORO')).sort((a,b) => a.ticker.localeCompare(b.ticker));
         const ypfGgalData = allData.filter(d => d.ticker.includes('YPF') || d.ticker.includes('GGAL')).sort((a,b) => a.ticker.localeCompare(b.ticker));
         const al30Data = allData.filter(d => d.ticker.includes('AL30')).sort((a,b) => a.ticker.localeCompare(b.ticker));
-        const rfx20Data = allData.filter(d => d.ticker.toLowerCase().includes('rfx20')).sort(sortByDate);
+        const rfx20Data = allData.filter(d => d.ticker.toLowerCase().includes('rfx20')).sort((a,b) => a.ticker.localeCompare(b.ticker));
 
         return { 
           dlrCalculados: calculados, 
@@ -483,7 +527,7 @@ export default function DolarFuturoPage() {
           distanciaTecho: distTecho, 
           chartData: dataForChart
         };
-    }, [marketData, bandas]);
+    }, [marketData, bandas, vencimientosMap]); // Agregamos vencimientosMap a dependencias
 
     return (
         <Layout>
@@ -491,7 +535,7 @@ export default function DolarFuturoPage() {
                 <h1 style={{ fontSize: '1.8rem', fontWeight: 700, textAlign: 'center', color: '#111827' }}>Monitor de Futuros</h1>
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                       <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '4px 12px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 600 }}>
-                         {estado}
+                          {estado}
                       </span>
                 </div>
 
