@@ -318,7 +318,7 @@ const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData
   return (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden'}}>
       <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 , textAlign: 'center'}}>
-        Dólar Futuro
+        Síntético Dollar Linked (Lecap + Compra Futuro)
       </h2>
       <div style={{ overflowX: 'auto'}}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
