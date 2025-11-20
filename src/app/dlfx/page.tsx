@@ -24,6 +24,7 @@ type Bono = {
   dv: number;     // dias_vto
   RD: number | null;
   ua: string | null; // ultimo_anuncio
+  pc: boolean | null;
 };
 
 type DlrfxData = {
@@ -145,10 +146,9 @@ const InfoCard = ({ title, value }: { title: string, value: number | null | unde
 };
 
 // ==================================================================
-// COMPONENTE TablaGeneral (ACTUALIZADO: Días calculados dinámicamente)
+// COMPONENTE TablaGeneral (ACTUALIZADO: Color PC + Días calculados)
 // ==================================================================
 const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
-  // 1. Definimos el día de hoy (inicio del día) para comparar fechas
   const hoy = startOfDay(new Date());
 
   return (
@@ -174,24 +174,31 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
           <tbody>
             {datos.length > 0 ? (
               datos.map((item: Bono, index: number) => {
-                // 2. Calculamos la diferencia de días
+                // Cálculo de días
                 let diasCalculados = 0;
                 try {
                   const fechaVto = parseISO(item.vto);
                   diasCalculados = differenceInDays(fechaVto, hoy);
                 } catch (e) {
-                  diasCalculados = item.dv; // Fallback por si falla el parseo
+                  diasCalculados = item.dv;
                 }
 
                 return (
                   <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
                     <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
-                    {/* 3. Mostramos el valor calculado */}
-                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>
-                      {diasCalculados}
-                    </td>
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{diasCalculados}</td>
                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatDate(item.vto)}</td>
-                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.p, '', 2)}</td>
+                    
+                    {/* 🆕 Lógica de color de fondo si es Precio Cierre (pc) */}
+                    <td style={{ 
+                        padding: '0.75rem 1rem', 
+                        color: '#4b5563', 
+                        textAlign: 'center',
+                        backgroundColor: item.pc ? '#e0f7fa' : 'transparent' 
+                    }}>
+                        {formatValue(item.p, '', 2)}
+                    </td>
+
                     <td style={{
                       padding: '0.75rem 1rem',
                       color: item.v >= 0 ? '#22c55e' : '#ef4444',
@@ -454,7 +461,7 @@ export default function DollarLinkedPage() {
     const fetchInitialData = async () => {
         const manana = new Date();
         manana.setDate(manana.getDate() + 1);
-        const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua';
+        const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua,pc';
         
         const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosDeEstaPagina);
         if (bonosError) console.error("Error fetching bonds:", bonosError);
@@ -645,7 +652,10 @@ export default function DollarLinkedPage() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '2rem' }}>
-                    
+                 <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#e0f7fa', borderLeft: '5px solid #00bcd4', borderRadius: '4px', color: '#006064', fontWeight: 600, fontSize: '0.9rem' }}>
+                    <span style={{ marginRight: '8px' }}>ⓘ</span>
+                    El fondo <strong>celeste</strong> en el precio indica que se utilizó el <strong>Cierre Anterior</strong> en lugar del Último Precio.
+                  </div>   
                     <TablaGeneral titulo="Dollar Linked" datos={datosParaTabla} />
 
                     {vencimientosMap === null ? (
