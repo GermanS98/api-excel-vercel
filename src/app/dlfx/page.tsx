@@ -145,13 +145,17 @@ const InfoCard = ({ title, value }: { title: string, value: number | null | unde
 };
 
 // ==================================================================
-// COMPONENTE TablaGeneral (Sin cambios)
+// COMPONENTE TablaGeneral (ACTUALIZADO: Días calculados dinámicamente)
 // ==================================================================
-const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
+const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
+  // 1. Definimos el día de hoy (inicio del día) para comparar fechas
+  const hoy = startOfDay(new Date());
+
+  return (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-        <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>
-          {titulo}
-        </h2>
+      <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>
+        {titulo}
+      </h2>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ position: 'sticky', top: 0 }}>
@@ -159,7 +163,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
               <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Ticker</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Días vto</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>VTO</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600}}>Precio</th>
+              <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Precio</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Var</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TIR</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>TNA</th>
@@ -169,25 +173,39 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
           </thead>
           <tbody>
             {datos.length > 0 ? (
-              datos.map((item: Bono, index: number) => (
-                <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{item.dv}</td>  
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatDate(item.vto)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.p,'',2)}</td>
-                  <td style={{ 
-                        padding: '0.75rem 1rem', 
-                        color: item.v >= 0 ? '#22c55e' : '#ef4444',
-                        fontWeight: 500, textAlign: 'center'
-                        }}>
-                    {formatValue(item.v)}
-                  </td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' , textAlign: 'center'}}>{formatValue(item.tir)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tna)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tem)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' , textAlign: 'center'}}>{formatValue(item.RD)}</td>
-                </tr>
-              ))
+              datos.map((item: Bono, index: number) => {
+                // 2. Calculamos la diferencia de días
+                let diasCalculados = 0;
+                try {
+                  const fechaVto = parseISO(item.vto);
+                  diasCalculados = differenceInDays(fechaVto, hoy);
+                } catch (e) {
+                  diasCalculados = item.dv; // Fallback por si falla el parseo
+                }
+
+                return (
+                  <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
+                    <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
+                    {/* 3. Mostramos el valor calculado */}
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>
+                      {diasCalculados}
+                    </td>
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatDate(item.vto)}</td>
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.p, '', 2)}</td>
+                    <td style={{
+                      padding: '0.75rem 1rem',
+                      color: item.v >= 0 ? '#22c55e' : '#ef4444',
+                      fontWeight: 500, textAlign: 'center'
+                    }}>
+                      {formatValue(item.v)}
+                    </td>
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tir)}</td>
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tna)}</td>
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.tem)}</td>
+                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>{formatValue(item.RD)}</td>
+                  </tr>
+                );
+              })
             ) : (
               <tr><td colSpan={9} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
             )}
@@ -195,7 +213,8 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
         </table>
       </div>
     </div>
-);
+  );
+};
 
 // ==================================================================
 // COMPONENTE TablaSinteticos (Futuros vs Spot) (Sin cambios)
