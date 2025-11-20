@@ -200,11 +200,12 @@ const TablaFuturos = ({
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Días</th>
               
               {/* Nueva Columna Var Mensual Linear */}
-              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#1e3a8a', color: '#bfdbfe' }}>Var. Mensual</th>
+              
               
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#03206b' }}>TNA Impl.</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#042b8a' }}>TEA Impl.</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>T. Fwd (Lineal)</th>
+              <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, background: '#1e3a8a', color: '#bfdbfe' }}>Var. Mensual</th>
               <th style={{ padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600 }}>Hora</th>
             </tr>
           </thead>
@@ -217,13 +218,14 @@ const TablaFuturos = ({
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#6b7280' }}>{item.diasVto > 0 ? item.diasVto : '-'}</td>
                   
                   {/* Valor Var Mensual (Fórmula Personalizada) */}
-                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 700, color: '#1e40af', background: '#eff6ff' }}>
-                    {formatPercent(item.varMensual)}
-                  </td>
+
 
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 600, color: (item.tnaImplicita || 0) > 0 ? '#059669' : '#ef4444', background: '#f9fafb' }}>{formatPercent(item.tnaImplicita)}</td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 600, color: (item.teaImplicita || 0) > 0 ? '#059669' : '#ef4444', background: '#f0fdfa' }}>{formatPercent(item.teaImplicita)}</td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#4b5563', fontSize: '0.85rem' }}>{formatPercent(item.tasaForward)}</td>
+                  <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', fontWeight: 700, color: '#1e40af', background: '#eff6ff' }}>
+                    {formatPercent(item.varMensual)}
+                  </td>
                   <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.8rem' }}>{formatTimestamp(item.timestamp)}</td>
                 </tr>
               ))
