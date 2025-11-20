@@ -252,8 +252,8 @@ const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData
   return (
     <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden'}}>
       <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'center' }}>
-        Rendimiento Sintéticos (Dólar Futuro)
-      </h2>
+        Futuros de dólar
+        </h2>
       <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ position: 'sticky', top: 0 }}>
@@ -268,7 +268,7 @@ const TablaSinteticos = ({ datos, vencimientos }: { datos: Map<string, DlrfxData
           <tbody>
             {spot ? (
               <tr style={{ borderTop: '1px solid #e5e7eb', background: '#f9fafb' }}>
-                <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#111827', textAlign: 'center'}}>{spot.t} (Spot)</td>
+                <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#111827', textAlign: 'center'}}>{spot.t}</td>
                 <td style={{ padding: '0.75rem 1rem', fontWeight: 700, color: '#111827' , textAlign: 'center'}}>{formatValue(spot.l, '', 2)}</td>
                 <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>-</td>
                 <td style={{ padding: '0.75rem 1rem', color: '#4b5563', textAlign: 'center' }}>-</td>
@@ -377,14 +377,14 @@ const TablaSinteticosDL = ({ bonos, futuros, vencimientos }: {
   return (
   <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
     <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 , textAlign: 'center'}}>
-    TNA Sintética (DL + Venta Futuro)
+    Sintético de tasa (DL + Venta Futuro)
     </h2>
-    <div style={{ overflowX: 'auto', maxHeight: '400px' }}>
+    <div style={{ overflowX: 'auto'}}>
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead style={{ position: 'sticky', top: 0 }}>
       <tr style={{ background: '#021751', color: 'white' }}>
-        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Letra (DL)</th>
-        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Días</th>
+        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Letra</th>
+        <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Días T+1</th>
         <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Precio Letra</th>
         <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Futuro (Hedge)</th>
         <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>Precio Futuro</th>
