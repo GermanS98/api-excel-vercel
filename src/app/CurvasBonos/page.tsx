@@ -184,7 +184,8 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
     // 1. Añadimos el diccionario de enlaces externos.
     const enlacesExternos: { [key: string]: string } = {
         'Obligaciones Negociables': 'https://researchcap.vercel.app/ons',
-        'Bonares y Globales': 'https://researchcap.vercel.app/soberanosrf'
+        'Bonares y Globales': 'https://researchcap.vercel.app/soberanosrf',
+        'ONs Dollar Linked': 'https://researchcap.vercel.app/ondl'
     };
     const urlExterna = enlacesExternos[titulo];
 
