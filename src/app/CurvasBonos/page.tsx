@@ -183,9 +183,10 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
 const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
     // 1. Añadimos el diccionario de enlaces externos.
     const enlacesExternos: { [key: string]: string } = {
-        'Obligaciones Negociables': 'https://researchcap.vercel.app/ons',
+        'Obligaciones Negociables': 'https://researchcap.vercel.app/ons', // No se usa, pero se mantiene por si acaso
         'Bonares y Globales': 'https://researchcap.vercel.app/soberanosrf',
-        'ONs Dollar Linked': 'https://researchcap.vercel.app/ondl'
+        'ONs Dollar Linked': 'https://researchcap.vercel.app/ondl',
+        'Subsoberanos': 'https://researchcap.vercel.app/subsob'
     };
     const urlExterna = enlacesExternos[titulo];
 
@@ -214,7 +215,8 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                             <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Precio</th>
                             <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Var</th>
                             <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>TIR</th>
-                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Paridad</th>
+                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>MD</th>
+                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Paridad</th>                            
                         </tr>
                     </thead>
                     <tbody>
@@ -238,11 +240,12 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                                         {formatValue(item.v)}
                                     </td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
+                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.md, '', 2)}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.pd, '', 2)}</td>
                                 </tr>
                             ))
                         ) : (
-                            <tr><td colSpan={6} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
+                            <tr><td colSpan={7} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
                         )}
                     </tbody>
                 </table>
@@ -268,7 +271,8 @@ export default function HomePage() {
       'TAMAR': ['TAMAR', 'ON TAMAR'],
       'Bonares y Globales': ['BONAR', 'GLOBAL', 'BOPREAL'],
       'Obligaciones Negociables': ['ON'],
-      'ONs Dollar Linked': ['ON_DL']
+      'ONs Dollar Linked': ['ON_DL'],
+      'Subsoberanos': ['SUBSOB']
     };
     
     const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>(Object.keys(gruposDeSegmentos)[0]);
@@ -432,6 +436,7 @@ useEffect(() => {
     const tabla5 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.s)));
     const tabla6 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Obligaciones Negociables'].includes(b.s)));
     const tabla7 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['ONs Dollar Linked'].includes(b.s)));
+    const tabla8 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Subsoberanos'].includes(b.s)));
 
 
 
@@ -551,7 +556,8 @@ useEffect(() => {
                     <TablaGeneral titulo="TAMAR" datos={tabla4} />
                     <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} />
                     <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} />
-                    <TablaSoberanosYONs titulo="ONs Dollar Linked" datos={tabla7} />
+                    <TablaGeneral titulo="ONs Dollar Linked" datos={tabla7} />
+                    <TablaSoberanosYONs titulo="Subsoberanos" datos={tabla8} />
                 </div>
                 {isGeneratingPDF && (
                     <ReportePDFGenerator

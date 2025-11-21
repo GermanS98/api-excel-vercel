@@ -21,9 +21,7 @@ type Bono = {
   pd: number;      // paridad
   md: number | null; // modify_duration
   RD: number | null;
-  spread?: number | null; // Campo opcional para el spread
   ua: string | null; // ultimo_anuncio
-  cje: number | null;
   pc: boolean; // indica si el precio es Cierre Anterior
 };
 
@@ -83,8 +81,6 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TIR</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Paridad</th>
               <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>MD</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Spread l. tasa</th>
-              <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>canje</th>
             </tr>
           </thead>
           <tbody>
@@ -115,12 +111,10 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => (
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.tir)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.pd, '', 2)}</td>
                   <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.md, '', 2)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.spread)}</td>
-                  <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatValue(item.cje,'%',2)}</td>
                 </tr>
               ))
             ) : (
-              <tr><td colSpan={9} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
+              <tr><td colSpan={7} style={{ padding: '1rem', textAlign: 'center', color: '#6b7280' }}>No se encontraron datos.</td></tr>
             )}
           </tbody>
         </table>
@@ -144,7 +138,7 @@ export default function SoberanosPage() {
         const fetchInitialData = async () => {
             const manana = new Date();
             manana.setDate(manana.getDate() + 1);
-            const columnasNecesarias = 't,vto,p,tir,v,s,pd,RD,dv,ua,cje,md,pc';
+            const columnasNecesarias = 't,vto,p,tir,v,pd,RD,dv,ua,md,pc';
             
             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
             if (bonosError) console.error("Error fetching bonds:", bonosError);
