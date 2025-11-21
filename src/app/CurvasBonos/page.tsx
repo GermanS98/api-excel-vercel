@@ -267,7 +267,7 @@ export default function HomePage() {
       'TAMAR': ['TAMAR', 'ON TAMAR'],
       'Bonares y Globales': ['BONAR', 'GLOBAL', 'BOPREAL'],
       'Obligaciones Negociables': ['ON'],
-      'ONs Dollar Linked': ['ON DL']
+      'ONs Dollar Linked': ['ON_DL']
     };
     
     const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>(Object.keys(gruposDeSegmentos)[0]);
