@@ -422,8 +422,14 @@
                 } else if (spotData) {
                     // Agregamos el valor spot al principio del array con la fecha de hoy
                     // Usamos la fecha actual para el valor SPOT, no la fecha de valoración del formulario.
+                    // Usamos la fecha actual para el valor SPOT, no la fecha de valoración del formulario
                     const fechaHoy = new Date().toISOString().split('T')[0];
-                    dolar = [{ fecha: fechaHoy, valor: spotData.l }, ...dolarHistorico];
+
+                    // Filtramos el histórico para remover la entrada de hoy, si es que ya existe
+                    const dolarSinHoy = dolarHistorico.filter((d: { fecha: string; }) => d.fecha !== fechaHoy);
+
+                    // Añadimos el valor SPOT de Supabase al principio del array
+                    dolar = [{ fecha: fechaHoy, valor: spotData.l }, ...dolarSinHoy];
                 } else {
                     dolar = dolarHistorico; // Fallback si no se encuentra el ticker
                 }
@@ -441,6 +447,11 @@
                 } else if (moneda === 'USD' && monedaBono === 'ARS') {
                 precioFinal = precioFinal * tc;
                 }
+        }
+
+        // Log para depurar los valores del dólar enviados
+        if (dolar && dolar.length > 0) {
+            console.log("Primeros 10 valores del DF Dólar enviados al backend:", dolar.slice(0, 10));
         }
 
         const res = await fetch('https://tir-backend-iop7.onrender.com/tir', {
