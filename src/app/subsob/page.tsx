@@ -258,7 +258,7 @@ export default function SoberanosPage() {
     return (
         <Layout>
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Soberanos</h1>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Subsoberanos</h1>
                 <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem'}}>
                       {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
                           <span style={{ color: '#374151', fontWeight: 500 }}>
@@ -287,7 +287,7 @@ export default function SoberanosPage() {
                     
                     <CurvaRendimientoChart 
                         data={datosParaGrafico} 
-                        segmentoActivo="Bonares y Globales" 
+                        segmentoActivo="Subsoberanos" 
                         xAxisKey="md"
                     />
                 </div>
@@ -297,7 +297,7 @@ export default function SoberanosPage() {
                 </div>                
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
-                    <TablaGeneral titulo="Soberanos" datos={datosParaTabla} />
+                    <TablaGeneral titulo="Subsoberanos" datos={datosParaTabla} />
                 </div>
             </div>
         </Layout>
