@@ -263,10 +263,11 @@ export default function HomePage() {
     const gruposDeSegmentos: { [key: string]: string[] } = {
       'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
       'Ajustados por CER': ['CER', 'ON CER'],
-      'Dollar Linked': ['ON DL', 'DL', 'ON HD'],
+      'Dollar Linked': ['DL', 'ON HD'],
       'TAMAR': ['TAMAR', 'ON TAMAR'],
       'Bonares y Globales': ['BONAR', 'GLOBAL', 'BOPREAL'],
-      'Obligaciones Negociables': ['ON']
+      'Obligaciones Negociables': ['ON'],
+      'ONs Dollar Linked': ['ON DL']
     };
     
     const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>(Object.keys(gruposDeSegmentos)[0]);
@@ -429,6 +430,7 @@ useEffect(() => {
     const tabla4 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['TAMAR'].includes(b.s)));
     const tabla5 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Bonares y Globales'].includes(b.s)));
     const tabla6 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['Obligaciones Negociables'].includes(b.s)));
+    const tabla7 = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => gruposDeSegmentos['ONs Dollar Linked'].includes(b.s)));
 
 
 
@@ -548,6 +550,7 @@ useEffect(() => {
                     <TablaGeneral titulo="TAMAR" datos={tabla4} />
                     <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} />
                     <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} />
+                    <TablaSoberanosYONs titulo="ONs Dollar Linked" datos={tabla7} />
                 </div>
                 {isGeneratingPDF && (
                     <ReportePDFGenerator
