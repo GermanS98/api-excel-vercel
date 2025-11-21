@@ -113,7 +113,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
         'Ajustados por CER': 'https://researchcap.vercel.app/cer',
         'Dollar Linked': 'https://researchcap.vercel.app/dl',
         'TAMAR': 'https://researchcap.vercel.app/tamar',
-        
+        'ONs Dollar Linked': 'https://researchcap.vercel.app/ondl'
     };
     const urlExterna = enlacesExternos[titulo];
 
