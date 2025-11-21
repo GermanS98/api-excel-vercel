@@ -407,7 +407,26 @@
                 tamar = await tamarRes.json();
         } else if (tipo_bono === 'DOLAR LINKED' || tipo_bono === "DL") {
                 const dolarRes = await fetch(`/api/dolar`);
-                dolar = await dolarRes.json();
+                const dolarHistorico = await dolarRes.json();
+
+                // --- NUEVO: OBTENER DÓLAR SPOT ---
+                const { data: spotData, error: spotError } = await supabase
+                    .from('dlrfx2')
+                    .select('l') // Seleccionamos solo la columna 'last' (precio)
+                    .eq('t', 'DLR/SPOT') // Buscamos el ticker específico
+                    .single(); // Esperamos un único resultado
+
+                if (spotError) {
+                    console.warn("No se pudo obtener el dólar spot, se usará solo el histórico:", spotError.message);
+                    dolar = dolarHistorico;
+                } else if (spotData) {
+                    // Agregamos el valor spot al principio del array con la fecha de hoy
+                    // Usamos la fecha actual para el valor SPOT, no la fecha de valoración del formulario.
+                    const fechaHoy = new Date().toISOString().split('T')[0];
+                    dolar = [{ fecha: fechaHoy, valor: spotData.l }, ...dolarHistorico];
+                } else {
+                    dolar = dolarHistorico; // Fallback si no se encuentra el ticker
+                }
         }
 
         const feriadosRes = await fetch(`/api/feriados`);
