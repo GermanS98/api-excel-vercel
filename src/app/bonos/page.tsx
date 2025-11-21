@@ -449,11 +449,6 @@
                 }
         }
 
-        // Log para depurar los valores del dólar enviados
-        if (dolar && dolar.length > 0) {
-            console.log("Primeros 10 valores del DF Dólar enviados al backend:", dolar.slice(0, 10));
-        }
-
         const res = await fetch('https://tir-backend-iop7.onrender.com/tir', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
