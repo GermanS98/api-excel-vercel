@@ -617,16 +617,26 @@ export default function LecapsPage() {
  
     const setupSuscripciones = (segmentosRequeridos: string[]) => {
       const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
-      bondChannel = supabase.channel('realtime-datosbonos')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
-          const bonoActualizado = payload.new as Bono;
-          setBonosLecaps(prev => {
-            const existe = prev.some(b => b.t === bonoActualizado.t);
-            return existe ? prev.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...prev, bonoActualizado];
-          });
-          setUltimaActualizacion(bonoActualizado.ua || null);
-        })
-        .subscribe();
+    bondChannel = supabase.channel('realtime-datosbonos')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
+          const bonoActualizado = payload.new as Bono;
+          setBonosLecaps(prev => {
+            // 1. Mapear para actualizar el bono existente
+            const newBonds = prev.map(b => (b.t === bonoActualizado.t ? bonoActualizado : b));
+            
+            // 2. Comprobar si fue actualizado (si existía)
+            const existe = newBonds.some(b => b.t === bonoActualizado.t);
+            
+            // 3. Si no existía, añadirlo (para manejar inserciones)
+            if (!existe) {
+              return [...newBonds, bonoActualizado];
+            }
+            
+            return newBonds;
+          });
+          setUltimaActualizacion(bonoActualizado.ua || null);
+        })
+        .subscribe();
  
       dlrfxChannel = supabase.channel('realtime-dlrfx')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'dlrfx2' }, payload => {
