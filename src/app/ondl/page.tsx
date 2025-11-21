@@ -606,7 +606,7 @@ export default function DollarLinkedPage() {
     return (
         <Layout>
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Dollar Linked</h1>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: ONs Dollar Linked</h1>
                 <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                   {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
                       <span style={{ color: '#374151', fontWeight: 500 }}>

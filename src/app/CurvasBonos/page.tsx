@@ -555,9 +555,9 @@ useEffect(() => {
                     <TablaGeneral titulo="Dollar Linked" datos={tabla3} />
                     <TablaGeneral titulo="TAMAR" datos={tabla4} />
                     <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} />
+                    <TablaSoberanosYONs titulo="Subsoberanos" datos={tabla8} />
                     <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} />
                     <TablaGeneral titulo="ONs Dollar Linked" datos={tabla7} />
-                    <TablaSoberanosYONs titulo="Subsoberanos" datos={tabla8} />
                 </div>
                 {isGeneratingPDF && (
                     <ReportePDFGenerator
