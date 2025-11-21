@@ -429,7 +429,7 @@
                     const dolarSinHoy = dolarHistorico.filter((d: { fecha: string; }) => d.fecha !== fechaHoy);
 
                     // Añadimos el valor SPOT de Supabase al principio del array
-                    dolar = [{ fecha: fechaHoy, valor: spotData.l }, ...dolarSinHoy];
+                    dolar = [{ fecha: fechaHoy, a3500: spotData.l }, ...dolarSinHoy];
                 } else {
                     dolar = dolarHistorico; // Fallback si no se encuentra el ticker
                 }
