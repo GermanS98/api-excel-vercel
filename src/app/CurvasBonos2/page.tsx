@@ -108,7 +108,7 @@ const InfoCard = ({ title, value }: { title: string, value: number | null | unde
 };
 
 // --- COMPONENTES DE TABLA CON TÍTULOS CLICKEABLES Y CUERPO COMPLETO ---
-const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
+const TablaGeneral = ({ titulo, datos, onShowTooltip, onHideTooltip }: { titulo: string, datos: Bono[], onShowTooltip: (content: string, event: React.MouseEvent) => void, onHideTooltip: () => void }) => {
     const enlacesExternos: { [key: string]: string } = {
         'LECAPs y Similares': 'https://researchcap.vercel.app/RentaFijaArs',
         'Ajustados por CER': 'https://researchcap.vercel.app/cer',
@@ -146,7 +146,11 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                         {datos.length > 0 ? (
                             datos.map((item: Bono, index: number) => (
                                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                    <td title={`Actualizado: ${formatTimestamp(item.ua || null)}`} style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', cursor: 'help' }}>{item.t}</td>
+                                    <td 
+                                        onMouseEnter={(e) => onShowTooltip(`Actualizado: ${formatTimestamp(item.ua || null)}`, e)}
+                                        onMouseLeave={onHideTooltip}
+                                        style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', cursor: 'help' }}
+                                    >{item.t}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
                                     <td 
                                         style={{ 
@@ -181,7 +185,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
     );
 };
   
-const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
+const TablaSoberanosYONs = ({ titulo, datos, onShowTooltip, onHideTooltip }: { titulo: string, datos: Bono[], onShowTooltip: (content: string, event: React.MouseEvent) => void, onHideTooltip: () => void }) => {
     // 1. Añadimos el diccionario de enlaces externos.
     const enlacesExternos: { [key: string]: string } = {
         'Obligaciones Negociables': 'https://researchcap.vercel.app/ons', // No se usa, pero se mantiene por si acaso
@@ -224,7 +228,11 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                         {datos.length > 0 ? (
                             datos.map((item: Bono, index: number) => (
                                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                    <td title={`Actualizado: ${formatTimestamp(item.ua || null)}`} style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', cursor: 'help' }}>{item.t}</td>
+                                    <td 
+                                        onMouseEnter={(e) => onShowTooltip(`Actualizado: ${formatTimestamp(item.ua || null)}`, e)}
+                                        onMouseLeave={onHideTooltip}
+                                        style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', cursor: 'help' }}
+                                    >{item.t}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
                                     <td 
                                         style={{ 
@@ -264,6 +272,36 @@ export default function HomePage() {
     const [menuAbierto, setMenuAbierto] = useState(false);
     // --- NUEVO: ESTADO PARA LOS DATOS DEL TIPO DE CAMBIO ---
     const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
+    // --- NUEVO: ESTADO Y COMPONENTE PARA EL TOOLTIP PERSONALIZADO ---
+    const [tooltip, setTooltip] = useState({ visible: false, content: '', x: 0, y: 0 });
+
+    const CustomTooltip = ({ visible, content, x, y }: typeof tooltip) => {
+        if (!visible) return null;
+        return (
+            <div style={{
+                position: 'fixed',
+                top: y,
+                left: x,
+                background: 'white',
+                border: '1px solid #3b82f6', // Borde azul fino
+                borderRadius: '8px', // Bordes redondeados
+                padding: '8px 12px',
+                color: '#4b5563', // Misma tipografía que la página
+                fontSize: '0.85rem',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                zIndex: 1000,
+                pointerEvents: 'none', // Para que no interfiera con el mouse
+                fontFamily: 'inherit' // Hereda la fuente de la página
+            }}>
+                {content}
+            </div>
+        );
+    };
+
+    const handleShowTooltip = (content: string, event: React.MouseEvent) => {
+        setTooltip({ visible: true, content, x: event.clientX + 15, y: event.clientY + 15 });
+    };
+    const handleHideTooltip = () => { setTooltip(prev => ({ ...prev, visible: false })); };
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const gruposDeSegmentos: { [key: string]: string[] } = {
       'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
@@ -443,6 +481,7 @@ useEffect(() => {
 
     return (
         <Layout onDownloadPDF={handleDownloadFullReport}>
+            <CustomTooltip visible={tooltip.visible} content={tooltip.content} x={tooltip.x} y={tooltip.y} />
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
 
                 <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
@@ -551,14 +590,14 @@ useEffect(() => {
                         marginTop: '2rem'
                     }}
                 >
-                    <TablaGeneral titulo="LECAPs y Similares" datos={tabla1} />
-                    <TablaGeneral titulo="Ajustados por CER" datos={tabla2} />
-                    <TablaGeneral titulo="Dollar Linked" datos={tabla3} />
-                    <TablaGeneral titulo="TAMAR" datos={tabla4} />
-                    <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} />
-                    <TablaSoberanosYONs titulo="Subsoberanos" datos={tabla8} />
-                    <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} />
-                    <TablaGeneral titulo="ONs Dollar Linked" datos={tabla7} />
+                    <TablaGeneral titulo="LECAPs y Similares" datos={tabla1} onShowTooltip={handleShowTooltip} onHideTooltip={handleHideTooltip} />
+                    <TablaGeneral titulo="Ajustados por CER" datos={tabla2} onShowTooltip={handleShowTooltip} onHideTooltip={handleHideTooltip} />
+                    <TablaGeneral titulo="Dollar Linked" datos={tabla3} onShowTooltip={handleShowTooltip} onHideTooltip={handleHideTooltip} />
+                    <TablaGeneral titulo="TAMAR" datos={tabla4} onShowTooltip={handleShowTooltip} onHideTooltip={handleHideTooltip} />
+                    <TablaSoberanosYONs titulo="Bonares y Globales" datos={tabla5} onShowTooltip={handleShowTooltip} onHideTooltip={handleHideTooltip} />
+                    <TablaSoberanosYONs titulo="Subsoberanos" datos={tabla8} onShowTooltip={handleShowTooltip} onHideTooltip={handleHideTooltip} />
+                    <TablaSoberanosYONs titulo="Obligaciones Negociables" datos={tabla6} onShowTooltip={handleShowTooltip} onHideTooltip={handleHideTooltip} />
+                    <TablaGeneral titulo="ONs Dollar Linked" datos={tabla7} onShowTooltip={handleShowTooltip} onHideTooltip={handleHideTooltip} />
                 </div>
                 {isGeneratingPDF && (
                     <ReportePDFGenerator
