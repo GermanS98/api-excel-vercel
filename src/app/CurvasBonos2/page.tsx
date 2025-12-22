@@ -327,7 +327,7 @@ useEffect(() => {
         manana.setDate(manana.getDate() + 1);
         const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd, pc, ua';
 
-        const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString());
+        const { data: bonosData, error: bonosError } = await supabase.from('datosbonos2').select(columnasNecesarias).gte('vto', manana.toISOString());
         if (bonosError) {
             setEstado(`Error al cargar bonos: ${bonosError.message}`);
         } else if (bonosData) {
