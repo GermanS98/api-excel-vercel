@@ -537,8 +537,8 @@ useEffect(() => {
                     />
                 </div>
 
-                <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#e0f7fa', borderLeft: '5px solid #00bcd4', borderRadius: '4px', color: '#006064', fontWeight: 600, fontSize: '0.9rem' }}>
-                    <span style={{ marginRight: '8px' }}>ⓘ</span>
+                <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#ffffff', border: '1px solid #3b82f6', borderRadius: '8px', color: '#4b5563', fontSize: '0.9rem' }}>
+                    <span style={{ marginRight: '8px', color: '#3b82f6', fontWeight: 'bold' }}>ⓘ</span>
                     El fondo <strong>celeste</strong> en el precio indica que se utilizó el <strong>Cierre Anterior</strong> en lugar del Último Precio.
                 </div>
 
