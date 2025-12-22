@@ -10,6 +10,7 @@ import Link from 'next/link';
 import ReportePDFGenerator from '@/components/ui/ReportePDFGenerator'; 
 import { format, parseISO } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
+// para push
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
 type Bono = {
   t: string;
