@@ -146,7 +146,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                         {datos.length > 0 ? (
                             datos.map((item: Bono, index: number) => (
                                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                    <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
+                                    <td title={`Actualizado: ${formatTimestamp(item.ua || null)}`} style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', cursor: 'help' }}>{item.t}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
                                     <td 
                                         style={{ 
@@ -224,7 +224,7 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                         {datos.length > 0 ? (
                             datos.map((item: Bono, index: number) => (
                                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                    <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563' }}>{item.t}</td>
+                                    <td title={`Actualizado: ${formatTimestamp(item.ua || null)}`} style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', cursor: 'help' }}>{item.t}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
                                     <td 
                                         style={{ 
@@ -287,7 +287,7 @@ useEffect(() => {
         setEstado('Actualizando datos...');
         const manana = new Date();
         manana.setDate(manana.getDate() + 1);
-        const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd, pc';
+        const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd, pc, ua';
 
         const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString());
         if (bonosError) {
