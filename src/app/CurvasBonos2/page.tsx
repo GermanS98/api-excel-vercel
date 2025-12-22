@@ -349,7 +349,7 @@ useEffect(() => {
         console.log("Configurando suscripciones de Supabase...");
         
         // Canal de Bonos
-        supabase.channel('realtime-datosbonos')
+        supabase.channel('realtime-datosbonos2')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos2' }, (payload) => {
                 console.log('Cambio recibido en bonos:', payload.new);
                 const bonoActualizado = payload.new as Bono;
