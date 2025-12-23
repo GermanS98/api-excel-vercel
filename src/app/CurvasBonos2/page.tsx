@@ -352,18 +352,17 @@ export default function HomePage() {
                 setUltimaActualizacion(tipoDeCambioData.datos.h);
             }
             setEstado('Datos cargados. Escuchando actualizaciones...');
-            return manana.toISOString();
         };
 
         // 2. Nueva función para configurar y activar las suscripciones
-        const setupSuscripciones = (fechaFiltro: string) => {
+        const setupSuscripciones = () => {
             if (channelRef.current) {
                 console.log("Limpiando canal anterior antes de suscribir...");
                 supabase.removeChannel(channelRef.current);
                 channelRef.current = null;
             }
 
-            console.log("Configurando suscripciones de Supabase con filtro:", fechaFiltro);
+            console.log("Configurando suscripciones de Supabase...");
 
             // Canal de Bonos
             const channel = supabase.channel('realtime-datosbonos2')
@@ -371,7 +370,6 @@ export default function HomePage() {
                     event: '*',
                     schema: 'public',
                     table: 'datosbonos2',
-                    filter: `vto=gte.${fechaFiltro}`
                 }, (payload) => {
                     console.log('Cambio recibido en bonos:', payload.new);
                     const bonoActualizado = payload.new as Bono;
@@ -419,9 +417,8 @@ export default function HomePage() {
         };
 
         // 3. Lógica inicial y de visibilidad simplificada
-        fetchInitialData().then((fechaFiltro) => {
-            if (fechaFiltro) setupSuscripciones(fechaFiltro);
-        });
+        fetchInitialData();
+        setupSuscripciones();
 
         const handleVisibilityChange = () => {
             if (document.hidden) {
@@ -433,9 +430,8 @@ export default function HomePage() {
                 supabase.removeAllChannels(); // Por seguridad limpiamos todo
             } else {
                 console.log("Pestaña visible. Recargando datos y creando suscripciones.");
-                fetchInitialData().then((fechaFiltro) => {
-                    if (fechaFiltro) setupSuscripciones(fechaFiltro);
-                });
+                fetchInitialData();
+                setupSuscripciones();
             }
         };
 
