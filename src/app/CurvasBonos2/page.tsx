@@ -1,6 +1,6 @@
 'use client';
 import Layout from '@/components/layout/Layout'; // Importa el Layout
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 import Slider from 'rc-slider';
@@ -327,6 +327,8 @@ export default function HomePage() {
 
     const manana = new Date();
     manana.setDate(manana.getDate() + 1);
+    const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
     useEffect(() => {
         // 1. La función de carga inicial no cambia
         const fetchInitialData = async () => {
@@ -350,15 +352,27 @@ export default function HomePage() {
                 setUltimaActualizacion(tipoDeCambioData.datos.h);
             }
             setEstado('Datos cargados. Escuchando actualizaciones...');
+            return manana.toISOString();
         };
 
         // 2. Nueva función para configurar y activar las suscripciones
-        const setupSuscripciones = () => {
-            console.log("Configurando suscripciones de Supabase...");
+        const setupSuscripciones = (fechaFiltro: string) => {
+            if (channelRef.current) {
+                console.log("Limpiando canal anterior antes de suscribir...");
+                supabase.removeChannel(channelRef.current);
+                channelRef.current = null;
+            }
+
+            console.log("Configurando suscripciones de Supabase con filtro:", fechaFiltro);
 
             // Canal de Bonos
-            supabase.channel('realtime-datosbonos2')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos2' }, (payload) => {
+            const channel = supabase.channel('realtime-datosbonos2')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'datosbonos2',
+                    filter: `vto=gte.${fechaFiltro}`
+                }, (payload) => {
                     console.log('Cambio recibido en bonos:', payload.new);
                     const bonoActualizado = payload.new as Bono;
                     setBonos(bonosActuales => {
@@ -375,7 +389,12 @@ export default function HomePage() {
                     }
                 });
 
+            channelRef.current = channel;
+
             // Canal de Tipo de Cambio
+            // El canal de tipo de cambio no genera tanto volumen, se puede mantener separado o unificado si se desea, 
+            // pero para aislar el problema de volumen, nos enfocamos en el de bonos primero o lo dejamos fuera de este ref.
+            // Asumimos que tipo de cambio es ligero.
             supabase.channel('tipodecambio-changes')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, (payload) => {
                     console.log('Cambio recibido en tipo de cambio:', payload.new);
@@ -385,25 +404,38 @@ export default function HomePage() {
                     }
 
                 })
-                .subscribe((status) => {
-                    if (status === 'SUBSCRIBED') {
-                        console.log('Canal de tipo de cambio suscrito.');
-                    }
-                });
+                .subscribe();
+
+            // Fetch inicial de tipo de cambio también aquí para asegurar consistencia
+            const fetchTC = async () => {
+                const { data, error } = await supabase.from('tipodecambio').select('datos').order('created_at', { ascending: false }).limit(1).single();
+                if (data) {
+                    setTipoDeCambio(data.datos);
+                    setUltimaActualizacion(data.datos.h);
+                }
+            };
+            fetchTC();
+
         };
 
         // 3. Lógica inicial y de visibilidad simplificada
-        fetchInitialData();
-        setupSuscripciones();
+        fetchInitialData().then((fechaFiltro) => {
+            if (fechaFiltro) setupSuscripciones(fechaFiltro);
+        });
 
         const handleVisibilityChange = () => {
             if (document.hidden) {
                 console.log("Pestaña oculta. Eliminando todos los canales.");
-                supabase.removeAllChannels();
+                if (channelRef.current) {
+                    supabase.removeChannel(channelRef.current);
+                    channelRef.current = null;
+                }
+                supabase.removeAllChannels(); // Por seguridad limpiamos todo
             } else {
                 console.log("Pestaña visible. Recargando datos y creando suscripciones.");
-                fetchInitialData();
-                setupSuscripciones(); // Se vuelven a crear desde cero
+                fetchInitialData().then((fechaFiltro) => {
+                    if (fechaFiltro) setupSuscripciones(fechaFiltro);
+                });
             }
         };
 
@@ -413,6 +445,9 @@ export default function HomePage() {
         return () => {
             console.log("Desmontando componente. Limpiando todo.");
             document.removeEventListener("visibilitychange", handleVisibilityChange);
+            if (channelRef.current) {
+                supabase.removeChannel(channelRef.current);
+            }
             supabase.removeAllChannels();
         };
     }, []);  // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
