@@ -7,38 +7,38 @@ import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import Sidebar from '@/components/ui/Sidebar';
 import Link from 'next/link';
-import ReportePDFGenerator from '@/components/ui/ReportePDFGenerator'; 
+import ReportePDFGenerator from '@/components/ui/ReportePDFGenerator';
 import { format, parseISO } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 // para push
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
 type Bono = {
-  t: string;
-  vto: string;
-  p: number | null;
-  tir: number;
-  tna: number | null;
-  tem: number | null;
-  v: number; // Nuevo campo
-  s: string;
-  dv: number;
-  md: number | null;
-   // Nuevo campo RD: number | null;
-   // Nuevo campo mb: number | null;
-  pd: number | null; // Nuevo campo para Paridad
-  ua?: string;
-  pc: boolean; // Verdadero si uso el precio de cierre anterior
+    t: string;
+    vto: string;
+    p: number | null;
+    tir: number;
+    tna: number | null;
+    tem: number | null;
+    v: number; // Nuevo campo
+    s: string;
+    dv: number;
+    md: number | null;
+    // Nuevo campo RD: number | null;
+    // Nuevo campo mb: number | null;
+    pd: number | null; // Nuevo campo para Paridad
+    ua?: string;
+    pc: boolean; // Verdadero si uso el precio de cierre anterior
 };
 // --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
 type TipoDeCambio = {
-  valor_ccl: number;
-  valor_mep: number;
-  h: string; 
+    valor_ccl: number;
+    valor_mep: number;
+    h: string;
 };
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_KEY!
 );
 
 // --- FUNCIONES AUXILIARES DE FORMATO ---
@@ -51,59 +51,67 @@ const formatValue = (value: number | null | undefined, unit: string = '%', decim
 
     // 3. Usamos toLocaleString para aplicar el formato deseado
     const numeroFormateado = numeroAFormatear.toLocaleString('es-AR', {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
     });
 
     // 4. Devolvemos el número formateado con su unidad
-   return `${numeroFormateado}${unit}`;
+    return `${numeroFormateado}${unit}`;
 };
 const formatDate = (dateString: string) => {
-  if (!dateString) return '-';
-  const date = toZonedTime(dateString, 'UTC');
-  return format(date, 'dd/MM/yy');
+    if (!dateString) return '-';
+    const date = toZonedTime(dateString, 'UTC');
+    return format(date, 'dd/MM/yy');
 };
 const formatTimestamp = (isoString: string | null) => {
-  if (!isoString) return '...'; // Devuelve esto si la fecha aún no ha cargado
+    if (!isoString) return '...'; // Devuelve esto si la fecha aún no ha cargado
 
-  // La zona horaria para Argentina
-  const timeZone = 'America/Argentina/Buenos_Aires';
+    // La zona horaria para Argentina
+    const timeZone = 'America/Argentina/Buenos_Aires';
 
-  // 1. Convertimos el texto a un objeto Date
-  const utcDate = new Date(isoString);
+    // 1. Convertimos el texto a un objeto Date
+    const utcDate = new Date(isoString);
 
-  // 2. Ajustamos la fecha a la zona horaria de Argentina
-  const zonedDate = toZonedTime(utcDate, timeZone);
+    // 2. Ajustamos la fecha a la zona horaria de Argentina
+    const zonedDate = toZonedTime(utcDate, timeZone);
 
-  // 3. Le damos el formato "dd/MM/yyyy HH:mm:ss"
-  return format(zonedDate, 'dd/MM/yyyy HH:mm:ss');
+    // 3. Le damos el formato "dd/MM/yyyy HH:mm:ss"
+    return format(zonedDate, 'dd/MM/yyyy HH:mm:ss');
+};
+
+const isToday = (isoString?: string) => {
+    if (!isoString) return false;
+    const timeZone = 'America/Argentina/Buenos_Aires';
+    const now = toZonedTime(new Date(), timeZone);
+    const date = toZonedTime(new Date(isoString), timeZone);
+    return format(now, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
 };
 const slugify = (text: string) => {
-  return text.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
+    return text.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
 };
 
 // --- NUEVO: COMPONENTE PARA LAS TARJETAS DE INFORMACIÓN ---
 const InfoCard = ({ title, value }: { title: string, value: number | null | undefined }) => {
     // Formatea el valor como moneda, mostrando 'Cargando...' si aún no hay datos.
-    const formattedValue = value 
-      ? `$${value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-      : 'Cargando...';
-  
+    const formattedValue = value
+        ? `$${value.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : 'Cargando...';
+
     return (
-      <div style={{
-        background: '#fff',
-        padding: '1rem',
-        borderRadius: '8px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-        textAlign: 'center',
-        flex: 1, // Para que ocupe el espacio disponible
-        minWidth: '200px'
-      }}>
-        <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#6b7280', fontWeight: 500 }}>{title}</h3>
-        <p style={{ margin: '0.5rem 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#111827' }}>
-          {formattedValue}
-        </p>
-      </div>
+        <div style={{
+            background: '#fff',
+            padding: '1rem',
+            borderRadius: '8px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+            textAlign: 'center',
+            flex: 1, // Para que ocupe el espacio disponible
+            minWidth: '200px'
+        }}>
+            <h3 style={{ margin: 0, fontSize: '0.9rem', color: '#6b7280', fontWeight: 500 }}>{title}</h3>
+            <p style={{ margin: '0.5rem 0 0', fontSize: '1.5rem', fontWeight: 700, color: '#111827' }}>
+                {formattedValue}
+            </p>
+        </div>
     );
 };
 
@@ -146,25 +154,25 @@ const TablaGeneral = ({ titulo, datos, onShowTooltip, onHideTooltip }: { titulo:
                         {datos.length > 0 ? (
                             datos.map((item: Bono, index: number) => (
                                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                    <td 
+                                    <td
                                         onMouseEnter={(e) => onShowTooltip(`Actualizado: ${formatTimestamp(item.ua || null)}`, e)}
                                         onMouseLeave={onHideTooltip}
                                         style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', cursor: 'help' }}
                                     >{item.t}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                                    <td 
-                                        style={{ 
-                                            padding: '0.75rem 1rem', 
-                                            color: '#4b5563', 
+                                    <td
+                                        style={{
+                                            padding: '0.75rem 1rem',
+                                            color: '#4b5563',
                                             textAlign: 'center',
-                                            // Si item.pc es TRUE (usó cierre ant.), pinta de celeste claro (#e0f7fa)
-                                            backgroundColor: item.pc ? '#e0f7fa' : 'transparent', 
+                                            // Si item.pc es TRUE (usó cierre ant.) O no es de hoy, pinta de celeste claro (#e0f7fa)
+                                            backgroundColor: item.pc || !isToday(item.ua) ? '#e0f7fa' : 'transparent',
                                         }}
                                     >
-                                        {formatValue(item.p,'',2)}
+                                        {formatValue(item.p, '', 2)}
                                     </td>
-                                    <td style={{ 
-                                        padding: '0.75rem 1rem', 
+                                    <td style={{
+                                        padding: '0.75rem 1rem',
                                         color: item.v >= 0 ? '#22c55e' : '#ef4444', // Misma lógica: Verde o Rojo
                                         fontWeight: 500
                                     }}>
@@ -184,7 +192,7 @@ const TablaGeneral = ({ titulo, datos, onShowTooltip, onHideTooltip }: { titulo:
         </div>
     );
 };
-  
+
 const TablaSoberanosYONs = ({ titulo, datos, onShowTooltip, onHideTooltip }: { titulo: string, datos: Bono[], onShowTooltip: (content: string, event: React.MouseEvent) => void, onHideTooltip: () => void }) => {
     // 1. Añadimos el diccionario de enlaces externos.
     const enlacesExternos: { [key: string]: string } = {
@@ -215,35 +223,35 @@ const TablaSoberanosYONs = ({ titulo, datos, onShowTooltip, onHideTooltip }: { t
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead style={{ position: 'sticky', top: 0 }}>
                         <tr style={{ background: '#021751', color: 'white' }}>
-                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Ticker</th>
+                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Ticker</th>
                             <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Vto</th>
                             <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Precio</th>
-                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>Var</th>
-                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600}}>TIR</th>
+                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Var</th>
+                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>TIR</th>
                             <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>MD</th>
-                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Paridad</th>                            
+                            <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>Paridad</th>
                         </tr>
                     </thead>
                     <tbody>
                         {datos.length > 0 ? (
                             datos.map((item: Bono, index: number) => (
                                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                                    <td 
+                                    <td
                                         onMouseEnter={(e) => onShowTooltip(`Actualizado: ${formatTimestamp(item.ua || null)}`, e)}
                                         onMouseLeave={onHideTooltip}
                                         style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#4b5563', cursor: 'help' }}
                                     >{item.t}</td>
                                     <td style={{ padding: '0.75rem 1rem', color: '#4b5563' }}>{formatDate(item.vto)}</td>
-                                    <td 
-                                        style={{ 
-                                            padding: '0.75rem 1rem', 
-                                            color: '#4b5563', 
+                                    <td
+                                        style={{
+                                            padding: '0.75rem 1rem',
+                                            color: '#4b5563',
                                             textAlign: 'center',
-                                            // Si item.pc es TRUE (usó cierre ant.), pinta de celeste claro (#e0f7fa)
-                                            backgroundColor: item.pc ? '#e0f7fa' : 'transparent', 
+                                            // Si item.pc es TRUE (usó cierre ant.) O no es de hoy, pinta de celeste claro (#e0f7fa)
+                                            backgroundColor: item.pc || !isToday(item.ua) ? '#e0f7fa' : 'transparent',
                                         }}
                                     >
-                                        {formatValue(item.p,'',2)}
+                                        {formatValue(item.p, '', 2)}
                                     </td>
                                     <td style={{ padding: '0.75rem 1rem', color: item.v >= 0 ? '#22c55e' : '#ef4444', fontWeight: 500 }}>
                                         {formatValue(item.v)}
@@ -304,126 +312,126 @@ export default function HomePage() {
     const handleHideTooltip = () => { setTooltip(prev => ({ ...prev, visible: false })); };
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const gruposDeSegmentos: { [key: string]: string[] } = {
-      'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
-      'Ajustados por CER': ['CER', 'ON CER'],
-      'Dollar Linked': ['DL', 'ON HD'],
-      'TAMAR': ['TAMAR', 'ON TAMAR'],
-      'Bonares y Globales': ['BONAR', 'GLOBAL', 'BOPREAL'],
-      'Obligaciones Negociables': ['ON'],
-      'ONs Dollar Linked': ['ON_DL'],
-      'Subsoberanos': ['SUBSOB']
+        'LECAPs y Similares': ['LECAP', 'BONCAP', 'BONTE', 'DUAL TAMAR'],
+        'Ajustados por CER': ['CER', 'ON CER'],
+        'Dollar Linked': ['DL', 'ON HD'],
+        'TAMAR': ['TAMAR', 'ON TAMAR'],
+        'Bonares y Globales': ['BONAR', 'GLOBAL', 'BOPREAL'],
+        'Obligaciones Negociables': ['ON'],
+        'ONs Dollar Linked': ['ON_DL'],
+        'Subsoberanos': ['SUBSOB']
     };
-    
+
     const [segmentoSeleccionado, setSegmentoSeleccionado] = useState<string>(Object.keys(gruposDeSegmentos)[0]);
     const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd';
-    
+
     const manana = new Date();
     manana.setDate(manana.getDate() + 1);
-useEffect(() => {
-    // 1. La función de carga inicial no cambia
-    const fetchInitialData = async () => {
-        setEstado('Actualizando datos...');
-        const manana = new Date();
-        manana.setDate(manana.getDate() + 1);
-        const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd, pc, ua';
+    useEffect(() => {
+        // 1. La función de carga inicial no cambia
+        const fetchInitialData = async () => {
+            setEstado('Actualizando datos...');
+            const manana = new Date();
+            manana.setDate(manana.getDate() + 1);
+            const columnasNecesarias = 't, vto, p, tir, tna, tem, v, s, dv, md, pd, pc, ua';
 
-        const { data: bonosData, error: bonosError } = await supabase.from('datosbonos2').select(columnasNecesarias).gte('vto', manana.toISOString());
-        if (bonosError) {
-            setEstado(`Error al cargar bonos: ${bonosError.message}`);
-        } else if (bonosData) {
-            setBonos(bonosData as Bono[]);
-        }
+            const { data: bonosData, error: bonosError } = await supabase.from('datosbonos2').select(columnasNecesarias).gte('vto', manana.toISOString());
+            if (bonosError) {
+                setEstado(`Error al cargar bonos: ${bonosError.message}`);
+            } else if (bonosData) {
+                setBonos(bonosData as Bono[]);
+            }
 
-        const { data: tipoDeCambioData, error: tipoDeCambioError } = await supabase.from('tipodecambio').select('datos').order('created_at', { ascending: false }).limit(1).single();
-        if (tipoDeCambioError) {
-            console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
-        } else if (tipoDeCambioData) {
-            setTipoDeCambio(tipoDeCambioData.datos);
-            setUltimaActualizacion(tipoDeCambioData.datos.h);
-        }
-        setEstado('Datos cargados. Escuchando actualizaciones...');
-    };
+            const { data: tipoDeCambioData, error: tipoDeCambioError } = await supabase.from('tipodecambio').select('datos').order('created_at', { ascending: false }).limit(1).single();
+            if (tipoDeCambioError) {
+                console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
+            } else if (tipoDeCambioData) {
+                setTipoDeCambio(tipoDeCambioData.datos);
+                setUltimaActualizacion(tipoDeCambioData.datos.h);
+            }
+            setEstado('Datos cargados. Escuchando actualizaciones...');
+        };
 
-    // 2. Nueva función para configurar y activar las suscripciones
-    const setupSuscripciones = () => {
-        console.log("Configurando suscripciones de Supabase...");
-        
-        // Canal de Bonos
-        supabase.channel('realtime-datosbonos2')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos2' }, (payload) => {
-                console.log('Cambio recibido en bonos:', payload.new);
-                const bonoActualizado = payload.new as Bono;
-                setBonos(bonosActuales => {
-                    const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
-                    if (existe) {
-                        return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
+        // 2. Nueva función para configurar y activar las suscripciones
+        const setupSuscripciones = () => {
+            console.log("Configurando suscripciones de Supabase...");
+
+            // Canal de Bonos
+            supabase.channel('realtime-datosbonos2')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos2' }, (payload) => {
+                    console.log('Cambio recibido en bonos:', payload.new);
+                    const bonoActualizado = payload.new as Bono;
+                    setBonos(bonosActuales => {
+                        const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
+                        if (existe) {
+                            return bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b);
+                        }
+                        return [...bonosActuales, bonoActualizado];
+                    });
+                })
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        console.log('Canal de bonos suscrito.');
                     }
-                    return [...bonosActuales, bonoActualizado];
                 });
-            })
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') {
-                    console.log('Canal de bonos suscrito.');
-                }
-            });
 
-        // Canal de Tipo de Cambio
-        supabase.channel('tipodecambio-changes')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, (payload) => {
-                console.log('Cambio recibido en tipo de cambio:', payload.new);
-                if (payload.new && payload.new.datos) {
-                    setTipoDeCambio(payload.new.datos);
-                    setUltimaActualizacion(payload.new.datos.h); 
-                }
-                
-            })
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') {
-                    console.log('Canal de tipo de cambio suscrito.');
-                }
-            });
-    };
+            // Canal de Tipo de Cambio
+            supabase.channel('tipodecambio-changes')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, (payload) => {
+                    console.log('Cambio recibido en tipo de cambio:', payload.new);
+                    if (payload.new && payload.new.datos) {
+                        setTipoDeCambio(payload.new.datos);
+                        setUltimaActualizacion(payload.new.datos.h);
+                    }
 
-    // 3. Lógica inicial y de visibilidad simplificada
-    fetchInitialData();
-    setupSuscripciones();
+                })
+                .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        console.log('Canal de tipo de cambio suscrito.');
+                    }
+                });
+        };
 
-    const handleVisibilityChange = () => {
-        if (document.hidden) {
-            console.log("Pestaña oculta. Eliminando todos los canales.");
+        // 3. Lógica inicial y de visibilidad simplificada
+        fetchInitialData();
+        setupSuscripciones();
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                console.log("Pestaña oculta. Eliminando todos los canales.");
+                supabase.removeAllChannels();
+            } else {
+                console.log("Pestaña visible. Recargando datos y creando suscripciones.");
+                fetchInitialData();
+                setupSuscripciones(); // Se vuelven a crear desde cero
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        // 4. Limpieza final
+        return () => {
+            console.log("Desmontando componente. Limpiando todo.");
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
             supabase.removeAllChannels();
-        } else {
-            console.log("Pestaña visible. Recargando datos y creando suscripciones.");
-            fetchInitialData();
-            setupSuscripciones(); // Se vuelven a crear desde cero
-        }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // 4. Limpieza final
-    return () => {
-        console.log("Desmontando componente. Limpiando todo.");
-        document.removeEventListener("visibilitychange", handleVisibilityChange);
-        supabase.removeAllChannels();
-    };
-}, []);  // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
+        };
+    }, []);  // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
     const ultimoLoteDeDatos: Bono[] = bonos;
     const handleDownloadFullReport = () => {
         setEstado('Generando reporte completo...');
         setIsGeneratingPDF(true); // Esto hará que ReportePDFGenerator se renderice
     };
     const generatePDFFromElement = async (element: HTMLElement) => { // 1. Haz la función async
-        
+
         // 2. Importa la librería dinámicamente DENTRO de la función
         const html2pdf = (await import('html2pdf.js')).default;
 
         const options = {
-            margin:       0.5,
-            filename:     'reporte_completo_bonos.pdf',
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, logging: false },
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+            margin: 0.5,
+            filename: 'reporte_completo_bonos.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
         } as const;
 
         // El resto de la función no cambia
@@ -441,12 +449,12 @@ useEffect(() => {
     const [rangoX, setRangoX] = useState<[number, number]>([0, 0]);
     const maxXValue = (() => {
         if (datosDelSegmentoSeleccionado.length === 0) return isBonaresSegment ? 10 : 1000;
-        
+
         // Si es Bonares, calculamos el máximo de la duration
         if (isBonaresSegment) {
             const maxDuration = Math.max(...datosDelSegmentoSeleccionado.map(b => b.md ?? 0));
             return isFinite(maxDuration) ? Math.ceil(maxDuration) : 10;
-        } 
+        }
         // Para el resto, usamos los días al vencimiento
         else {
             const maxDias = Math.max(...datosDelSegmentoSeleccionado.map(b => b.dv));
@@ -578,7 +586,7 @@ useEffect(() => {
 
                 <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#ffffff', border: '1px solid #3b82f6', borderRadius: '8px', color: '#4b5563', fontSize: '0.9rem' }}>
                     <span style={{ marginRight: '8px', color: '#3b82f6', fontWeight: 'bold' }}>ⓘ</span>
-                    El fondo <strong>celeste</strong> en el precio indica que se utilizó el <strong>Cierre Anterior</strong> en lugar del Último Precio.
+                    El fondo <strong>celeste</strong> en el precio indica que se utilizó el <strong>Cierre Anterior</strong> en lugar del Último Precio, o que el precio no corresponde al día de hoy.
                 </div>
 
                 {/* --- CONTENEDOR DE LAS TABLAS --- */}
