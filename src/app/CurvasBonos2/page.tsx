@@ -30,10 +30,17 @@ type Bono = {
     pc: boolean; // Verdadero si uso el precio de cierre anterior
 };
 // --- NUEVO: TIPO PARA LOS DATOS DE TIPO DE CAMBIO ---
-type TipoDeCambio = {
+// Se adapta a la estructura de la tabla 'tipodecambio2': h (fecha/hora), vl (valor), t (tipo/etiqueta)
+type TipoDeCambioRow = {
+    h: string;
+    vl: number;
+    t: string;
+};
+
+type TipoDeCambioState = {
     valor_ccl: number;
     valor_mep: number;
-    h: string;
+    h: string; // Guardamos la fecha más reciente de cualquiera de los dos
 };
 // --- CONFIGURACIÓN DEL CLIENTE DE SUPABASE ---
 const supabase = createClient(
@@ -279,7 +286,7 @@ export default function HomePage() {
     const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null); //
     const [menuAbierto, setMenuAbierto] = useState(false);
     // --- NUEVO: ESTADO PARA LOS DATOS DEL TIPO DE CAMBIO ---
-    const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
+    const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambioState | null>(null);
     // --- NUEVO: ESTADO Y COMPONENTE PARA EL TOOLTIP PERSONALIZADO ---
     const [tooltip, setTooltip] = useState({ visible: false, content: '', x: 0, y: 0 });
 
@@ -344,12 +351,31 @@ export default function HomePage() {
                 setBonos(bonosData as Bono[]);
             }
 
-            const { data: tipoDeCambioData, error: tipoDeCambioError } = await supabase.from('tipodecambio').select('datos').order('created_at', { ascending: false }).limit(1).single();
+            // --- CAMBIO: FETCH A tipodecambio2 ---
+            // Traemos los últimos 20 registros para asegurarnos de encontrar al menos un MEP y un CCL recientes
+            const { data: tipoDeCambioRaw, error: tipoDeCambioError } = await supabase
+                .from('tipodecambio2')
+                .select('h, vl, t')
+                .order('h', { ascending: false })
+                .limit(20);
+
             if (tipoDeCambioError) {
                 console.error('Error al obtener tipo de cambio:', tipoDeCambioError);
-            } else if (tipoDeCambioData) {
-                setTipoDeCambio(tipoDeCambioData.datos);
-                setUltimaActualizacion(tipoDeCambioData.datos.h);
+            } else if (tipoDeCambioRaw && tipoDeCambioRaw.length > 0) {
+                // Encontrar el registro más reciente de cada tipo
+                const rows = tipoDeCambioRaw as TipoDeCambioRow[];
+
+                const mepRow = rows.find(r => r.t.toUpperCase().includes('MEP'));
+                const cclRow = rows.find(r => r.t.toUpperCase().includes('CCL'));
+
+                const nuevoEstadoTC: TipoDeCambioState = {
+                    valor_mep: mepRow ? mepRow.vl : 0,
+                    valor_ccl: cclRow ? cclRow.vl : 0,
+                    h: (mepRow?.h && cclRow?.h) ? (new Date(mepRow.h) > new Date(cclRow.h) ? mepRow.h : cclRow.h) : (mepRow?.h || cclRow?.h || new Date().toISOString())
+                };
+
+                setTipoDeCambio(nuevoEstadoTC);
+                setUltimaActualizacion(nuevoEstadoTC.h);
             }
             setEstado('Datos cargados. Escuchando actualizaciones...');
         };
@@ -393,26 +419,29 @@ export default function HomePage() {
             // El canal de tipo de cambio no genera tanto volumen, se puede mantener separado o unificado si se desea, 
             // pero para aislar el problema de volumen, nos enfocamos en el de bonos primero o lo dejamos fuera de este ref.
             // Asumimos que tipo de cambio es ligero.
-            supabase.channel('tipodecambio-changes')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tipodecambio' }, (payload) => {
+            // Canal de Tipo de Cambio (NUEVO: tipodecambio2)
+            supabase.channel('tipodecambio2-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'tipodecambio2' }, (payload) => {
                     console.log('Cambio recibido en tipo de cambio:', payload.new);
-                    if (payload.new && payload.new.datos) {
-                        setTipoDeCambio(payload.new.datos);
-                        setUltimaActualizacion(payload.new.datos.h);
-                    }
+                    const newRow = payload.new as TipoDeCambioRow;
 
+                    setTipoDeCambio((prevState: TipoDeCambioState | null) => {
+                        if (!prevState) return {
+                            valor_mep: newRow.t.toUpperCase().includes('MEP') ? newRow.vl : 0,
+                            valor_ccl: newRow.t.toUpperCase().includes('CCL') ? newRow.vl : 0,
+                            h: newRow.h
+                        };
+
+                        return {
+                            ...prevState,
+                            valor_mep: newRow.t.toUpperCase().includes('MEP') ? newRow.vl : prevState.valor_mep,
+                            valor_ccl: newRow.t.toUpperCase().includes('CCL') ? newRow.vl : prevState.valor_ccl,
+                            h: newRow.h
+                        };
+                    });
+                    setUltimaActualizacion(newRow.h);
                 })
                 .subscribe();
-
-            // Fetch inicial de tipo de cambio también aquí para asegurar consistencia
-            const fetchTC = async () => {
-                const { data, error } = await supabase.from('tipodecambio').select('datos').order('created_at', { ascending: false }).limit(1).single();
-                if (data) {
-                    setTipoDeCambio(data.datos);
-                    setUltimaActualizacion(data.datos.h);
-                }
-            };
-            fetchTC();
 
         };
 
