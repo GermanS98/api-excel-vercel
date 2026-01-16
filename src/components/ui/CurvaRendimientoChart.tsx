@@ -48,8 +48,11 @@ const CustomLabel = (props: any) => {
   // Si el índice es par, la etiqueta va arriba. Si es impar, va abajo.
   const yOffset = index % 2 === 0 ? -8 : 18;
 
-  const labelText = showTirLabels
-    ? `${value} ${(payload.tir * 100).toFixed(1)}%`
+  const tirValue = payload?.tir;
+  const hasTir = typeof tirValue === 'number' && isFinite(tirValue);
+
+  const labelText = showTirLabels && hasTir
+    ? `${value} ${(tirValue * 100).toFixed(1)}%`
     : value;
 
   return (
