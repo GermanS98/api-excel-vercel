@@ -39,30 +39,22 @@ type ChartProps = {
   data: any[];
   segmentoActivo: string;
   xAxisKey: 'dv' | 'md';
-  showTirLabels?: boolean;
 };
 
 const CustomLabel = (props: any) => {
-  const { x, y, index, value, payload, showTirLabels } = props;
+  const { x, y, index, value } = props;
 
   // Si el índice es par, la etiqueta va arriba. Si es impar, va abajo.
   const yOffset = index % 2 === 0 ? -8 : 18;
 
-  const tirValue = payload?.tir;
-  const hasTir = typeof tirValue === 'number' && isFinite(tirValue);
-
-  const labelText = showTirLabels && hasTir
-    ? `${value} ${(tirValue * 100).toFixed(1)}%`
-    : value;
-
   return (
     <text x={x} y={y + yOffset} dy={0} textAnchor="middle" fill="#555" fontSize={9}>
-      {labelText}
+      {value}
     </text>
   );
 };
 
-export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey, showTirLabels = false }: ChartProps) {
+export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }: ChartProps) {
   const segmentosSoberanos = ['BONAR', 'GLOBAL', 'BOPREAL'];
   const esGrupoSoberano = segmentoActivo === 'Bonares y Globales';
 
@@ -124,13 +116,13 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey, 
                 fill={PALETA_SEGMENTOS[segmento]}
               >
                 {/* CAMBIO 1.2: Usamos nuestro componente personalizado */}
-                <LabelList dataKey="t" content={<CustomLabel showTirLabels={showTirLabels} />} />
+                <LabelList dataKey="t" content={<CustomLabel />} />
               </Scatter>
             ))
           ) : (
             <Scatter data={data}>
               {/* CAMBIO 1.2: Usamos nuestro componente personalizado */}
-              <LabelList dataKey="t" content={<CustomLabel showTirLabels={showTirLabels} />} />
+              <LabelList dataKey="t" content={<CustomLabel />} />
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={PALETA_SEGMENTOS[entry.s] || PALETA_SEGMENTOS.default} />
               ))}

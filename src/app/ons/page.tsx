@@ -382,7 +382,7 @@ export default function Onspage() {
                             <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
                         </div>
                     </div>
-                    <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="ON" xAxisKey="dv" showTirLabels={true} />
+                    <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="ON" xAxisKey="dv" />
                 </div>
 
                 <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#e0f7fa', borderLeft: '5px solid #00bcd4', borderRadius: '4px', color: '#006064', fontWeight: 600, fontSize: '0.9rem' }}>
