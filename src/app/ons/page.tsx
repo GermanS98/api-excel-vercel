@@ -11,26 +11,26 @@ import { toZonedTime } from 'date-fns-tz';
 // DEFINICIÓN DE TIPOS
 // ==================================================================
 type Bono = {
-  t: string;       // ticker
-  vto: string;
-  p: number | null;  // precio
-  v: number;       // var
-  tir: number;
-  s: string;       // segmento
-  dv: number;      // dias_vto
-  pd: number;      // paridad
-  md: number | null; // modify_duration
-  RD: number | null;
-  // --- Campos de 'caracteristicas' (opcionales) ---
-  ley?: string;
-  mpago?: string;   // monedadepago
-  frec?: string;
-  lmin?: string;
-  nom?: string;     // cantnominales
-  amort?: string;   // tipoamort
-  nomb?: string;    // nombre
-  ua?: string | null; // ultimo_anuncio
-  pc: boolean; // indica se si el precio es Cierre Anterior
+    t: string;       // ticker
+    vto: string;
+    p: number | null;  // precio
+    v: number;       // var
+    tir: number;
+    s: string;       // segmento
+    dv: number;      // dias_vto
+    pd: number;      // paridad
+    md: number | null; // modify_duration
+    RD: number | null;
+    // --- Campos de 'caracteristicas' (opcionales) ---
+    ley?: string;
+    mpago?: string;   // monedadepago
+    frec?: string;
+    lmin?: string;
+    nom?: string;     // cantnominales
+    amort?: string;   // tipoamort
+    nomb?: string;    // nombre
+    ua?: string | null; // ultimo_anuncio
+    pc: boolean; // indica se si el precio es Cierre Anterior
 };
 
 // Objeto de configuración para la tabla dinámica (CORREGIDO con nombres cortos)
@@ -57,8 +57,8 @@ type FilterableColumn = keyof typeof columnConfig;
 // CONFIGURACIONES GLOBALES
 // ==================================================================
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_KEY!
 );
 
 // ==================================================================
@@ -70,20 +70,20 @@ const formatValue = (value: number | null | undefined, unit: string = '', decima
     return `${numeroAFormatear.toLocaleString('es-AR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}${unit}`;
 };
 const formatDate = (dateString: string) => {
-  if (!dateString) return '-';
-  const date = toZonedTime(dateString, 'UTC');
-  return format(date, 'dd/MM/yy');
+    if (!dateString) return '-';
+    const date = toZonedTime(dateString, 'UTC');
+    return format(date, 'dd/MM/yy');
 };
 const formatDateTime = (dateString: string | null) => {
-  if (!dateString) return '-';
-  try {
-    // parseISO convierte el string ISO (que viene de la base de datos) a un objeto Date
-    const date = parseISO(dateString); 
-    // format() lo mostrará en la zona horaria local del usuario
-    return format(date, 'dd/MM/yy HH:mm:ss'); 
-  } catch (e) {
-    return 'Fecha inv.'; // En caso de que la fecha sea inválida
-  }
+    if (!dateString) return '-';
+    try {
+        // parseISO convierte el string ISO (que viene de la base de datos) a un objeto Date
+        const date = parseISO(dateString);
+        // format() lo mostrará en la zona horaria local del usuario
+        return format(date, 'dd/MM/yy HH:mm:ss');
+    } catch (e) {
+        return 'Fecha inv.'; // En caso de que la fecha sea inválida
+    }
 };
 
 // ==================================================================
@@ -128,7 +128,7 @@ const TablaGeneral = ({
                                         let displayValue: React.ReactNode = '-';
                                         if (value !== null && value !== undefined) {
                                             const config = columnConfig[key];
-                                            if(!config) return <td key={`${item.t}-${key}`}>-</td>; // Safety check
+                                            if (!config) return <td key={`${item.t}-${key}`}>-</td>; // Safety check
 
                                             if (config.type === 'date') {
                                                 displayValue = formatDate(String(value));
@@ -144,20 +144,20 @@ const TablaGeneral = ({
                                             }
                                         }
                                         return (
-                                        <td 
-                                            key={`${item.t}-${key}`} 
-                                            style={{ 
-                                                padding: '0.75rem 1rem', 
-                                                textAlign: 'center',
-                                                // --- ÚNICO CAMBIO REQUERIDO: Fondo celeste condicional ---
-                                                backgroundColor: (key === 'p' && item.pc) ? '#e0f7fa' : 'transparent', 
-                                                // El color del texto se mantiene como el original (o lo forzamos si es necesario)
-                                                color: '#4b5563', 
-                                            }}
-                                        >
-                                            {displayValue}
-                                        </td>
-                                    );
+                                            <td
+                                                key={`${item.t}-${key}`}
+                                                style={{
+                                                    padding: '0.75rem 1rem',
+                                                    textAlign: 'center',
+                                                    // --- ÚNICO CAMBIO REQUERIDO: Fondo celeste condicional ---
+                                                    backgroundColor: (key === 'p' && item.pc) ? '#e0f7fa' : 'transparent',
+                                                    // El color del texto se mantiene como el original (o lo forzamos si es necesario)
+                                                    color: '#4b5563',
+                                                }}
+                                            >
+                                                {displayValue}
+                                            </td>
+                                        );
                                     })}
                                 </tr>
                             ))
@@ -189,7 +189,7 @@ export default function Onspage() {
                 .from('caracteristicas')
 
                 .select('t:ticker, ley, mpago, frec, lmin, nom, amort, nomb')
-                .in('segmento', segmentosDeEstaPagina); 
+                .in('segmento', segmentosDeEstaPagina);
 
             if (error) {
                 console.error("Error al cargar características:", error);
@@ -200,74 +200,74 @@ export default function Onspage() {
         cargarCaracteristicas();
     }, []);
 
-     const manana = new Date();
-     manana.setDate(manana.getDate() + 1);
+    const manana = new Date();
+    manana.setDate(manana.getDate() + 1);
     useEffect(() => {
-         const segmentosRequeridos = segmentosDeEstaPagina;
-         const fetchInitialData = async () => {
-             const manana = new Date();
-             manana.setDate(manana.getDate() + 1);
-             const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua,md,pc';
-             
-             const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
-             if (bonosError) console.error("Error fetching bonds:", bonosError);
-             else if (bonosData) {
-                 setBonos(bonosData as Bono[]);
-                if (bonosData.length > 0) { 
-              // Encuentra el UA más reciente entre todos los bonos cargados
-              const maxUA = bonosData.reduce((latestUA, bono) => {
-                  // ... lógica para encontrar maxUA ...
-                  if (!bono.ua) return latestUA;
-                  if (!latestUA || new Date(bono.ua) > new Date(latestUA)) {
-                      return bono.ua;
-                  }
-                  return latestUA;
-              }, null as string | null);
-              
-              setUltimaActualizacion(maxUA);
-          }
-                    setEstado('Datos cargados'); 
-        }
+        const segmentosRequeridos = segmentosDeEstaPagina;
+        const fetchInitialData = async () => {
+            const manana = new Date();
+            manana.setDate(manana.getDate() + 1);
+            const columnasNecesarias = 't,vto,p,tir,tna,tem,v,s,pd,RD,dv,ua,md,pc';
 
- 
-         };
-         let bondChannel: any = null; // 
-         const setupSuscripciones = () => {
-              const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
-              const bondChannel = supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
-                    const bonoActualizado = payload.new as Bono;
-                    setBonos(bonosActuales => {
-                        const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
-                        return existe ? bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...bonosActuales, bonoActualizado];
-                    });
-                    setUltimaActualizacion(bonoActualizado.ua || null);
-                }).subscribe();
-              
-             return { bondChannel };
-         };
- 
-         fetchInitialData();
-         setupSuscripciones();
- 
-         const handleVisibilityChange = () => {
-             if (document.hidden) {
-                 if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
-             } else {
-                 fetchInitialData();
-                 if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
-                 setupSuscripciones();
-             }
-         };
-         document.addEventListener("visibilitychange", handleVisibilityChange);
- 
-       return () => {
-         document.removeEventListener("visibilitychange", handleVisibilityChange);
-         if (bondChannel) {
-             if (bondChannel.unsubscribe) bondChannel.unsubscribe();
-             else supabase.removeChannel(bondChannel);
-         }
-     };
-     }, []);
+            const { data: bonosData, error: bonosError } = await supabase.from('latest_bonds').select(columnasNecesarias).gte('vto', manana.toISOString()).in('s', segmentosRequeridos);
+            if (bonosError) console.error("Error fetching bonds:", bonosError);
+            else if (bonosData) {
+                setBonos(bonosData as Bono[]);
+                if (bonosData.length > 0) {
+                    // Encuentra el UA más reciente entre todos los bonos cargados
+                    const maxUA = bonosData.reduce((latestUA, bono) => {
+                        // ... lógica para encontrar maxUA ...
+                        if (!bono.ua) return latestUA;
+                        if (!latestUA || new Date(bono.ua) > new Date(latestUA)) {
+                            return bono.ua;
+                        }
+                        return latestUA;
+                    }, null as string | null);
+
+                    setUltimaActualizacion(maxUA);
+                }
+                setEstado('Datos cargados');
+            }
+
+
+        };
+        let bondChannel: any = null; // 
+        const setupSuscripciones = () => {
+            const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
+            const bondChannel = supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
+                const bonoActualizado = payload.new as Bono;
+                setBonos(bonosActuales => {
+                    const existe = bonosActuales.some(b => b.t === bonoActualizado.t);
+                    return existe ? bonosActuales.map(b => b.t === bonoActualizado.t ? bonoActualizado : b) : [...bonosActuales, bonoActualizado];
+                });
+                setUltimaActualizacion(bonoActualizado.ua || null);
+            }).subscribe();
+
+            return { bondChannel };
+        };
+
+        fetchInitialData();
+        setupSuscripciones();
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
+            } else {
+                fetchInitialData();
+                if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
+                setupSuscripciones();
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            if (bondChannel) {
+                if (bondChannel.unsubscribe) bondChannel.unsubscribe();
+                else supabase.removeChannel(bondChannel);
+            }
+        };
+    }, []);
 
     const datosCompletos = useMemo(() => {
         if (bonos.length === 0 || caracteristicasMap.size === 0) {
@@ -291,11 +291,11 @@ export default function Onspage() {
                 return (Object.entries(filtros) as [FilterableColumn, string][]).every(([key, filterValue]) => {
                     if (!filterValue) return true;
                     const config = columnConfig[key];
-                    if (!config) return true; 
+                    if (!config) return true;
 
                     const cellValue = bono[key as keyof Bono];
                     if (cellValue === null || cellValue === undefined) return false;
-                    
+
                     switch (config.type) {
                         case 'number':
                             let numericValue = Number(cellValue);
@@ -346,7 +346,7 @@ export default function Onspage() {
 
         return datosFiltrados.sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
     }, [datosCompletos, filtros]);
-    
+
     const maxDiasDelSegmento = useMemo(() => {
         if (datosCompletos.length === 0) return 1000;
         const maxDias = Math.max(...datosCompletos.map(b => b.dv));
@@ -356,7 +356,7 @@ export default function Onspage() {
     useEffect(() => {
         if (maxDiasDelSegmento > 0) setRangoDias([0, maxDiasDelSegmento]);
     }, [maxDiasDelSegmento]);
-    
+
     const datosParaGrafico = datosParaTabla.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
 
     return (
@@ -364,15 +364,15 @@ export default function Onspage() {
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
                 <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Obligaciones Negociables</h1>
                 <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
-                      {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
-                          <span style={{ color: '#374151', fontWeight: 500 }}>
-                              Estado: <strong>Actualizado el {formatDateTime(ultimaActualizacion)}</strong>
-                          </span>
-                      ) : (
-                          <span>Estado: <strong>{estado}</strong></span>
-                      )}
-                      {/* ------------------------- */}
-                  </div>
+                    {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
+                        <span style={{ color: '#374151', fontWeight: 500 }}>
+                            Estado: <strong>Actualizado el {formatDateTime(ultimaActualizacion)}</strong>
+                        </span>
+                    ) : (
+                        <span>Estado: <strong>{estado}</strong></span>
+                    )}
+                    {/* ------------------------- */}
+                </div>
                 <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
                     <div style={{ padding: '0 10px', marginBottom: '20px' }}>
                         <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
@@ -382,7 +382,7 @@ export default function Onspage() {
                             <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
                         </div>
                     </div>
-                    <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="ON" xAxisKey="dv" />
+                    <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="ON" xAxisKey="dv" showTirLabels={true} />
                 </div>
 
                 <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#e0f7fa', borderLeft: '5px solid #00bcd4', borderRadius: '4px', color: '#006064', fontWeight: 600, fontSize: '0.9rem' }}>
@@ -391,8 +391,8 @@ export default function Onspage() {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
-                    <TablaGeneral 
-                        titulo="Obligaciones Negociables" 
+                    <TablaGeneral
+                        titulo="Obligaciones Negociables"
                         datos={datosParaTabla}
                         filtros={filtros}
                         onFiltroChange={handleFiltroChange}

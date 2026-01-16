@@ -1,7 +1,7 @@
 'use client';
 
-import { 
-  ResponsiveContainer, ComposedChart, XAxis, YAxis, Tooltip, 
+import {
+  ResponsiveContainer, ComposedChart, XAxis, YAxis, Tooltip,
   CartesianGrid, Scatter, Line, LabelList, Cell, Legend, ZAxis
 } from 'recharts';
 import { linearRegression } from 'simple-statistics';
@@ -25,13 +25,13 @@ const calcularTendencia = (datos: any[], xAxisKey: 'dv' | 'md', segmento?: strin
   const regressionPoints = datosParaRegresion
     .filter(p => p[xAxisKey] > 0 && typeof p.tir === 'number' && isFinite(p.tir))
     .map(p => [Math.log(p[xAxisKey]), p.tir]);
-    
+
   if (regressionPoints.length < 2) return [];
 
   const { m, b } = linearRegression(regressionPoints);
-  
-  const uniqueXPoints = [...new Set(datosParaRegresion.map(p => p[xAxisKey]).filter(d => d > 0))].sort((a,b) => a - b);
-  
+
+  const uniqueXPoints = [...new Set(datosParaRegresion.map(p => p[xAxisKey]).filter(d => d > 0))].sort((a, b) => a - b);
+
   return uniqueXPoints.map(x => ({ [xAxisKey]: x, trend: m * Math.log(x) + b }));
 };
 
@@ -39,21 +39,27 @@ type ChartProps = {
   data: any[];
   segmentoActivo: string;
   xAxisKey: 'dv' | 'md';
+  showTirLabels?: boolean;
 };
+
 const CustomLabel = (props: any) => {
-  const { x, y, index, value } = props;
+  const { x, y, index, value, payload, showTirLabels } = props;
 
   // Si el índice es par, la etiqueta va arriba. Si es impar, va abajo.
   const yOffset = index % 2 === 0 ? -8 : 18;
 
+  const labelText = showTirLabels
+    ? `${value} ${(payload.tir * 100).toFixed(1)}%`
+    : value;
+
   return (
     <text x={x} y={y + yOffset} dy={0} textAnchor="middle" fill="#555" fontSize={9}>
-      {value}
+      {labelText}
     </text>
   );
 };
 
-export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }: ChartProps) {
+export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey, showTirLabels = false }: ChartProps) {
   const segmentosSoberanos = ['BONAR', 'GLOBAL', 'BOPREAL'];
   const esGrupoSoberano = segmentoActivo === 'Bonares y Globales';
 
@@ -61,11 +67,11 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       if (!data.t) return null;
-      
+
       const xValueLabel = xAxisKey === 'md' ? 'Mod. Duration' : 'Días al Vto';
       const xValue = data[xAxisKey];
-      const formattedXValue = typeof xValue === 'number' 
-        ? xValue.toFixed(xAxisKey === 'md' ? 2 : 0) 
+      const formattedXValue = typeof xValue === 'number'
+        ? xValue.toFixed(xAxisKey === 'md' ? 2 : 0)
         : '-';
 
       return (
@@ -92,11 +98,11 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
       <ResponsiveContainer>
         <ComposedChart margin={{ top: 20, right: 30, bottom: 20, left: -20 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
-            type="number" 
+          <XAxis
+            type="number"
             dataKey={xAxisKey}
             name={xAxisKey === 'md' ? 'Modified Duration' : 'Días al Vencimiento'}
-            tick={{ fontSize: 12 }} 
+            tick={{ fontSize: 12 }}
             domain={['dataMin', 'dataMax']}
             allowDuplicatedCategory={false}
             tickFormatter={(tick) => tick.toFixed(xAxisKey === 'md' ? 2 : 0)}
@@ -105,7 +111,7 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
           <Tooltip content={<CustomTooltip />} />
           <Legend wrapperStyle={{ display: esGrupoSoberano ? 'block' : 'none' }} />
           <ZAxis type="number" range={[25, 25]} />
-          
+
           {esGrupoSoberano ? (
             segmentosSoberanos.map(segmento => (
               <Scatter
@@ -115,19 +121,19 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
                 fill={PALETA_SEGMENTOS[segmento]}
               >
                 {/* CAMBIO 1.2: Usamos nuestro componente personalizado */}
-                <LabelList dataKey="t" content={<CustomLabel />} />
+                <LabelList dataKey="t" content={<CustomLabel showTirLabels={showTirLabels} />} />
               </Scatter>
             ))
           ) : (
             <Scatter data={data}>
               {/* CAMBIO 1.2: Usamos nuestro componente personalizado */}
-              <LabelList dataKey="t" content={<CustomLabel />} />
+              <LabelList dataKey="t" content={<CustomLabel showTirLabels={showTirLabels} />} />
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={PALETA_SEGMENTOS[entry.s] || PALETA_SEGMENTOS.default} />
               ))}
             </Scatter>
           )}
-          
+
           {esGrupoSoberano ? (
             <>
               <Line name="Tendencia Bonares" data={trendlineBonar} dataKey="trend" stroke={PALETA_SEGMENTOS['BONAR']} dot={false} strokeWidth={1} strokeDasharray="5 5" type="monotone" />
