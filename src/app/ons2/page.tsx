@@ -461,8 +461,11 @@ export default function Onspage() {
     // Datos filtrados por el rango de días (slider)
     const datosFiltradosPorDias = datosParaTabla.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
 
-    // Datos para el gráfico (sin modificar el ticker, el componente ONS2Chart lee los datos originales)
-    const datosParaGrafico = datosFiltradosPorDias;
+    // Datos para el gráfico con tirFormatted para etiquetas de dos líneas
+    const datosParaGrafico = datosFiltradosPorDias.map(b => ({
+        ...b,
+        tirFormatted: typeof b.tir === 'number' && isFinite(b.tir) ? `${(b.tir * 100).toFixed(1)}%` : null
+    }));
 
     return (
         <Layout>
