@@ -11,6 +11,7 @@ import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import { format, parseISO } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
+import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
 // ==================================================================
 // DEFINICIÓN DE TIPOS
 // ==================================================================

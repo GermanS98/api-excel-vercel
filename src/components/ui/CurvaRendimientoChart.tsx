@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 
 import {
   ResponsiveContainer, ComposedChart, XAxis, YAxis, Tooltip,
@@ -43,15 +44,26 @@ type ChartProps = {
 };
 
 const CustomLabel = (props: any) => {
-  const { x, y, index, value } = props;
+  // Estrategia defensiva: intentar obtener datos de value, o del payload directo
+  const { x, y, index, value, payload } = props;
 
-  // Validación básica
-  if (x === undefined || y === undefined || value === undefined || value === null) return null;
+  // Determinar el texto a mostrar
+  // Prioridad 1: value si viene definido
+  // Prioridad 2: payload.formattedLabel si existe
+  // Prioridad 3: payload.t si existe
+  let labelText = value;
 
-  const isMultiLine = typeof value === 'string' && value.includes('|');
+  if (!labelText && payload) {
+    labelText = payload.formattedLabel || payload.t;
+  }
+
+  // Validación básica final
+  if (x === undefined || y === undefined || !labelText) return null;
+
+  const isMultiLine = typeof labelText === 'string' && labelText.includes('|');
 
   if (isMultiLine) {
-    const [line1, line2] = value.split('|');
+    const [line1, line2] = labelText.split('|');
     // Ajuste vertical para centrar mejor las dos líneas
     const yOffset = index % 2 === 0 ? -15 : 25;
     return (
@@ -66,10 +78,12 @@ const CustomLabel = (props: any) => {
   const yOffset = index % 2 === 0 ? -8 : 18;
   return (
     <text x={x} y={y + yOffset} dy={0} textAnchor="middle" fill="#555" fontSize={9}>
-      {value}
+      {labelText}
     </text>
   );
 };
+
+
 
 export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey, labelKey }: ChartProps) {
   const segmentosSoberanos = ['BONAR', 'GLOBAL', 'BOPREAL'];
@@ -133,13 +147,13 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey, 
                 fill={PALETA_SEGMENTOS[segmento]}
               >
                 {/* CAMBIO 1.2: Usamos nuestro componente personalizado */}
-                <LabelList dataKey={labelKey || 't'} content={CustomLabel} />
+                <LabelList dataKey={labelKey || 't'} content={(props) => <CustomLabel {...props} />} />
               </Scatter>
             ))
           ) : (
             <Scatter data={data}>
               {/* CAMBIO 1.2: Usamos nuestro componente personalizado */}
-              <LabelList dataKey={labelKey || 't'} content={CustomLabel} />
+              <LabelList dataKey={labelKey || 't'} content={(props) => <CustomLabel {...props} />} />
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={PALETA_SEGMENTOS[entry.s] || PALETA_SEGMENTOS.default} />
               ))}
