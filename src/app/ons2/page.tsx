@@ -357,12 +357,14 @@ export default function Onspage() {
         if (maxDiasDelSegmento > 0) setRangoDias([0, maxDiasDelSegmento]);
     }, [maxDiasDelSegmento]);
 
-    const datosParaGrafico = datosParaTabla
-        .filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1])
-        .map(b => ({
-            ...b,
-            t: `${b.t} (${typeof b.tir === 'number' && isFinite(b.tir) ? (b.tir * 100).toFixed(1) : '-'}%)`
-        }));
+    // Datos filtrados por el rango de días (slider)
+    const datosFiltradosPorDias = datosParaTabla.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
+
+    // Datos para el gráfico con campo tirFormatted para mostrar en segunda línea
+    const datosParaGrafico = datosFiltradosPorDias.map(b => ({
+        ...b,
+        tirFormatted: typeof b.tir === 'number' && isFinite(b.tir) ? `${(b.tir * 100).toFixed(1)}%` : null
+    }));
 
     return (
         <Layout>
@@ -398,7 +400,7 @@ export default function Onspage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
                     <TablaGeneral
                         titulo="Obligaciones Negociables"
-                        datos={datosParaTabla}
+                        datos={datosFiltradosPorDias}
                         filtros={filtros}
                         onFiltroChange={handleFiltroChange}
                     />
