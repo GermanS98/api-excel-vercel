@@ -89,39 +89,39 @@ const formatDateTime = (dateString: string | null) => {
 };
 
 // ==================================================================
-// GRÁFICO LOCAL ONS2 CON ETIQUETAS PERSONALIZADAS
+// GRÁFICO LOCAL ONS2 CON ETIQUETAS EN DOS LÍNEAS (TICKER + TIR)
 // ==================================================================
 const CustomLabelONS2 = (props: any) => {
     const { x, y, index, payload } = props;
-    const yOffset = index % 2 === 0 ? -12 : 20;
+    const yOffset = index % 2 === 0 ? -12 : 22;
 
     const ticker = payload?.t || '';
     const tir = payload?.tir;
-    const tirFormatted = typeof tir === 'number' && isFinite(tir)
+    const tirText = typeof tir === 'number' && isFinite(tir)
         ? `${(tir * 100).toFixed(1)}%`
         : '';
 
     return (
         <text x={x} y={y + yOffset} textAnchor="middle" fill="#555" fontSize={9}>
             <tspan x={x} dy={0}>{ticker}</tspan>
-            <tspan x={x} dy={10} fontWeight="bold">{tirFormatted}</tspan>
+            <tspan x={x} dy={10} fontWeight="bold">{tirText}</tspan>
         </text>
     );
 };
 
-const calcularTendencia = (datos: any[], xAxisKey: 'dv' | 'md') => {
+const calcularTendenciaONS2 = (datos: any[]) => {
     if (datos.length < 2) return [];
     const regressionPoints = datos
-        .filter(p => p[xAxisKey] > 0 && typeof p.tir === 'number' && isFinite(p.tir))
-        .map(p => [Math.log(p[xAxisKey]), p.tir]);
+        .filter((p: any) => p.dv > 0 && typeof p.tir === 'number' && isFinite(p.tir))
+        .map((p: any) => [Math.log(p.dv), p.tir]);
     if (regressionPoints.length < 2) return [];
     const { m, b } = linearRegression(regressionPoints);
-    const uniqueXPoints = [...new Set(datos.map(p => p[xAxisKey]).filter(d => d > 0))].sort((a, b) => a - b);
-    return uniqueXPoints.map(x => ({ [xAxisKey]: x, trend: m * Math.log(x) + b }));
+    const uniqueXPoints = [...new Set(datos.map((p: any) => p.dv).filter((d: number) => d > 0))].sort((a: number, b: number) => a - b);
+    return uniqueXPoints.map((x: number) => ({ dv: x, trend: m * Math.log(x) + b }));
 };
 
 const ONS2Chart = ({ data }: { data: any[] }) => {
-    const CustomTooltip = ({ active, payload }: any) => {
+    const CustomTooltipONS2 = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
             const d = payload[0].payload;
             if (!d.t) return null;
@@ -139,7 +139,7 @@ const ONS2Chart = ({ data }: { data: any[] }) => {
         return null;
     };
 
-    const trendline = calcularTendencia(data, 'dv');
+    const trendline = calcularTendenciaONS2(data);
 
     return (
         <div style={{ width: '100%', height: 450, userSelect: 'none' }}>
@@ -164,11 +164,11 @@ const ONS2Chart = ({ data }: { data: any[] }) => {
                         tick={{ fontSize: 12 }}
                         width={80}
                     />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltipONS2 />} />
                     <ZAxis type="number" range={[25, 25]} />
                     <Scatter data={data}>
-                        <LabelList dataKey="t" content={<CustomLabelONS2 />} />
-                        {data.map((entry, index) => (
+                        <LabelList dataKey="t" content={CustomLabelONS2} />
+                        {data.map((entry: any, index: number) => (
                             <Cell key={`cell-${index}`} fill="#1036E2" />
                         ))}
                     </Scatter>
@@ -461,7 +461,7 @@ export default function Onspage() {
     // Datos filtrados por el rango de días (slider)
     const datosFiltradosPorDias = datosParaTabla.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
 
-    // Datos para el gráfico (usamos directamente los datos filtrados)
+    // Datos para el gráfico (sin modificar el ticker, el componente ONS2Chart lee los datos originales)
     const datosParaGrafico = datosFiltradosPorDias;
 
     return (
