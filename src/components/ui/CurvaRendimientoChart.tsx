@@ -42,15 +42,16 @@ type ChartProps = {
 };
 
 const CustomLabel = (props: any) => {
-  const { x, y, index, value, payload } = props;
+  const { x, y, index, value } = props;
 
-  // Si existe tirFormatted en el payload, mostrar en dos líneas (Ticker arriba, TIR abajo)
-  if (payload && payload.tirFormatted) {
+  // Si el valor contiene '|', lo separamos en dos líneas
+  if (typeof value === 'string' && value.includes('|')) {
+    const [line1, line2] = value.split('|');
     const yOffset = index % 2 === 0 ? -12 : 22;
     return (
       <text x={x} y={y + yOffset} textAnchor="middle" fill="#555" fontSize={9}>
-        <tspan x={x} dy={0}>{value}</tspan>
-        <tspan x={x} dy={10} fontWeight="bold">{payload.tirFormatted}</tspan>
+        <tspan x={x} dy={0}>{line1}</tspan>
+        <tspan x={x} dy={10} fontWeight="bold">{line2}</tspan>
       </text>
     );
   }
@@ -84,7 +85,7 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
           backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #ccc',
           padding: '10px', borderRadius: '5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
         }}>
-          <p style={{ margin: 0, fontWeight: 'bold', color: '#333' }}>{`Ticker: ${data.t}`}</p>
+          <p style={{ margin: 0, fontWeight: 'bold', color: '#333' }}>{`Ticker: ${data.t.split('|')[0]}`}</p>
           <p style={{ margin: 0, color: '#666' }}>{`TIR: ${(data.tir * 100).toFixed(2)}%`}</p>
           <p style={{ margin: 0, color: '#666' }}>{`${xValueLabel}: ${formattedXValue}`}</p>
         </div>
