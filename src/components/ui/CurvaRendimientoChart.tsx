@@ -67,9 +67,9 @@ const CustomLabel = (props: any) => {
     // Ajuste vertical para centrar mejor las dos líneas
     const yOffset = index % 2 === 0 ? -15 : 25;
     return (
-      <text x={x} y={y + yOffset} textAnchor="middle" fill="#000" fontSize={10} style={{ fontWeight: 500 }}>
-        <tspan x={x} dy={0}>{line1}</tspan>
-        <tspan x={x} dy={11} fontWeight="bold" fontSize={9}>{line2}</tspan>
+      <text x={x} y={y + yOffset} textAnchor="middle" fontSize={10}>
+        <tspan x={x} dy={0} fill="#888" fontWeight="normal">{line1}</tspan>
+        <tspan x={x} dy={11} fill="#000" fontWeight="bold" fontSize={9}>{line2}</tspan>
       </text>
     );
   }
