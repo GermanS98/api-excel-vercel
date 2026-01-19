@@ -42,22 +42,10 @@ type ChartProps = {
 };
 
 const CustomLabel = (props: any) => {
-  const { x, y, index, value, payload } = props;
+  const { x, y, index, value } = props;
 
   // Si el índice es par, la etiqueta va arriba. Si es impar, va abajo.
   const yOffset = index % 2 === 0 ? -8 : 18;
-
-  // Si existe tirFormatted en el payload, mostrar en dos líneas
-  const tirFormatted = payload?.tirFormatted;
-
-  if (tirFormatted) {
-    return (
-      <text x={x} y={y + yOffset} dy={0} textAnchor="middle" fill="#555" fontSize={9}>
-        <tspan x={x} dy={0}>{value}</tspan>
-        <tspan x={x} dy={10}>{tirFormatted}</tspan>
-      </text>
-    );
-  }
 
   return (
     <text x={x} y={y + yOffset} dy={0} textAnchor="middle" fill="#555" fontSize={9}>

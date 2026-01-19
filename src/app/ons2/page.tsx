@@ -2,7 +2,11 @@
 import Layout from '@/components/layout/Layout';
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import CurvaRendimientoChart from '@/components/ui/CurvaRendimientoChart';
+import {
+    ResponsiveContainer, ComposedChart, XAxis, YAxis, Tooltip,
+    CartesianGrid, Scatter, Line, LabelList, Cell, ZAxis
+} from 'recharts';
+import { linearRegression } from 'simple-statistics';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import { format, parseISO } from 'date-fns';
@@ -77,13 +81,110 @@ const formatDate = (dateString: string) => {
 const formatDateTime = (dateString: string | null) => {
     if (!dateString) return '-';
     try {
-        // parseISO convierte el string ISO (que viene de la base de datos) a un objeto Date
         const date = parseISO(dateString);
-        // format() lo mostrará en la zona horaria local del usuario
         return format(date, 'dd/MM/yy HH:mm:ss');
     } catch (e) {
-        return 'Fecha inv.'; // En caso de que la fecha sea inválida
+        return 'Fecha inv.';
     }
+};
+
+// ==================================================================
+// GRÁFICO LOCAL ONS2 CON ETIQUETAS PERSONALIZADAS
+// ==================================================================
+const CustomLabelONS2 = (props: any) => {
+    const { x, y, index, payload } = props;
+    const yOffset = index % 2 === 0 ? -12 : 20;
+
+    const ticker = payload?.t || '';
+    const tir = payload?.tir;
+    const tirFormatted = typeof tir === 'number' && isFinite(tir)
+        ? `${(tir * 100).toFixed(1)}%`
+        : '';
+
+    return (
+        <text x={x} y={y + yOffset} textAnchor="middle" fill="#555" fontSize={9}>
+            <tspan x={x} dy={0}>{ticker}</tspan>
+            <tspan x={x} dy={10} fontWeight="bold">{tirFormatted}</tspan>
+        </text>
+    );
+};
+
+const calcularTendencia = (datos: any[], xAxisKey: 'dv' | 'md') => {
+    if (datos.length < 2) return [];
+    const regressionPoints = datos
+        .filter(p => p[xAxisKey] > 0 && typeof p.tir === 'number' && isFinite(p.tir))
+        .map(p => [Math.log(p[xAxisKey]), p.tir]);
+    if (regressionPoints.length < 2) return [];
+    const { m, b } = linearRegression(regressionPoints);
+    const uniqueXPoints = [...new Set(datos.map(p => p[xAxisKey]).filter(d => d > 0))].sort((a, b) => a - b);
+    return uniqueXPoints.map(x => ({ [xAxisKey]: x, trend: m * Math.log(x) + b }));
+};
+
+const ONS2Chart = ({ data }: { data: any[] }) => {
+    const CustomTooltip = ({ active, payload }: any) => {
+        if (active && payload && payload.length) {
+            const d = payload[0].payload;
+            if (!d.t) return null;
+            return (
+                <div style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #ccc',
+                    padding: '10px', borderRadius: '5px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                }}>
+                    <p style={{ margin: 0, fontWeight: 'bold', color: '#333' }}>{`Ticker: ${d.t}`}</p>
+                    <p style={{ margin: 0, color: '#666' }}>{`TIR: ${(d.tir * 100).toFixed(2)}%`}</p>
+                    <p style={{ margin: 0, color: '#666' }}>{`Días al Vto: ${d.dv}`}</p>
+                </div>
+            );
+        }
+        return null;
+    };
+
+    const trendline = calcularTendencia(data, 'dv');
+
+    return (
+        <div style={{ width: '100%', height: 450, userSelect: 'none' }}>
+            <ResponsiveContainer>
+                <ComposedChart margin={{ top: 30, right: 30, bottom: 20, left: -20 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                        type="number"
+                        dataKey="dv"
+                        name="Días al Vencimiento"
+                        tick={{ fontSize: 12 }}
+                        domain={['dataMin', 'dataMax']}
+                        allowDuplicatedCategory={false}
+                        tickFormatter={(tick: number) => tick.toFixed(0)}
+                    />
+                    <YAxis
+                        type="number"
+                        dataKey="tir"
+                        name="TIR"
+                        tickFormatter={(tick: number) => `${(tick * 100).toFixed(0)}%`}
+                        domain={['auto', 'auto']}
+                        tick={{ fontSize: 12 }}
+                        width={80}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <ZAxis type="number" range={[25, 25]} />
+                    <Scatter data={data}>
+                        <LabelList dataKey="t" content={<CustomLabelONS2 />} />
+                        {data.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill="#1036E2" />
+                        ))}
+                    </Scatter>
+                    <Line
+                        data={trendline}
+                        dataKey="trend"
+                        stroke="#1036E2"
+                        dot={false}
+                        strokeWidth={1}
+                        strokeDasharray="5 5"
+                        type="monotone"
+                    />
+                </ComposedChart>
+            </ResponsiveContainer>
+        </div>
+    );
 };
 
 // ==================================================================
@@ -360,11 +461,8 @@ export default function Onspage() {
     // Datos filtrados por el rango de días (slider)
     const datosFiltradosPorDias = datosParaTabla.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
 
-    // Datos para el gráfico con campo tirFormatted para mostrar en segunda línea
-    const datosParaGrafico = datosFiltradosPorDias.map(b => ({
-        ...b,
-        tirFormatted: typeof b.tir === 'number' && isFinite(b.tir) ? `${(b.tir * 100).toFixed(1)}%` : null
-    }));
+    // Datos para el gráfico (usamos directamente los datos filtrados)
+    const datosParaGrafico = datosFiltradosPorDias;
 
     return (
         <Layout>
@@ -389,7 +487,7 @@ export default function Onspage() {
                             <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
                         </div>
                     </div>
-                    <CurvaRendimientoChart data={datosParaGrafico} segmentoActivo="ON" xAxisKey="dv" />
+                    <ONS2Chart data={datosParaGrafico} />
                 </div>
 
                 <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#e0f7fa', borderLeft: '5px solid #00bcd4', borderRadius: '4px', color: '#006064', fontWeight: 600, fontSize: '0.9rem' }}>
