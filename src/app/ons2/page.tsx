@@ -284,6 +284,7 @@ export default function Onspage() {
     const [filtros, setFiltros] = useState<{ [key: string]: string }>({});
     const [ultimaActualizacion, setUltimaActualizacion] = useState<string | null>(null);
     const segmentosDeEstaPagina = ['ON'];
+    const segmentoActivo = segmentosDeEstaPagina[0];
 
     useEffect(() => {
         const cargarCaracteristicas = async () => {
