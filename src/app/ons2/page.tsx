@@ -450,11 +450,14 @@ export default function Onspage() {
 
                         case 'date':
                             if (!cellValue) return false;
+                            // Parsear fecha de la celda (formato ISO o Date string) a objeto Date local solo para comparación de DÍA
                             const cellDateObj = new Date(cellValue as string);
+                            // Normalizar a medianoche local
                             const cellTime = new Date(cellDateObj.getFullYear(), cellDateObj.getMonth(), cellDateObj.getDate()).getTime();
 
                             if (filterValue.includes('-')) {
                                 const [startStr, endStr] = filterValue.split('-').map(s => s.trim());
+                                // Parse dd/mm/yyyy
                                 const parseUserDate = (str: string) => {
                                     const parts = str.split('/');
                                     if (parts.length !== 3) return null;
@@ -466,6 +469,7 @@ export default function Onspage() {
                                 if (!startT || !endT || isNaN(startT) || isNaN(endT)) return false;
                                 return cellTime >= startT && cellTime <= endT;
                             } else {
+                                // Búsqueda exacta o parcial
                                 if (filterValue.includes('/')) {
                                     const parts = filterValue.split('/');
                                     if (parts.length === 3) {
@@ -473,6 +477,7 @@ export default function Onspage() {
                                         return cellTime === filterTime;
                                     }
                                 }
+                                // Fallback a texto simple
                                 return String(cellValue).includes(filterValue);
                             }
 
@@ -486,8 +491,6 @@ export default function Onspage() {
 
         // --- ORDENAMIENTO ---
         if (sortConfig.key) {
-            // .sort multa in-place, así que aseguramos que estamos trabajando sobre una copia si no filtramos antes
-            // (datosFiltrados ya es una copia fresca o un nuevo array de .filter)
             datosFiltrados.sort((a, b) => {
                 const aValue = a[sortConfig.key!];
                 const bValue = b[sortConfig.key!];
@@ -507,166 +510,76 @@ export default function Onspage() {
 
         return datosFiltrados;
     }, [datosCompletos, filtros, sortConfig]);
-    switch (config.type) {
-        case 'number':
-            let numericValue = Number(cellValue);
-            if (config.isPercentage) numericValue *= 100;
-            if (filterValue.includes('-')) {
-                const [min, max] = filterValue.split('-').map(s => parseFloat(s.trim()));
-                return numericValue >= (min || -Infinity) && numericValue <= (max || Infinity);
-            }
-            const match = filterValue.match(/^(>=|<=|>|<)?\s*(-?\d+\.?\d*)$/);
-            if (match) {
-                const [, operator, numStr] = match;
-                const num = parseFloat(numStr);
-                switch (operator) {
-                    case '>': return numericValue > num;
-                    case '<': return numericValue < num;
-                    case '>=': return numericValue >= num;
-                    case '<=': return numericValue <= num;
-                    default: return numericValue === num;
-                }
-            }
-            return String(numericValue).toLowerCase().includes(filterValue.toLowerCase());
 
-        case 'date':
-            if (!cellValue) return false;
-            // Parsear fecha de la celda (formato ISO o Date string) a objeto Date local solo para comparación de DÍA
-            const cellDateObj = new Date(cellValue as string);
-            // Normalizar a medianoche local
-            const cellTime = new Date(cellDateObj.getFullYear(), cellDateObj.getMonth(), cellDateObj.getDate()).getTime();
+    const maxDiasDelSegmento = useMemo(() => {
+        if (datosCompletos.length === 0) return 1000;
+        const maxDias = Math.max(...datosCompletos.map(b => b.dv));
+        return isFinite(maxDias) ? maxDias : 1000;
+    }, [datosCompletos]);
 
-            if (filterValue.includes('-')) {
-                const [startStr, endStr] = filterValue.split('-').map(s => s.trim());
-                // Parse dd/mm/yyyy
-                const parseUserDate = (str: string) => {
-                    const parts = str.split('/');
-                    if (parts.length !== 3) return null;
-                    return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])).getTime();
-                };
-                const startT = parseUserDate(startStr);
-                const endT = parseUserDate(endStr);
+    useEffect(() => {
+        if (maxDiasDelSegmento > 0) setRangoDias([0, maxDiasDelSegmento]);
+    }, [maxDiasDelSegmento]);
 
-                if (!startT || !endT || isNaN(startT) || isNaN(endT)) return false;
-                return cellTime >= startT && cellTime <= endT;
-            } else {
-                // Búsqueda exacta o parcial: si el usuario escribe "2024" buscamos en el string ISO
-                // Si escribe dd/mm/yyyy hacemos match exacto
-                if (filterValue.includes('/')) {
-                    const parts = filterValue.split('/');
-                    if (parts.length === 3) {
-                        const filterTime = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])).getTime();
-                        return cellTime === filterTime;
-                    }
-                }
-                // Fallback a texto simple para años "2025" o meses
-                return String(cellValue).includes(filterValue);
-            }
+    // Datos filtrados por el rango de días (slider)
+    const datosFiltradosPorDias = datosParaTabla.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
 
-        case 'text':
-        default:
-            return String(cellValue).toLowerCase().includes(filterValue.toLowerCase());
-    }
-});
-            });
-        }
-
-// --- ORDENAMIENTO ---
-if (sortConfig.key) {
-    datosFiltrados.sort((a, b) => {
-        const aValue = a[sortConfig.key!];
-        const bValue = b[sortConfig.key!];
-
-        if (aValue === null || aValue === undefined) return 1;
-        if (bValue === null || bValue === undefined) return -1;
-
-        if (aValue < bValue) {
-            return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-            return sortConfig.direction === 'asc' ? 1 : -1;
-        }
-        return 0;
+    // Datos para el gráfico con formattedLabel para etiquetas de dos líneas
+    const datosParaGrafico = datosFiltradosPorDias.map(b => {
+        const tirFormatted = typeof b.tir === 'number' && isFinite(b.tir) ? `${(b.tir * 100).toFixed(1)}%` : '';
+        return {
+            ...b,
+            formattedLabel: `${b.t}|${tirFormatted}`
+        };
     });
-}
 
-return datosFiltrados;
-    }, [datosCompletos, filtros, sortConfig]);
-}
-
-return datosFiltrados.sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
-    }, [datosCompletos, filtros]);
-
-const maxDiasDelSegmento = useMemo(() => {
-    if (datosCompletos.length === 0) return 1000;
-    const maxDias = Math.max(...datosCompletos.map(b => b.dv));
-    return isFinite(maxDias) ? maxDias : 1000;
-}, [datosCompletos]);
-
-useEffect(() => {
-    if (maxDiasDelSegmento > 0) setRangoDias([0, maxDiasDelSegmento]);
-}, [maxDiasDelSegmento]);
-
-// Datos filtrados por el rango de días (slider)
-const datosFiltradosPorDias = datosParaTabla.filter(b => b.dv >= rangoDias[0] && b.dv <= rangoDias[1]);
-
-// Datos para el gráfico con formattedLabel para etiquetas de dos líneas
-const datosParaGrafico = datosFiltradosPorDias.map(b => {
-    const tirFormatted = typeof b.tir === 'number' && isFinite(b.tir) ? `${(b.tir * 100).toFixed(1)}%` : '';
-    return {
-        ...b,
-        formattedLabel: `${b.t}|${tirFormatted}`
-    };
-});
-
-return (
-    <Layout>
-        <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Obligaciones Negociables</h1>
-            <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
-                {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
-                    <span style={{ color: '#374151', fontWeight: 500 }}>
-                        Estado: <strong>Actualizado el {formatDateTime(ultimaActualizacion)}</strong>
-                    </span>
-                ) : (
-                    <span>Estado: <strong>{estado}</strong></span>
-                )}
-                {/* ------------------------- */}
-            </div>
-            <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
-                <div style={{ padding: '0 10px', marginBottom: '20px' }}>
-                    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
-                    <Slider range min={0} max={maxDiasDelSegmento > 0 ? maxDiasDelSegmento : 1} value={rangoDias} onChange={(value) => setRangoDias(value as [number, number])} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
-                        <span style={{ fontSize: '12px' }}>{rangoDias[0]} días</span>
-                        <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
-                    </div>
+    return (
+        <Layout>
+            <div style={{ maxWidth: '1400px', margin: 'auto' }}>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Obligaciones Negociables</h1>
+                <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
+                    {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
+                        <span style={{ color: '#374151', fontWeight: 500 }}>
+                            Estado: <strong>Actualizado el {formatDateTime(ultimaActualizacion)}</strong>
+                        </span>
+                    ) : (
+                        <span>Estado: <strong>{estado}</strong></span>
+                    )}
+                    {/* ------------------------- */}
                 </div>
-                <CurvaRendimientoChart
-                    data={datosParaGrafico}
-                    segmentoActivo={segmentoActivo}
-                    xAxisKey="dv"
-                    labelKey="formattedLabel"
-                />
-            </div>
+                <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
+                    <div style={{ padding: '0 10px', marginBottom: '20px' }}>
+                        <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Filtrar por Días al Vencimiento:</label>
+                        <Slider range min={0} max={maxDiasDelSegmento > 0 ? maxDiasDelSegmento : 1} value={rangoDias} onChange={(value) => setRangoDias(value as [number, number])} />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '5px' }}>
+                            <span style={{ fontSize: '12px' }}>{rangoDias[0]} días</span>
+                            <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
+                        </div>
+                    </div>
+                    <CurvaRendimientoChart
+                        data={datosParaGrafico}
+                        segmentoActivo={segmentoActivo}
+                        xAxisKey="dv"
+                        labelKey="formattedLabel"
+                    />
+                </div>
 
-            <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#e0f7fa', borderLeft: '5px solid #00bcd4', borderRadius: '4px', color: '#006064', fontWeight: 600, fontSize: '0.9rem' }}>
-                <span style={{ marginRight: '8px' }}>ⓘ</span>
-                El fondo <strong>celeste</strong> en el precio indica que se utilizó el <strong>Cierre Anterior</strong> en lugar del Último Precio.
-            </div>
+                <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#e0f7fa', borderLeft: '5px solid #00bcd4', borderRadius: '4px', color: '#006064', fontWeight: 600, fontSize: '0.9rem' }}>
+                    <span style={{ marginRight: '8px' }}>ⓘ</span>
+                    El fondo <strong>celeste</strong> en el precio indica que se utilizó el <strong>Cierre Anterior</strong> en lugar del Último Precio.
+                </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
-                <TablaGeneral
-                    titulo="Obligaciones Negociables"
-                    datos={datosFiltradosPorDias}
-                    filtros={filtros}
-                    onFiltroChange={handleFiltroChange}
-                />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginTop: '2rem' }}>
+                    <TablaGeneral
+                        titulo="Obligaciones Negociables"
+                        datos={datosFiltradosPorDias}
+                        filtros={filtros}
+                        onFiltroChange={handleFiltroChange}
+                        sortConfig={sortConfig}
+                        onSort={handleSort}
+                    />
+                </div>
             </div>
-        </div>
-    </Layout>
-);
+        </Layout>
+    );
 }
-
-
-
