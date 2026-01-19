@@ -39,22 +39,35 @@ type ChartProps = {
   data: any[];
   segmentoActivo: string;
   xAxisKey: 'dv' | 'md';
+  showTirLabels?: boolean;
 };
 
-const CustomLabel = (props: any) => {
-  const { x, y, index, value } = props;
+const createCustomLabel = (showTirLabels: boolean) => (props: any) => {
+  const { x, y, index, payload } = props;
 
   // Si el índice es par, la etiqueta va arriba. Si es impar, va abajo.
   const yOffset = index % 2 === 0 ? -8 : 18;
 
+  const ticker = payload?.t || '';
+
+  let labelText = ticker;
+  if (showTirLabels) {
+    const tir = payload?.tir;
+    const tirFormatted = typeof tir === 'number' && isFinite(tir)
+      ? `(${(tir * 100).toFixed(1)}%)`
+      : '';
+    labelText = `${ticker} ${tirFormatted}`;
+  }
+
   return (
     <text x={x} y={y + yOffset} dy={0} textAnchor="middle" fill="#555" fontSize={9}>
-      {value}
+      {labelText}
     </text>
   );
 };
 
-export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }: ChartProps) {
+export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey, showTirLabels = false }: ChartProps) {
+  const CustomLabel = createCustomLabel(showTirLabels);
   const segmentosSoberanos = ['BONAR', 'GLOBAL', 'BOPREAL'];
   const esGrupoSoberano = segmentoActivo === 'Bonares y Globales';
 
