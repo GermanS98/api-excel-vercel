@@ -562,7 +562,10 @@ export default function Onspage() {
     return (
         <Layout>
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center' }}>Curva de Rendimiento: Obligaciones Negociables</h1>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '20px' }}>
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Curva de Rendimiento: Obligaciones Negociables</h1>
+                    <img src="/vetacap_logo.svg" alt="Veta Capital" style={{ height: '50px' }} />
+                </div>
                 <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                     {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
                         <span style={{ color: '#374151', fontWeight: 500 }}>
