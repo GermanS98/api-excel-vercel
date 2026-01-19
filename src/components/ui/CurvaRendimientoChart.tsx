@@ -129,13 +129,13 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey, 
                 fill={PALETA_SEGMENTOS[segmento]}
               >
                 {/* CAMBIO 1.2: Usamos nuestro componente personalizado */}
-                <LabelList dataKey="t" content={<CustomLabel />} />
+                <LabelList dataKey="t" content={CustomLabel} />
               </Scatter>
             ))
           ) : (
             <Scatter data={data}>
               {/* CAMBIO 1.2: Usamos nuestro componente personalizado */}
-              <LabelList dataKey="t" content={<CustomLabel />} />
+              <LabelList dataKey="t" content={CustomLabel} />
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={PALETA_SEGMENTOS[entry.s] || PALETA_SEGMENTOS.default} />
               ))}
