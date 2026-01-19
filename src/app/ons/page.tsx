@@ -207,9 +207,64 @@ const TablaGeneral = ({
         return `Filtrar...`;
     };
 
+    const handleDownloadCSV = () => {
+        if (!datos.length) return;
+
+        // 1. Cabeceras
+        const headers = Object.keys(columnConfig) as FilterableColumn[];
+        const headerLabels = headers.map(key => columnConfig[key].label).join(';');
+
+        // 2. Filas
+        const rows = datos.map(item => {
+            return headers.map(key => {
+                const val = item[key];
+                if (val === null || val === undefined) return '';
+                // Formatear fechas y números para Excel local (punto/coma según locale, aqui forzamos string simple)
+                if (columnConfig[key].type === 'date') return formatDate(String(val));
+                if (columnConfig[key].type === 'number') {
+                    let num = Number(val);
+                    if (columnConfig[key].isPercentage) num = num * 100;
+                    // Reemplazar punto por coma para Excel en español si es necesario, 
+                    // pero el estándar CSV suele usar punto. Usaremos toLocaleString con es-AR
+                    return num.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\./g, '');
+                    // Hack simple: toLocaleString 'es-AR' usa coma decimal y punto de miles. 
+                    // CSV delimitado por punto y coma (;) prefiere coma decimal.
+                }
+                return String(val).replace(/;/g, ','); // Escapar separadores
+            }).join(';');
+        }).join('\n');
+
+        const csvContent = "\uFEFF" + headerLabels + '\n' + rows; // BOM para UTF-8 en Excel
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'ons_data.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div style={{ background: '#fff', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-            <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0 }}>{titulo}</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                <h2 style={{ fontSize: '1.1rem', margin: 0 }}>{titulo}</h2>
+                <button
+                    onClick={handleDownloadCSV}
+                    style={{
+                        padding: '0.5rem 1rem',
+                        background: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontWeight: 500,
+                        fontSize: '0.9rem'
+                    }}
+                >
+                    Descargar Excel
+                </button>
+            </div>
             <div style={{ overflowX: 'auto', maxHeight: '500px' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
@@ -562,10 +617,7 @@ export default function Onspage() {
     return (
         <Layout>
             <div style={{ maxWidth: '1400px', margin: 'auto' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '20px' }}>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Curva de Rendimiento: Obligaciones Negociables</h1>
-                    <img src="/vetacap_logo.svg" alt="Veta Capital" style={{ height: '50px' }} />
-                </div>
+                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center', marginBottom: '1rem' }}>Curva de Rendimiento: Obligaciones Negociables</h1>
                 <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem' }}>
                     {ultimaActualizacion && estado !== 'Cargando instrumentos...' ? (
                         <span style={{ color: '#374151', fontWeight: 500 }}>
@@ -576,7 +628,7 @@ export default function Onspage() {
                     )}
                     {/* ------------------------- */}
                 </div>
-                <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem' }}>
+                <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', marginTop: '1.5rem', position: 'relative' }}>
                     <div style={{ marginBottom: '20px', padding: '0 20px' }}>
                         <p style={{ marginBottom: '5px', fontWeight: 500 }}>Filtrar por Días al Vencimiento:</p>
                         <Slider
@@ -600,6 +652,18 @@ export default function Onspage() {
                         segmentoActivo={segmentoActivo}
                         xAxisKey="dv"
                         labelKey="formattedLabel"
+                    />
+                    <img
+                        src="/vetacap_logo.svg"
+                        alt="Veta Capital"
+                        style={{
+                            position: 'absolute',
+                            bottom: '10px',
+                            right: '20px',
+                            height: '40px',
+                            opacity: 0.8,
+                            pointerEvents: 'none'
+                        }}
                     />
                 </div>
 
