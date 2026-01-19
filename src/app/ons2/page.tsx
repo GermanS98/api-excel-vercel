@@ -329,10 +329,9 @@ export default function Onspage() {
                 }
                 setEstado('Datos cargados');
             }
-
-
         };
-        let bondChannel: any = null; // 
+
+        let bondChannel: any = null;
         const setupSuscripciones = () => {
             const realtimeFilter = `s=in.(${segmentosRequeridos.map(s => `"${s}"`).join(',')})`;
             const bondChannel = supabase.channel('realtime-datosbonos').on('postgres_changes', { event: '*', schema: 'public', table: 'datosbonos', filter: realtimeFilter }, payload => {
@@ -348,7 +347,8 @@ export default function Onspage() {
         };
 
         fetchInitialData();
-        setupSuscripciones();
+        const sub = setupSuscripciones();
+        bondChannel = sub.bondChannel;
 
         const handleVisibilityChange = () => {
             if (document.hidden) {
@@ -356,7 +356,8 @@ export default function Onspage() {
             } else {
                 fetchInitialData();
                 if (bondChannel?.unsubscribe) bondChannel.unsubscribe();
-                setupSuscripciones();
+                const sub = setupSuscripciones();
+                bondChannel = sub.bondChannel;
             }
         };
         document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -493,7 +494,12 @@ export default function Onspage() {
                             <span style={{ fontSize: '12px' }}>{maxDiasDelSegmento} días</span>
                         </div>
                     </div>
-                    <ONS2Chart data={datosParaGrafico} />
+                    <CurvaRendimientoChart
+                        data={datosParaGrafico}
+                        segmentoActivo={segmentoActivo}
+                        xAxisKey="dv"
+                        labelKey="formattedLabel"
+                    />
                 </div>
 
                 <div style={{ margin: '1rem 0', padding: '0.75rem 1rem', background: '#e0f7fa', borderLeft: '5px solid #00bcd4', borderRadius: '4px', color: '#006064', fontWeight: 600, fontSize: '0.9rem' }}>

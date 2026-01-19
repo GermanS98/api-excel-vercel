@@ -39,6 +39,7 @@ type ChartProps = {
   data: any[];
   segmentoActivo: string;
   xAxisKey: 'dv' | 'md';
+  labelKey?: string;
 };
 
 const CustomLabel = (props: any) => {
@@ -70,7 +71,7 @@ const CustomLabel = (props: any) => {
   );
 };
 
-export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }: ChartProps) {
+export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey, labelKey }: ChartProps) {
   const segmentosSoberanos = ['BONAR', 'GLOBAL', 'BOPREAL'];
   const esGrupoSoberano = segmentoActivo === 'Bonares y Globales';
 
@@ -132,13 +133,13 @@ export default function CurvaRendimientoChart({ data, segmentoActivo, xAxisKey }
                 fill={PALETA_SEGMENTOS[segmento]}
               >
                 {/* CAMBIO 1.2: Usamos nuestro componente personalizado */}
-                <LabelList dataKey={(d: any) => d.formattedLabel || d.t} content={CustomLabel} />
+                <LabelList dataKey={labelKey || 't'} content={CustomLabel} />
               </Scatter>
             ))
           ) : (
             <Scatter data={data}>
               {/* CAMBIO 1.2: Usamos nuestro componente personalizado */}
-              <LabelList dataKey={(d: any) => d.formattedLabel || d.t} content={CustomLabel} />
+              <LabelList dataKey={labelKey || 't'} content={CustomLabel} />
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={PALETA_SEGMENTOS[entry.s] || PALETA_SEGMENTOS.default} />
               ))}
