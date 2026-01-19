@@ -253,7 +253,7 @@ const TablaGeneral = ({
                     onClick={handleDownloadCSV}
                     style={{
                         padding: '0.5rem 1rem',
-                        background: '#10b981',
+                        background: '#00C600',
                         color: 'white',
                         border: 'none',
                         borderRadius: '4px',
