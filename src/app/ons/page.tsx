@@ -217,7 +217,7 @@ const TablaGeneral = ({
         // 2. Filas
         const rows = datos.map(item => {
             return headers.map(key => {
-                const val = item[key];
+                const val = item[key as keyof Bono];
                 if (val === null || val === undefined) return '';
                 // Formatear fechas y números para Excel local (punto/coma según locale, aqui forzamos string simple)
                 if (columnConfig[key].type === 'date') return formatDate(String(val));
