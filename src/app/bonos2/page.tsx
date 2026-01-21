@@ -474,8 +474,13 @@ export default function BonosPage() {
                         if (isCCLPrice) {
                                 const canjeNum = parseFloat(canje.replace(',', '.'));
                                 if (!isNaN(canjeNum)) {
-                                        // Canje directo como factor (ej: 1.03)
-                                        precioFinal = precioFinal * canjeNum;
+                                        // Si la moneda original es ARS, dividimos por MEP antes.
+                                        // Para llegar al valor USD implicito vía CCL, dividimos por canje.
+                                        if (moneda === 'ARS') {
+                                                precioFinal = precioFinal / canjeNum;
+                                        } else {
+                                                precioFinal = precioFinal * canjeNum;
+                                        }
                                 } else {
                                         // Si el canje no es válido, alertamos o usamos factor 1?
                                         // Mejor avisar, pero por robustez dejamos el precio igual si falla.
@@ -690,9 +695,10 @@ export default function BonosPage() {
                                                                                                 id="ccl-price-check"
                                                                                                 checked={isCCLPrice}
                                                                                                 onChange={(e) => setIsCCLPrice(e.target.checked)}
-                                                                                                style={{ cursor: 'pointer', width: '14px', height: '14px', accentColor: '#00C805' }}
+                                                                                                disabled={monedaBono === 'ARS'}
+                                                                                                style={{ cursor: monedaBono === 'ARS' ? 'not-allowed' : 'pointer', width: '14px', height: '14px', accentColor: '#00C805', opacity: monedaBono === 'ARS' ? 0.5 : 1 }}
                                                                                         />
-                                                                                        <label htmlFor="ccl-price-check" style={{ fontSize: '0.85rem', cursor: 'pointer', color: '#555', userSelect: 'none' }}>
+                                                                                        <label htmlFor="ccl-price-check" style={{ fontSize: '0.85rem', cursor: monedaBono === 'ARS' ? 'not-allowed' : 'pointer', color: monedaBono === 'ARS' ? '#999' : '#555', userSelect: 'none' }}>
                                                                                                 Precio CCL
                                                                                         </label>
                                                                                 </div>
