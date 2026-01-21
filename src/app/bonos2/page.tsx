@@ -642,14 +642,26 @@ export default function BonosPage() {
                                                         </div>
 
                                                         <div>
-                                                                <label htmlFor="precio-input" className={styles.formLabel}>Precio</label>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                        <label htmlFor="precio-input" className={styles.formLabel}>Precio</label>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                                                <input
+                                                                                        type="checkbox"
+                                                                                        id="clean-price-check"
+                                                                                        checked={isCleanPrice}
+                                                                                        onChange={(e) => setIsCleanPrice(e.target.checked)}
+                                                                                        style={{ cursor: 'pointer', width: '14px', height: '14px', accentColor: '#00C805' }}
+                                                                                />
+                                                                                <label htmlFor="clean-price-check" style={{ fontSize: '0.85rem', cursor: 'pointer', color: '#555', userSelect: 'none' }}>
+                                                                                        Precio Clean
+                                                                                </label>
+                                                                        </div>
+                                                                </div>
                                                                 <input
                                                                         id="precio-input"
                                                                         type="text"
                                                                         value={precio}
                                                                         onChange={e => {
-                                                                                // 1. Reemplaza todos los puntos por comas.
-                                                                                // 2. Elimina cualquier caracter que no sea un número o una coma.
                                                                                 const valor = e.target.value.replace(/\./g, ',').replace(/[^0-9,]/g, '');
                                                                                 setPrecio(valor);
                                                                         }}
@@ -657,18 +669,6 @@ export default function BonosPage() {
                                                                         disabled={isLoading}
                                                                         placeholder="Ej: 99,61"
                                                                 />
-
-                                                                <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                        <input
-                                                                                type="checkbox"
-                                                                                id="clean-price-check"
-                                                                                checked={isCleanPrice}
-                                                                                onChange={(e) => setIsCleanPrice(e.target.checked)}
-                                                                        />
-                                                                        <label htmlFor="clean-price-check" style={{ fontSize: '0.9rem', cursor: 'pointer', color: '#666' }}>
-                                                                                Precio Clean + Int. Corr.
-                                                                        </label>
-                                                                </div>
                                                         </div>
 
                                                         <div>
