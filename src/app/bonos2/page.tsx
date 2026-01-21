@@ -374,7 +374,7 @@ export default function BonosPage() {
                                                 // Solo seteamos el canje si está vacío para no pisar edición del usuario,
                                                 // o si acaba de activar el check (podríamos refinar esto, pero por ahora init simple)
                                                 if (!canje) {
-                                                        setCanje(canjeCalculado.toFixed(3));
+                                                        setCanje(canjeCalculado.toFixed(3).replace('.', ','));
                                                 }
                                         }
 
@@ -475,7 +475,7 @@ export default function BonosPage() {
                                 const canjeNum = parseFloat(canje.replace(',', '.'));
                                 if (!isNaN(canjeNum)) {
                                         // Canje directo como factor (ej: 1.03)
-                                        precioFinal = precioFinal / canjeNum;
+                                        precioFinal = precioFinal * canjeNum;
                                 } else {
                                         // Si el canje no es válido, alertamos o usamos factor 1?
                                         // Mejor avisar, pero por robustez dejamos el precio igual si falla.
@@ -698,24 +698,25 @@ export default function BonosPage() {
                                                                                 </div>
                                                                         </div>
                                                                 </div>
+                                                                {isCCLPrice && (
+                                                                        <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                                <label htmlFor="canje-input" className={styles.formLabel} style={{ marginBottom: 0, minWidth: '60px' }}>Canje</label>
+                                                                                <input
+                                                                                        id="canje-input"
+                                                                                        type="text"
+                                                                                        value={canje}
+                                                                                        onChange={e => {
+                                                                                                const val = e.target.value.replace(/[^0-9,.-]/g, '');
+                                                                                                setCanje(val);
+                                                                                        }}
+                                                                                        className={styles.formInput}
+                                                                                        style={{ width: '100px', padding: '0.3rem' }}
+                                                                                        placeholder="Ratio"
+                                                                                />
+                                                                        </div>
+                                                                )}
                                                         </div>
-                                                        {isCCLPrice && (
-                                                                <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                        <label htmlFor="canje-input" className={styles.formLabel} style={{ marginBottom: 0, minWidth: '60px' }}>Canje %</label>
-                                                                        <input
-                                                                                id="canje-input"
-                                                                                type="text"
-                                                                                value={canje}
-                                                                                onChange={e => {
-                                                                                        const val = e.target.value.replace(/[^0-9,.-]/g, '');
-                                                                                        setCanje(val);
-                                                                                }}
-                                                                                className={styles.formInput}
-                                                                                style={{ width: '100px', padding: '0.3rem' }}
-                                                                                placeholder="%"
-                                                                        />
-                                                                </div>
-                                                        )}
+
                                                         <input
                                                                 id="precio-input"
                                                                 type="text"
