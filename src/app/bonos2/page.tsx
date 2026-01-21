@@ -784,13 +784,12 @@ export default function BonosPage() {
                                                         </button>
                                                 </div>
                                         </div>
+                                        {resultados && (
+                                                <div style={{ marginTop: '2rem' }}>
+                                                        {renderResults(resultados)}
+                                                </div>
+                                        )}
                                 </div>
-
-                                {resultados && (
-                                        <div style={{ marginTop: '2rem' }}>
-                                                {renderResults(resultados)}
-                                        </div>
-                                )}
                         </div>
                 </Layout>
         );
