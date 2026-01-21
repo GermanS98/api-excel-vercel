@@ -280,6 +280,8 @@ export default function BonosPage() {
 
         // --- NUEVO PARA PRECIO CLEAN ---
         const [isCleanPrice, setIsCleanPrice] = useState(false);
+        const [isCCLPrice, setIsCCLPrice] = useState(false);
+        const [canje, setCanje] = useState<string>('');
 
         const [moneda, setMoneda] = useState<'ARS' | 'USD'>('USD');
         const [tipoDeCambio, setTipoDeCambio] = useState<TipoDeCambio | null>(null);
@@ -350,7 +352,7 @@ export default function BonosPage() {
                 const necesitaTC = (moneda === 'ARS' && monedaBono === 'USD') || (moneda === 'USD' && monedaBono === 'ARS');
                 setMostrarTipoCambio(necesitaTC);
 
-                if (necesitaTC) {
+                if (necesitaTC || isCCLPrice) {
                         const fetchTipoDeCambio = async () => {
                                 const { data, error } = await supabase
                                         .from('tipodecambio')
@@ -361,17 +363,29 @@ export default function BonosPage() {
 
                                 if (!error && data && data.datos && typeof data.datos.valor_mep !== 'undefined') {
                                         setTipoDeCambio(data.datos);
-                                        setTipoCambioInput(String(data.datos.valor_mep));
+                                        // Update input only if it's empty or we are in the auto-fetch mode for display
+                                        if (necesitaTC && !tipoCambioInput) {
+                                                setTipoCambioInput(String(data.datos.valor_mep));
+                                        }
+
+                                        // Calcular canje por defecto si tenemos ambos valores
+                                        if (data.datos.valor_ccl && data.datos.valor_mep) {
+                                                const canjeCalculado = data.datos.valor_ccl / data.datos.valor_mep;
+                                                // Solo seteamos el canje si está vacío para no pisar edición del usuario,
+                                                // o si acaba de activar el check (podríamos refinar esto, pero por ahora init simple)
+                                                if (!canje) {
+                                                        setCanje(canjeCalculado.toFixed(3));
+                                                }
+                                        }
+
                                 } else {
-                                        setTipoDeCambio(null);
-                                        setTipoCambioInput('');
+                                        if (!tipoDeCambio) setTipoDeCambio(null);
+                                        // Don't clear input if user typed something
                                 }
                         };
                         fetchTipoDeCambio();
-                } else {
-                        setTipoCambioInput('');
                 }
-        }, [moneda, monedaBono]);
+        }, [moneda, monedaBono, isCCLPrice]);
 
         const calcular = async () => {
                 setIsLoading(true);
@@ -453,6 +467,19 @@ export default function BonosPage() {
                                         precioFinal = precioFinal / tc;
                                 } else if (moneda === 'USD' && monedaBono === 'ARS') {
                                         precioFinal = precioFinal * tc;
+                                }
+                        }
+
+                        // Calcular conversión CCL -> MEP usando el Canje
+                        if (isCCLPrice) {
+                                const canjeNum = parseFloat(canje.replace(',', '.'));
+                                if (!isNaN(canjeNum)) {
+                                        // Canje directo como factor (ej: 1.03)
+                                        precioFinal = precioFinal / canjeNum;
+                                } else {
+                                        // Si el canje no es válido, alertamos o usamos factor 1?
+                                        // Mejor avisar, pero por robustez dejamos el precio igual si falla.
+                                        console.warn("Valor de canje inválido, no se aplicó conversión.");
                                 }
                         }
 
@@ -644,88 +671,119 @@ export default function BonosPage() {
                                                         <div>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                                         <label htmlFor="precio-input" className={styles.formLabel}>Precio</label>
-                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                                                                <input
-                                                                                        type="checkbox"
-                                                                                        id="clean-price-check"
-                                                                                        checked={isCleanPrice}
-                                                                                        onChange={(e) => setIsCleanPrice(e.target.checked)}
-                                                                                        style={{ cursor: 'pointer', width: '14px', height: '14px', accentColor: '#00C805' }}
-                                                                                />
-                                                                                <label htmlFor="clean-price-check" style={{ fontSize: '0.85rem', cursor: 'pointer', color: '#555', userSelect: 'none' }}>
-                                                                                        Precio Clean
-                                                                                </label>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                                                        <input
+                                                                                                type="checkbox"
+                                                                                                id="clean-price-check"
+                                                                                                checked={isCleanPrice}
+                                                                                                onChange={(e) => setIsCleanPrice(e.target.checked)}
+                                                                                                style={{ cursor: 'pointer', width: '14px', height: '14px', accentColor: '#00C805' }}
+                                                                                        />
+                                                                                        <label htmlFor="clean-price-check" style={{ fontSize: '0.85rem', cursor: 'pointer', color: '#555', userSelect: 'none' }}>
+                                                                                                Precio Clean
+                                                                                        </label>
+                                                                                </div>
+                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                                                        <input
+                                                                                                type="checkbox"
+                                                                                                id="ccl-price-check"
+                                                                                                checked={isCCLPrice}
+                                                                                                onChange={(e) => setIsCCLPrice(e.target.checked)}
+                                                                                                style={{ cursor: 'pointer', width: '14px', height: '14px', accentColor: '#00C805' }}
+                                                                                        />
+                                                                                        <label htmlFor="ccl-price-check" style={{ fontSize: '0.85rem', cursor: 'pointer', color: '#555', userSelect: 'none' }}>
+                                                                                                Precio CCL
+                                                                                        </label>
+                                                                                </div>
                                                                         </div>
                                                                 </div>
-                                                                <input
-                                                                        id="precio-input"
-                                                                        type="text"
-                                                                        value={precio}
-                                                                        onChange={e => {
-                                                                                const valor = e.target.value.replace(/\./g, ',').replace(/[^0-9,]/g, '');
-                                                                                setPrecio(valor);
-                                                                        }}
-                                                                        className={styles.formInput}
-                                                                        disabled={isLoading}
-                                                                        placeholder="Ej: 99,61"
-                                                                />
                                                         </div>
-
-                                                        <div>
-                                                                <label htmlFor="moneda-input" className={styles.formLabel}>Moneda</label>
-                                                                <select
-                                                                        id="moneda-input"
-                                                                        value={moneda}
-                                                                        onChange={e => setMoneda(e.target.value as 'ARS' | 'USD')}
-                                                                        className={styles.formInput}
-                                                                        disabled={isLoading}
-                                                                >
-                                                                        <option value="ARS">ARS</option>
-                                                                        <option value="USD">USD</option>
-                                                                </select>
-                                                        </div>
-
-                                                        {monedaBonoCargada && mostrarTipoCambio && (
-                                                                <div>
-                                                                        <label htmlFor="tipo-cambio-input" className={styles.formLabel}>Tipo de cambio (MEP)</label>
+                                                        {isCCLPrice && (
+                                                                <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                        <label htmlFor="canje-input" className={styles.formLabel} style={{ marginBottom: 0, minWidth: '60px' }}>Canje %</label>
                                                                         <input
-                                                                                id="tipo-cambio-input"
+                                                                                id="canje-input"
                                                                                 type="text"
-                                                                                inputMode="decimal"
-                                                                                value={tipoCambioInput}
+                                                                                value={canje}
                                                                                 onChange={e => {
-                                                                                        const val = e.target.value.replace(/[^0-9,.]/g, '');
-                                                                                        setTipoCambioInput(val);
+                                                                                        const val = e.target.value.replace(/[^0-9,.-]/g, '');
+                                                                                        setCanje(val);
                                                                                 }}
                                                                                 className={styles.formInput}
-                                                                                disabled={isLoading}
-                                                                                placeholder="Tipo de cambio MEP"
+                                                                                style={{ width: '100px', padding: '0.3rem' }}
+                                                                                placeholder="%"
                                                                         />
                                                                 </div>
                                                         )}
+                                                        <input
+                                                                id="precio-input"
+                                                                type="text"
+                                                                value={precio}
+                                                                onChange={e => {
+                                                                        const valor = e.target.value.replace(/\./g, ',').replace(/[^0-9,]/g, '');
+                                                                        setPrecio(valor);
+                                                                }}
+                                                                className={styles.formInput}
+                                                                disabled={isLoading}
+                                                                placeholder="Ej: 99,61"
+                                                        />
+                                                </div>
 
+                                                <div>
+                                                        <label htmlFor="moneda-input" className={styles.formLabel}>Moneda</label>
+                                                        <select
+                                                                id="moneda-input"
+                                                                value={moneda}
+                                                                onChange={e => setMoneda(e.target.value as 'ARS' | 'USD')}
+                                                                className={styles.formInput}
+                                                                disabled={isLoading}
+                                                        >
+                                                                <option value="ARS">ARS</option>
+                                                                <option value="USD">USD</option>
+                                                        </select>
+                                                </div>
+
+                                                {monedaBonoCargada && mostrarTipoCambio && (
                                                         <div>
-                                                                <label htmlFor="nominales-input" className={styles.formLabel}>Nominales</label>
-                                                                <input id="nominales-input" type="number" value={nominales} onChange={e => setNominales(Number(e.target.value))} className={styles.formInput} disabled={isLoading} />
+                                                                <label htmlFor="tipo-cambio-input" className={styles.formLabel}>Tipo de cambio (MEP)</label>
+                                                                <input
+                                                                        id="tipo-cambio-input"
+                                                                        type="text"
+                                                                        inputMode="decimal"
+                                                                        value={tipoCambioInput}
+                                                                        onChange={e => {
+                                                                                const val = e.target.value.replace(/[^0-9,.]/g, '');
+                                                                                setTipoCambioInput(val);
+                                                                        }}
+                                                                        className={styles.formInput}
+                                                                        disabled={isLoading}
+                                                                        placeholder="Tipo de cambio MEP"
+                                                                />
                                                         </div>
-                                                        <div className={styles.gridColSpan4}>
-                                                                <label htmlFor="fecha-input" className={styles.formLabel}>Fecha Valor</label>
-                                                                <input id="fecha-input" type="date" value={fecha} onChange={e => setFecha(e.target.value)} className={styles.formInput} disabled={isLoading} />
-                                                        </div>
-                                                        <div className={styles.gridColSpan4}>
-                                                                <button onClick={calcular} className={`${styles.submitButton} ${styles.fontAlbert}`} disabled={isLoading}>
-                                                                        {isLoading ? 'Calculando...' : 'CALCULAR TIR'}
-                                                                </button>
-                                                        </div>
+                                                )}
+
+                                                <div>
+                                                        <label htmlFor="nominales-input" className={styles.formLabel}>Nominales</label>
+                                                        <input id="nominales-input" type="number" value={nominales} onChange={e => setNominales(Number(e.target.value))} className={styles.formInput} disabled={isLoading} />
+                                                </div>
+                                                <div className={styles.gridColSpan4}>
+                                                        <label htmlFor="fecha-input" className={styles.formLabel}>Fecha Valor</label>
+                                                        <input id="fecha-input" type="date" value={fecha} onChange={e => setFecha(e.target.value)} className={styles.formInput} disabled={isLoading} />
+                                                </div>
+                                                <div className={styles.gridColSpan4}>
+                                                        <button onClick={calcular} className={`${styles.submitButton} ${styles.fontAlbert}`} disabled={isLoading}>
+                                                                {isLoading ? 'Calculando...' : 'CALCULAR TIR'}
+                                                        </button>
                                                 </div>
                                         </div>
-
-                                        {resultados && (
-                                                <div style={{ marginTop: '2rem' }}>
-                                                        {renderResults(resultados)}
-                                                </div>
-                                        )}
                                 </div>
+
+                                {resultados && (
+                                        <div style={{ marginTop: '2rem' }}>
+                                                {renderResults(resultados)}
+                                        </div>
+                                )}
                         </div>
                 </Layout>
         );
