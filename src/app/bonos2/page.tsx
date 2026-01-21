@@ -674,7 +674,7 @@ export default function BonosPage() {
                                                         </div>
 
                                                         <div>
-                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '0.5rem' }}>
                                                                         <label htmlFor="precio-input" className={styles.formLabel}>Precio</label>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
