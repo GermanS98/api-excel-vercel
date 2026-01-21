@@ -164,8 +164,8 @@ const WhatIfCalculator = ({
 }) => {
         return (
                 <div className={styles.whatIfContainer}>
-                        <h4 className={`${styles.resultTitle} ${styles.fontAlbert}`}>Análisis de Sensibilidad Inverso</h4>
-                        <p className={styles.subtitle} style={{ marginTop: 0, marginBottom: '1rem' }}>
+                        <h4 className={`${styles.resultTitle} ${styles.fontAlbert}`} style={{ margin: '0 0 0.5rem 0' }}>Análisis de Sensibilidad Inverso</h4>
+                        <p className={styles.subtitle} style={{ marginTop: 0, marginBottom: '0.5rem' }}>
                                 Ingresá una TIR objetivo para ver a qué precio de mercado corresponde.
                         </p>
                         <div className={styles.whatIfGrid}>
@@ -206,8 +206,8 @@ const SensibilidadTirTable = ({ datos }: { datos?: SensibilidadItem[] }) => {
                 return null;
         }
         return (
-                <div className={styles.flujosTableContainer} style={{ marginTop: '1.5rem' }}>
-                        <h4 className={`${styles.resultTitle} ${styles.fontAlbert}`}>Análisis de Sensibilidad (Precio vs. TIR)</h4>
+                <div className={styles.flujosTableContainer} style={{ marginTop: '0.5rem' }}>
+                        <h4 className={`${styles.resultTitle} ${styles.fontAlbert}`} style={{ marginBottom: '0.5rem' }}>Análisis de Sensibilidad (Precio vs. TIR)</h4>
                         <table className={styles.flujosTable}>
                                 <thead>
                                         <tr>
@@ -669,7 +669,7 @@ export default function BonosPage() {
                                                         </div>
 
                                                         <div>
-                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                                                                         <label htmlFor="precio-input" className={styles.formLabel}>Precio</label>
                                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
