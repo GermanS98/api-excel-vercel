@@ -461,6 +461,7 @@ export default function BonosPage() {
 
                         let precioFinal = parseFloat(precio.replace(/\./g, '').replace(',', '.'));
                         const tc = Number(tipoCambioInput) || (tipoDeCambio?.valor_mep ?? 1);
+                        let coeficienteAjusteInteres = 1.0;
 
                         if (mostrarTipoCambio && tc) {
                                 if (moneda === 'ARS' && monedaBono === 'USD') {
@@ -474,16 +475,15 @@ export default function BonosPage() {
                         if (isCCLPrice) {
                                 const canjeNum = parseFloat(canje.replace(',', '.'));
                                 if (!isNaN(canjeNum)) {
-                                        // Si la moneda original es ARS, dividimos por MEP antes.
-                                        // Para llegar al valor USD implicito vía CCL, dividimos por canje.
+                                        coeficienteAjusteInteres = canjeNum;
                                         if (moneda === 'ARS') {
-                                                precioFinal = precioFinal / canjeNum;
+                                                // Si es ARS y es CCL, ya se dividió por el MEP (tc) arriba.
+                                                // El resultado ya es un precio en USD "inflado". No se multiplica por canje de nuevo.
                                         } else {
+                                                // Si es USD, multiplicamos por canje para "inflar" el precio Clean.
                                                 precioFinal = precioFinal * canjeNum;
                                         }
                                 } else {
-                                        // Si el canje no es válido, alertamos o usamos factor 1?
-                                        // Mejor avisar, pero por robustez dejamos el precio igual si falla.
                                         console.warn("Valor de canje inválido, no se aplicó conversión.");
                                 }
                         }
@@ -505,7 +505,8 @@ export default function BonosPage() {
                                         tipotasa: caracteristicas?.tipotasa,
                                         diasarestar: caracteristicas?.diasarestar,
                                         nominales: parseInt(nominales.toString()),
-                                        es_precio_clean: isCleanPrice
+                                        es_precio_clean: isCleanPrice,
+                                        coeficiente_ajuste_interes: coeficienteAjusteInteres
                                 })
                         });
 
