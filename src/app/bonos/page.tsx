@@ -278,6 +278,9 @@ export default function BonosPage() {
         const [precioObjetivo, setPrecioObjetivo] = useState<number | null>(null);
         const [whatIfError, setWhatIfError] = useState('');
 
+        // NUEVO: Estado para Comisión
+        const [comision, setComision] = useState<string>('');
+
         // --- NUEVO PARA PRECIO CLEAN ---
         const [isCleanPrice, setIsCleanPrice] = useState(false);
         const [isCCLPrice, setIsCCLPrice] = useState(false);
@@ -506,7 +509,8 @@ export default function BonosPage() {
                                         diasarestar: caracteristicas?.diasarestar,
                                         nominales: parseInt(nominales.toString()),
                                         es_precio_clean: isCleanPrice,
-                                        coeficiente_ajuste_interes: coeficienteAjusteInteres
+                                        coeficiente_ajuste_interes: coeficienteAjusteInteres,
+                                        comision: parseFloat(comision.replace(',', '.')) || 0 // Enviamos la comisión
                                 })
                         });
 
@@ -568,6 +572,7 @@ export default function BonosPage() {
                                         flujos: flujosParaCalcular,
                                         fecha_valor: fecha,
                                         tir: tirDecimal, // Enviamos como decimal
+                                        comision: parseFloat(comision.replace(',', '.')) || 0 // Enviamos la comisión
 
                                 })
                         });
@@ -735,6 +740,22 @@ export default function BonosPage() {
                                                                 className={styles.formInput}
                                                                 disabled={isLoading}
                                                                 placeholder="Ej: 99,61"
+                                                        />
+                                                </div>
+
+                                                <div>
+                                                        <label htmlFor="comision-input" className={styles.formLabel}>Comisión %</label>
+                                                        <input
+                                                                id="comision-input"
+                                                                type="text"
+                                                                value={comision}
+                                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                                                        const val = e.target.value.replace(/\./g, ',').replace(/[^0-9,]/g, '');
+                                                                        setComision(val);
+                                                                }}
+                                                                className={styles.formInput}
+                                                                disabled={isLoading}
+                                                                placeholder="Ej: 0,5"
                                                         />
                                                 </div>
 
