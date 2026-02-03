@@ -8,6 +8,7 @@ import 'rc-slider/assets/index.css';
 import Sidebar from '@/components/ui/Sidebar';
 import Link from 'next/link';
 import ReportePDFGenerator from '@/components/ui/ReportePDFGenerator';
+import { generateHTMLReport } from '@/utils/generateHTMLReport'; // Importar utilidad
 import { format, parseISO } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 // --- DEFINICIÓN DEL TIPO PARA TYPESCRIPT ---
@@ -370,9 +371,6 @@ export default function HomePage() {
         };
     }, []);  // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
     const ultimoLoteDeDatos: Bono[] = bonos;
-    import { generateHTMLReport } from '@/utils/generateHTMLReport'; // Importar utilidad
-
-    // ... (Resto de imports y código sigue igual hasta handleDownloadFullReport)
 
     const handleDownloadFullReport = () => {
         setEstado('Generando reporte completo...');
