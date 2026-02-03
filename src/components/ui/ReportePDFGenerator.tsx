@@ -127,7 +127,9 @@ const ReportePDFGenerator = ({
                             {showChart && (
                                 <div style={{
                                     width: '80%', margin: '20px auto 0 auto',
-                                    pageBreakBefore: 'auto' // No forzamos salto antes del gráfico
+                                    pageBreakBefore: 'auto', // No forzamos salto antes del gráfico
+                                    pageBreakInside: 'avoid', // EVITA que el gráfico se corte a la mitad
+                                    breakInside: 'avoid' // Compatibilidad extra
                                 }}>
                                     {/* 3. Título del gráfico estilo tabla */}
                                     <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'left' }}>

@@ -16,6 +16,9 @@ type SidebarProps = {
 const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF, onDownloadHTML }: SidebarProps) => {
   const router = useRouter();
 
+  // Debugging log to verify props
+  console.log('Sidebar Props:', { onDownloadPDF: !!onDownloadPDF, onDownloadHTML: !!onDownloadHTML });
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/login');
