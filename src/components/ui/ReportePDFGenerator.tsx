@@ -24,7 +24,7 @@ const ReportePDFGenerator = ({
 
     useEffect(() => {
         console.log('ReportePDFGenerator: Component mounted.');
-        
+
         if (contentRef.current) {
             console.log('ReportePDFGenerator: contentRef is valid. Starting 1s timer...');
             // --- CAMBIO 1: Aumentamos el tiempo de espera a 1 segundo ---
@@ -51,30 +51,30 @@ const ReportePDFGenerator = ({
         if (!datos) return [];
         return [...datos].sort((a, b) => new Date(a.vto).getTime() - new Date(b.vto).getTime());
     };
-    
+
     // Tipamos el style correctamente para React
     const overlayStyle: React.CSSProperties = {
-        position: 'fixed' as const, 
-        top: 0, 
-        left: 0, 
-        width: '100%', 
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        width: '100%',
         height: '100vh',
-        background: 'rgba(255, 255, 255, 0.9)', 
-        zIndex: 9998, 
+        background: 'rgba(255, 255, 255, 0.9)',
+        zIndex: 9998,
         display: 'flex',
-        flexDirection: 'column', 
-        alignItems: 'center', 
+        flexDirection: 'column',
+        alignItems: 'center',
         justifyContent: 'center',
-        textAlign: 'center', 
+        textAlign: 'center',
         overflow: 'auto'
     };
-    
+
     // --- CAMBIO 2: Reducimos el ancho total del contenedor ---
     // 1024px es un ancho más seguro que cabe en la mayoría de los formatos.
     const reportContainerStyle: React.CSSProperties = {
-        width: '1024px', 
-        background: 'white', 
-        padding: '1rem', 
+        width: '1024px',
+        background: 'white',
+        padding: '1rem',
         border: '1px solid #ccc'
     };
 
@@ -83,7 +83,7 @@ const ReportePDFGenerator = ({
             <h2 style={{ color: '#021751', marginBottom: '20px' }}>
                 Generando reporte, por favor espere...
             </h2>
-            
+
             <div ref={contentRef} style={reportContainerStyle}>
                 {/* --- CAMBIO 3: Inyectamos CSS para achicar las tablas --- */}
                 <style>
@@ -96,13 +96,16 @@ const ReportePDFGenerator = ({
                 </style>
 
                 {Object.keys(gruposDeSegmentos).map((titulo, index) => {
+                    // 1. Filtrar las secciones que no queremos
+                    if (titulo === 'ONs Dollar Linked' || titulo === 'Subsoberanos') return null;
+
                     const segmentos = gruposDeSegmentos[titulo];
-                    const datosDelGrupo = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => segmentos.includes(b.s))); // Validar propiedad 's' vs 'segmento', en page.tsx era 's'
-                    // NOTA: En el JS original decia b.segmento, pero en page.tsx el tipo Bono usa 's'.
-                    // Voy a asumir que 's' es lo correcto basado en TablaGeneral.
-                    
+                    const datosDelGrupo = ordenarPorVencimiento(ultimoLoteDeDatos.filter(b => segmentos.includes(b.s)));
+
                     const isBonares = titulo === 'Bonares y Globales';
                     const isSoberanos = titulo === 'Bonares y Globales' || titulo === 'Obligaciones Negociables';
+                    // 2. Condición para mostrar gráfico
+                    const showChart = titulo !== 'Obligaciones Negociables';
 
                     if (datosDelGrupo.length === 0) return null;
 
@@ -111,7 +114,7 @@ const ReportePDFGenerator = ({
                             <h1 style={{ textAlign: 'center', fontSize: '1.5rem', color: '#021751', pageBreakBefore: index > 0 ? 'always' : 'auto' }}>
                                 {titulo}
                             </h1>
-                            
+
                             {/* Envolvemos las tablas en un div con la nueva clase */}
                             <div className="pdf-table" style={{ width: '100%', marginTop: '1rem' }}>
                                 {isSoberanos ? (
@@ -120,17 +123,25 @@ const ReportePDFGenerator = ({
                                     <TablaGeneral titulo={""} datos={datosDelGrupo} />
                                 )}
                             </div>
-                            
-                            <div style={{ 
-                                width: '80%', margin: '20px auto 0 auto', height: '400px',
-                                pageBreakBefore: 'always'
-                            }}>
-                                <CurvaRendimientoChart
-                                    data={datosDelGrupo}
-                                    segmentoActivo={titulo}
-                                    xAxisKey={isBonares ? 'md' : 'dv'} 
-                                />
-                            </div>
+
+                            {showChart && (
+                                <div style={{
+                                    width: '80%', margin: '20px auto 0 auto',
+                                    pageBreakBefore: 'auto' // No forzamos salto antes del gráfico
+                                }}>
+                                    {/* 3. Título del gráfico estilo tabla */}
+                                    <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'left' }}>
+                                        Curva de Rendimiento
+                                    </h2>
+                                    <div style={{ height: '400px', border: '1px solid #e5e7eb', borderTop: 'none', padding: '10px' }}>
+                                        <CurvaRendimientoChart
+                                            data={datosDelGrupo}
+                                            segmentoActivo={titulo}
+                                            xAxisKey={isBonares ? 'md' : 'dv'}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     );
                 })}
