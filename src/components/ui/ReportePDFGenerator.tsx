@@ -125,17 +125,14 @@ const ReportePDFGenerator = ({
                             </div>
 
                             {showChart && (
-                                <div style={{
-                                    width: '80%', margin: '20px auto 0 auto',
-                                    pageBreakBefore: 'auto', // No forzamos salto antes del gráfico
-                                    pageBreakInside: 'avoid', // EVITA que el gráfico se corte a la mitad
-                                    breakInside: 'avoid' // Compatibilidad extra
+                                <div className="pdf-chart-section" style={{
+                                    width: '80%', margin: '20px auto 0 auto'
                                 }}>
                                     {/* 3. Título del gráfico estilo tabla */}
                                     <h2 style={{ fontSize: '1.1rem', padding: '1rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', margin: 0, textAlign: 'left' }}>
                                         Curva de Rendimiento
                                     </h2>
-                                    <div style={{ height: '400px', border: '1px solid #e5e7eb', borderTop: 'none', padding: '10px' }}>
+                                    <div style={{ height: '300px', border: '1px solid #e5e7eb', borderTop: 'none', padding: '10px' }}>
                                         <CurvaRendimientoChart
                                             data={datosDelGrupo}
                                             segmentoActivo={titulo}
