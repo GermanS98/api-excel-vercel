@@ -10,9 +10,10 @@ type SidebarProps = {
   onClose: () => void;
   items?: { label: string; href: string }[];
   onDownloadPDF: () => void;
+  onDownloadHTML?: () => void; // Nuevo prop opcional
 };
 
-const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF }: SidebarProps) => {
+const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF, onDownloadHTML }: SidebarProps) => {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -34,7 +35,7 @@ const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF }: SidebarProps) =
           zIndex: 99
         }}
       />
-      
+
       <aside style={{
         position: 'fixed', top: 0, left: 0,
         height: '100%', width: '250px',
@@ -49,7 +50,7 @@ const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF }: SidebarProps) =
         <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#021751', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
           Menú
         </h2>
-        
+
         <nav style={{ marginTop: '20px', flex: '1' }}>
           {/* --- SECCIÓN DE ENLACES RESTAURADA --- */}
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -110,9 +111,28 @@ const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF }: SidebarProps) =
               textAlign: 'center'
             }}
           >
-            Descargar Reporte
+            Descargar PDF (Estático)
           </button>
-          
+
+          {/* Botón para reporte HTML */}
+          {onDownloadHTML && (
+            <button
+              onClick={() => {
+                onDownloadHTML();
+                onClose();
+              }}
+              style={{
+                width: '100%', padding: '12px 16px', fontSize: '15px',
+                cursor: 'pointer', borderRadius: '8px', border: 'none',
+                backgroundColor: '#0284c7', color: 'white', fontWeight: '600', // Azul cielo
+                textAlign: 'center',
+                marginTop: '10px'
+              }}
+            >
+              Descargar HTML (Interactivo)
+            </button>
+          )}
+
           <button
             onClick={handleLogout}
             style={{
