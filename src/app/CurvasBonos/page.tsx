@@ -370,10 +370,40 @@ export default function HomePage() {
         };
     }, []);  // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
     const ultimoLoteDeDatos: Bono[] = bonos;
+    import { generateHTMLReport } from '@/utils/generateHTMLReport'; // Importar utilidad
+
+    // ... (Resto de imports y código sigue igual hasta handleDownloadFullReport)
+
     const handleDownloadFullReport = () => {
         setEstado('Generando reporte completo...');
         setIsGeneratingPDF(true); // Esto hará que ReportePDFGenerator se renderice
     };
+
+    const handleDownloadHTMLReport = () => {
+        try {
+            setEstado('Generando reporte interactivo...');
+            // Generamos el HTML string usando la utilidad y los datos filtrados
+            const htmlContent = generateHTMLReport(gruposDeSegmentos, ultimoLoteDeDatos);
+
+            // Creamos un Blob y lo descargamos
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `reporte_bonos_interactivo_${new Date().toISOString().split('T')[0]}.html`;
+            document.body.appendChild(a); // Requerido para Firefox
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            setEstado('Reporte HTML descargado');
+            alert('Reporte HTML generado correctamente. Revise su carpeta de descargas.');
+        } catch (error) {
+            console.error('Error generando HTML:', error);
+            alert('Error al generar el reporte HTML: ' + String(error));
+        }
+    };
+
     const generatePDFFromElement = async (element: HTMLElement) => {
         try {
             console.log('generatePDFFromElement: Starting PDF generation...');
