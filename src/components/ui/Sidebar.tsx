@@ -118,23 +118,26 @@ const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF, onDownloadHTML }:
           </button>
 
           {/* Botón para reporte HTML */}
-          {onDownloadHTML && (
-            <button
-              onClick={() => {
+          <button
+            onClick={() => {
+              if (onDownloadHTML) {
                 onDownloadHTML();
                 onClose();
-              }}
-              style={{
-                width: '100%', padding: '12px 16px', fontSize: '15px',
-                cursor: 'pointer', borderRadius: '8px', border: 'none',
-                backgroundColor: '#0284c7', color: 'white', fontWeight: '600', // Azul cielo
-                textAlign: 'center',
-                marginTop: '10px'
-              }}
-            >
-              Descargar HTML (Interactivo)
-            </button>
-          )}
+              } else {
+                console.error('onDownloadHTML is not defined');
+                alert('La función de descarga HTML no está disponible. Verifique la consola.');
+              }
+            }}
+            style={{
+              width: '100%', padding: '12px 16px', fontSize: '15px',
+              cursor: 'pointer', borderRadius: '8px', border: 'none',
+              backgroundColor: '#0284c7', color: 'white', fontWeight: '600', // Azul cielo
+              textAlign: 'center',
+              marginTop: '10px'
+            }}
+          >
+            Descargar HTML (Interactivo)
+          </button>
 
           <button
             onClick={handleLogout}

@@ -92,6 +92,12 @@ const ReportePDFGenerator = ({
                             font-size: 10px !important; /* Letra más pequeña */
                             padding: 4px 6px !important;   /* Menos espaciado interno */
                         }
+                        .pdf-chart-section { 
+                            page-break-inside: avoid !important; 
+                            break-inside: avoid !important; 
+                            display: block; 
+                            page-break-before: auto;
+                        }
                     `}
                 </style>
 
