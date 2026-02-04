@@ -152,7 +152,7 @@ const TablaGeneral = ({ titulo, datos }: { titulo: string, datos: Bono[] }) => {
                                         style={{
                                             padding: '0.75rem 1rem',
                                             color: '#4b5563',
-                                            textAlign: 'center',
+                                            textAlign: 'left',
                                             // Si item.pc es TRUE (usó cierre ant.), pinta de celeste claro (#e0f7fa)
                                             backgroundColor: item.pc ? '#e0f7fa' : 'transparent',
                                         }}
@@ -230,7 +230,7 @@ const TablaSoberanosYONs = ({ titulo, datos }: { titulo: string, datos: Bono[] }
                                         style={{
                                             padding: '0.75rem 1rem',
                                             color: '#4b5563',
-                                            textAlign: 'center',
+                                            textAlign: 'left',
                                             // Si item.pc es TRUE (usó cierre ant.), pinta de celeste claro (#e0f7fa)
                                             backgroundColor: item.pc ? '#e0f7fa' : 'transparent',
                                         }}

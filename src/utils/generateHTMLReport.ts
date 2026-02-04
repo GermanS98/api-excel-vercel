@@ -246,8 +246,8 @@ export const generateHTMLReport = (
         .section { margin-bottom: 50px; page-break-inside: avoid; }
         .section-title { color: #021751; background: #f9fafb; padding: 10px 15px; border-radius: 6px; border-left: 5px solid #021751; }
         
-        .table-container { overflow-x: auto; margin-bottom: 20px; border-radius: 8px; border: 1px solid #e5e7eb; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .table-container { overflow-x: auto; margin-bottom: 20px; border-radius: 8px; border: 1px solid #e5e7eb; display: inline-block; min-width: 50%; }
+        table { width: auto; border-collapse: collapse; font-size: 0.9rem; min-width: 100%; }
         th { background: #021751; color: white; padding: 10px; text-align: left; }
         td { padding: 8px 10px; border-top: 1px solid #e5e7eb; }
         tr:nth-child(even) { background: #f9fafb; }
