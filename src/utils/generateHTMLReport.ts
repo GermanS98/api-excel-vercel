@@ -155,7 +155,7 @@ export const generateHTMLReport = (
 
              const isBonares = titulo === 'Bonares y Globales';
              const isSoberanos = titulo === 'Bonares y Globales' || titulo === 'Obligaciones Negociables';
-             const showChart = titulo !== 'Obligaciones Negociables'; // No chart for ONs
+             const showChart = true; // Habilitamos gráfico para todas las secciones
 
              // Render Chart si corresponde
              if (showChart) {
@@ -183,7 +183,7 @@ export const generateHTMLReport = (
 
         const isBonares = titulo === 'Bonares y Globales';
         const isSoberanos = titulo === 'Bonares y Globales' || titulo === 'Obligaciones Negociables';
-        const showChart = titulo !== 'Obligaciones Negociables';
+        const showChart = true;
 
         bodyContent += `
             <div class="section">
