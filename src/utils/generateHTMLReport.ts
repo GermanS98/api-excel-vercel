@@ -200,7 +200,7 @@ export const generateHTMLReport = (
                             <tr>
                                 <th>Ticker</th>
                                 <th>Vto</th>
-                                <th style="text-align: center; width: 90px;">Precio</th>
+                                <th style="text-align: left;">Precio</th>
                                 <th>Var</th>
                                 <th>TIR</th>
                                 ${isSoberanos ? '<th>MD</th><th>Paridad</th>' : '<th>TNA</th><th>TEM</th>'}
@@ -211,7 +211,7 @@ export const generateHTMLReport = (
                                 <tr>
                                     <td>${item.t}</td>
                                     <td>${formatDate(item.vto)}</td>
-                                    <td style="text-align: center; background-color: ${item.pc ? '#e0f7fa' : 'transparent'}">${formatValue(item.p, '', 2)}</td>
+                                    <td style="text-align: left; background-color: ${item.pc ? '#e0f7fa' : 'transparent'}">${formatValue(item.p, '', 2)}</td>
                                     <td style="color: ${item.v >= 0 ? '#22c55e' : '#ef4444'}">${formatValue(item.v)}</td>
                                     <td>${formatValue(item.tir)}</td>
                                     ${isSoberanos

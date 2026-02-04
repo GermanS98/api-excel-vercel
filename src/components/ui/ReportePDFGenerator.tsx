@@ -98,11 +98,8 @@ const ReportePDFGenerator = ({
                             display: block; 
                             page-break-before: always !important;
                         }
-                        .pdf-chart-section { 
-                            page-break-inside: avoid !important; 
-                            break-inside: avoid !important; 
-                            display: block; 
-                            page-break-before: always !important;
+                        .pdf-table th:nth-child(3), .pdf-table td:nth-child(3) {
+                            text-align: left !important;
                         }
                     `}
                 </style>
