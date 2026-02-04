@@ -200,7 +200,7 @@ export const generateHTMLReport = (
                             <tr>
                                 <th>Ticker</th>
                                 <th>Vto</th>
-                                <th style="text-align: center; width: 80px;">Precio</th>
+                                <th style="text-align: center;">Precio</th>
                                 <th>Var</th>
                                 <th>TIR</th>
                                 ${isSoberanos ? '<th>MD</th><th>Paridad</th>' : '<th>TNA</th><th>TEM</th>'}
