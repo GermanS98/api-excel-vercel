@@ -123,9 +123,6 @@ const Sidebar = ({ isOpen, onClose, items = [], onDownloadPDF, onDownloadHTML }:
               if (onDownloadHTML) {
                 onDownloadHTML();
                 onClose();
-              } else {
-                console.error('onDownloadHTML is not defined');
-                alert('La función de descarga HTML no está disponible. Verifique la consola.');
               }
             }}
             style={{
