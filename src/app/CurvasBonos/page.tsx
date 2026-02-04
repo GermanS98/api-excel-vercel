@@ -395,7 +395,7 @@ export default function HomePage() {
             URL.revokeObjectURL(url);
 
             setEstado('Reporte HTML descargado');
-            alert('Reporte HTML generado correctamente. Revise su carpeta de descargas.');
+            console.log('Reporte HTML generado correctamente.');
         } catch (error) {
             console.error('Error generando HTML:', error);
             alert('Error al generar el reporte HTML: ' + String(error));
