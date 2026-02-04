@@ -98,8 +98,16 @@ const ReportePDFGenerator = ({
                             display: block; 
                             page-break-before: always !important;
                         }
+                        .pdf-table th:nth-child(3), .pdf-table td:nth-child(3) {
+                            text-align: center !important;
+                        }
                     `}
                 </style>
+
+                <div style={{ padding: '10px 20px', fontSize: '0.8rem', color: '#555', textAlign: 'right', fontStyle: 'italic' }}>
+                    <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#e0f7fa', marginRight: '5px', border: '1px solid #ccc' }}></span>
+                    Los precios con fondo celeste corresponden al cierre anterior.
+                </div>
 
                 {Object.keys(gruposDeSegmentos).map((titulo, index) => {
                     // 1. Filtrar las secciones que no queremos

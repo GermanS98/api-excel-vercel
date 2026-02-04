@@ -70,10 +70,10 @@ export const generateHTMLReport = (
             };
         }
 
-        function renderChart(divId, data, title, xAxisKey, isSoberanos) {
+        function renderChart(divId, data, title, xAxisKey, isSplitChart) {
             const traces = [];
             
-            if (isSoberanos) {
+            if (isSplitChart) {
                 const subSegmentos = ['BONAR', 'GLOBAL', 'BOPREAL'];
                 subSegmentos.forEach(seg => {
                     const segData = data.filter(d => d.s === seg);
@@ -154,13 +154,14 @@ export const generateHTMLReport = (
              if (datosGrupo.length === 0) return;
 
              const isBonares = titulo === 'Bonares y Globales';
-             const isSoberanos = titulo === 'Bonares y Globales' || titulo === 'Obligaciones Negociables';
+             const isTableSoberanos = titulo === 'Bonares y Globales' || titulo === 'Obligaciones Negociables';
+             const isChartSplit = titulo === 'Bonares y Globales'; // Solo split para Bonares, ONs van juntas
              const showChart = true; // Habilitamos gráfico para todas las secciones
 
              // Render Chart si corresponde
              if (showChart) {
                 const divId = 'chart-' + titulo.replace(/[^a-zA-Z0-9]/g, '');
-                renderChart(divId, datosGrupo, 'Curva de Rendimiento - ' + titulo, isBonares ? 'md' : 'dv', isSoberanos);
+                renderChart(divId, datosGrupo, 'Curva de Rendimiento - ' + titulo, isBonares ? 'md' : 'dv', isChartSplit);
              }
         });
     `;
@@ -168,6 +169,10 @@ export const generateHTMLReport = (
     let bodyContent = `
         <div class="container">
             <h1 class="main-title">Reporte de Bonos Argentinos - ${currentDate}</h1>
+            <div style="text-align: right; margin-bottom: 20px; font-size: 0.9rem; color: #666; font-style: italic;">
+                <span style="display: inline-block; width: 12px; height: 12px; background-color: #e0f7fa; margin-right: 5px; border: 1px solid #ccc;"></span>
+                Los precios con fondo celeste corresponden al cierre anterior.
+            </div>
     `;
 
     Object.keys(gruposDeSegmentos).forEach(titulo => {
@@ -195,7 +200,7 @@ export const generateHTMLReport = (
                             <tr>
                                 <th>Ticker</th>
                                 <th>Vto</th>
-                                <th>Precio</th>
+                                <th style="text-align: center; width: 80px;">Precio</th>
                                 <th>Var</th>
                                 <th>TIR</th>
                                 ${isSoberanos ? '<th>MD</th><th>Paridad</th>' : '<th>TNA</th><th>TEM</th>'}
@@ -206,7 +211,7 @@ export const generateHTMLReport = (
                                 <tr>
                                     <td>${item.t}</td>
                                     <td>${formatDate(item.vto)}</td>
-                                    <td style="background-color: ${item.pc ? '#e0f7fa' : 'transparent'}">${formatValue(item.p, '', 2)}</td>
+                                    <td style="text-align: center; background-color: ${item.pc ? '#e0f7fa' : 'transparent'}">${formatValue(item.p, '', 2)}</td>
                                     <td style="color: ${item.v >= 0 ? '#22c55e' : '#ef4444'}">${formatValue(item.v)}</td>
                                     <td>${formatValue(item.tir)}</td>
                                     ${isSoberanos
