@@ -12,6 +12,7 @@ type LayoutProps = {
 };
 
 const Layout = ({ children, onDownloadPDF, onDownloadHTML }: LayoutProps) => {
+  console.log('Layout receives:', { onDownloadPDF: !!onDownloadPDF, onDownloadHTML: !!onDownloadHTML });
   // --- CORREGIDO: Usamos un solo nombre para el estado ---
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 

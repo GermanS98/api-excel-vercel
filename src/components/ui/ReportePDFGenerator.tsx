@@ -96,7 +96,7 @@ const ReportePDFGenerator = ({
                             page-break-inside: avoid !important; 
                             break-inside: avoid !important; 
                             display: block; 
-                            page-break-before: auto;
+                            page-break-before: always !important;
                         }
                     `}
                 </style>
