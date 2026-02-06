@@ -243,8 +243,8 @@ export const generateHTMLReport = (
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f3f4f6; color: #1f2937; margin: 0; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .main-title { color: #021751; text-align: center; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 30px; }
-        .section { margin-bottom: 50px; page-break-inside: avoid; }
-        .section-title { color: #021751; background: #f9fafb; padding: 10px 15px; border-radius: 6px; border-left: 5px solid #021751; }
+        .section { margin-bottom: 50px; page-break-inside: avoid; text-align: center; }
+        .section-title { color: #021751; background: #f9fafb; padding: 10px 15px; border-radius: 6px; border-bottom: 3px solid #021751; text-align: center; }
         
         .table-container { overflow-x: auto; margin-bottom: 20px; border-radius: 8px; border: 1px solid #e5e7eb; display: inline-block; min-width: 50%; }
         table { width: auto; border-collapse: collapse; font-size: 0.9rem; min-width: 100%; }
