@@ -310,8 +310,8 @@ export default function BonosPage() {
                                 if (res.ok) {
                                         setTickers(data);
                                         if (data.length > 0) {
-                                                setTicker(data[0].ticker);
-                                                setFiltroTicker(data[0].ticker);
+                                                // setTicker(data[0].ticker); // COMENTADO: NO SELECCIONAR POR DEFECTO
+                                                // setFiltroTicker(data[0].ticker); // COMENTADO: NO LLENAR INPUT POR DEFECTO
                                         }
                                 } else {
                                         console.error('Error fetching tickers:', data);
@@ -368,7 +368,7 @@ export default function BonosPage() {
                                         setTipoDeCambio(data.datos);
                                         // Update input only if it's empty or we are in the auto-fetch mode for display
                                         if (necesitaTC && !tipoCambioInput) {
-                                                setTipoCambioInput(String(data.datos.valor_mep));
+                                                setTipoCambioInput(data.datos.valor_mep.toFixed(2)); // REDONDEADO A 2 DECIMALES
                                         }
 
                                         // Calcular canje por defecto si tenemos ambos valores
@@ -635,10 +635,26 @@ export default function BonosPage() {
                 t.desctasa.toLowerCase().includes(filtroTicker.toLowerCase())
         );
 
-        const handleSeleccionarTicker = (tickerSeleccionado: TickerItem) => {
+        const handleSeleccionarTicker = async (tickerSeleccionado: TickerItem) => {
                 setTicker(tickerSeleccionado.ticker);
                 setFiltroTicker(tickerSeleccionado.ticker);
                 setMostrarLista(false);
+
+                // --- NUEVO: BUSCAR PRECIO EL TICKER EN DATOSBONOS ---
+                try {
+                        const { data, error } = await supabase
+                                .from('datosbonos')
+                                .select('p')
+                                .eq('t', tickerSeleccionado.ticker)
+                                .single();
+
+                        if (!error && data && data.p) {
+                                // Formateamos el precio con coma
+                                setPrecio(data.p.toString().replace('.', ','));
+                        }
+                } catch (err) {
+                        console.error("Error buscando precio:", err);
+                }
         };
 
         return (
