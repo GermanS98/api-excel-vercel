@@ -644,12 +644,34 @@ export default function BonosPage() {
                 try {
                         const { data, error } = await supabase
                                 .from('datosbonos')
-                                .select('p')
+                                .select('p, ua, pc')
                                 .eq('t', tickerSeleccionado.ticker)
                                 .single();
 
                         if (!error && data && data.p) {
-                                // Formateamos el precio con coma
+                                // LÓGICA DE VALIDACIÓN DE FECHA Y CIERRE
+                                // "si ua es menor al dia en que se está usando la calculadora y pc es FALSE,
+                                // entonces no me muestre ese precio"
+
+                                const uaDate = new Date(data.ua); // Asumiendo que ua viene en formato ISO o compatible
+                                const now = new Date();
+
+                                // Normalizamos fechas a medianoche para comparar solo el día
+                                const uaMidnight = new Date(uaDate.getFullYear(), uaDate.getMonth(), uaDate.getDate());
+                                const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                                // Si la fecha de actualización es anterior a hoy
+                                if (uaMidnight < todayMidnight) {
+                                        // Y NO es precio de cierre (pc es false o null)
+                                        if (!data.pc) {
+                                                // No mostramos el precio (podríamos limpiar el campo o dejar lo que estaba, 
+                                                // pero el requerimiento es "no muestre ese precio", asumimos no llenar el input)
+                                                // setPrecio(''); // Opcional: limpiar si había algo
+                                                return;
+                                        }
+                                }
+
+                                // Si pasa la validación (es de hoy O es precio de cierre), seteamos.
                                 setPrecio(data.p.toString().replace('.', ','));
                         }
                 } catch (err) {
