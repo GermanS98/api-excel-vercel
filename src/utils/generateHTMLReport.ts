@@ -200,7 +200,7 @@ export const generateHTMLReport = (
                             <tr>
                                 <th>Ticker</th>
                                 <th>Vto</th>
-                                <th style="text-align: left;">Precio</th>
+                                <th>Precio</th>
                                 <th>Var</th>
                                 <th>TIR</th>
                                 ${isSoberanos ? '<th>MD</th><th>Paridad</th>' : '<th>TNA</th><th>TEM</th>'}
@@ -211,7 +211,7 @@ export const generateHTMLReport = (
                                 <tr>
                                     <td>${item.t}</td>
                                     <td>${formatDate(item.vto)}</td>
-                                    <td style="text-align: left; background-color: ${item.pc ? '#e0f7fa' : 'transparent'}">${formatValue(item.p, '', 2)}</td>
+                                    <td style="background-color: ${item.pc ? '#e0f7fa' : 'transparent'}">${formatValue(item.p, '', 2)}</td>
                                     <td style="color: ${item.v >= 0 ? '#22c55e' : '#ef4444'}">${formatValue(item.v)}</td>
                                     <td>${formatValue(item.tir)}</td>
                                     ${isSoberanos
@@ -248,8 +248,9 @@ export const generateHTMLReport = (
         
         .table-container { overflow-x: auto; margin-bottom: 20px; border-radius: 8px; border: 1px solid #e5e7eb; display: inline-block; min-width: 50%; }
         table { width: auto; border-collapse: collapse; font-size: 0.9rem; min-width: 100%; }
-        th { background: #021751; color: white; padding: 10px; text-align: left; }
-        td { padding: 8px 10px; border-top: 1px solid #e5e7eb; }
+        th { background: #021751; color: white; padding: 10px; text-align: center; }
+        td { padding: 8px 10px; border-top: 1px solid #e5e7eb; text-align: center; }
+        th:first-child, td:first-child { text-align: left; }
         tr:nth-child(even) { background: #f9fafb; }
         
         .chart-container { width: 100%; height: 500px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; background: white; }
