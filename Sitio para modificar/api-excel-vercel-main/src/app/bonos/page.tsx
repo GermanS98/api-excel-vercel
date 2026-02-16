@@ -728,7 +728,14 @@ export default function BonosPage() {
                                                                 {mostrarLista && tickersFiltrados.length > 0 && (
                                                                         <ul className={styles.listaTickers}>
                                                                                 {tickersFiltrados.map(t => (
-                                                                                        <li key={t.ticker} onClick={() => handleSeleccionarTicker(t)}>
+                                                                                        <li
+                                                                                                key={t.ticker}
+                                                                                                onMouseDown={(e) => {
+                                                                                                        e.preventDefault(); // Prevent focus loss
+                                                                                                        handleSeleccionarTicker(t);
+                                                                                                }}
+                                                                                                style={{ cursor: 'pointer' }}
+                                                                                        >
                                                                                                 {t.ticker} <span>({t.desctasa})</span>
                                                                                         </li>
                                                                                 ))}
@@ -876,6 +883,7 @@ export default function BonosPage() {
                                                 <p><strong>Moneda State:</strong> {moneda}</p>
                                                 <p><strong>Moneda Bono State:</strong> {monedaBono}</p>
                                                 <p><strong>Moneda Bono Cargada:</strong> {monedaBonoCargada ? 'YES' : 'NO'}</p>
+                                                <p><strong>Resultados:</strong> {resultados ? 'Calculated' : 'Null'}</p>
                                         </div>
                                 </div>
                         </div>
