@@ -333,9 +333,30 @@ export default function BonosPage() {
                 return () => document.removeEventListener("mousedown", handleClickOutside);
         }, [searchContainerRef]);
 
-        // Fetch tipo de cambio cuando se necesita (mostrarTipoCambio o isCCLPrice)
-        // IMPORTANTE: mostrarTipoCambio se setea SOLO cuando el usuario cambia manualmente
-        // la moneda en el dropdown, NO cuando se selecciona un nuevo bono.
+        // Cuando cambia el ticker, buscar la moneda del bono y actualizar el listbox
+        useEffect(() => {
+                if (!ticker) return;
+                const fetchMoneda = async () => {
+                        try {
+                                const res = await fetch(`/api/caracteristicas?ticker=${ticker}`);
+                                if (res.ok) {
+                                        const data = await res.json();
+                                        if (data && data.moneda) {
+                                                const m = data.moneda === 'USD' ? 'USD' : 'ARS';
+                                                setMonedaBono(m);
+                                                setMoneda(m);
+                                                setMostrarTipoCambio(false);
+                                                setMonedaBonoCargada(true);
+                                        }
+                                }
+                        } catch (e) {
+                                console.error('Error fetching moneda:', e);
+                        }
+                };
+                fetchMoneda();
+        }, [ticker]);
+
+        // Fetch tipo de cambio cuando el usuario cambia manualmente la moneda
         useEffect(() => {
                 if (mostrarTipoCambio || isCCLPrice) {
                         const fetchTipoDeCambio = async () => {
@@ -670,7 +691,7 @@ export default function BonosPage() {
 
                                         <div className={styles.card}>
                                                 <h1 className={`${styles.title} ${styles.fontAlbert}`}>Calculadora de Bonos</h1>
-                                                <p className={styles.subtitle}>Complete todos los campos.</p>
+                                                <p className={styles.subtitle}>Complete todos los campos. (v3)</p>
 
                                                 <div className={styles.formGrid}>
                                                         <div className={`${styles.gridColSpan2} ${styles.tickerContainer}`} ref={searchContainerRef}>
