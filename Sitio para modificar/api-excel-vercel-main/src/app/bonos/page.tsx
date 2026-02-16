@@ -858,6 +858,15 @@ export default function BonosPage() {
                                                         {renderResults(resultados)}
                                                 </div>
                                         )}
+
+                                        {/* DEBUG - REMOVE LATER */}
+                                        <div style={{ marginTop: '2rem', padding: '1rem', border: '2px solid red', backgroundColor: '#fff0f0' }}>
+                                                <h3>DEBUG INFO</h3>
+                                                <p><strong>Ticker:</strong> {ticker}</p>
+                                                <p><strong>Moneda State:</strong> {moneda}</p>
+                                                <p><strong>Moneda Bono State:</strong> {monedaBono}</p>
+                                                <p><strong>Moneda Bono Cargada:</strong> {monedaBonoCargada ? 'YES' : 'NO'}</p>
+                                        </div>
                                 </div>
                         </div>
                 </Layout>
