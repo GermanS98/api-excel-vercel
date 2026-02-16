@@ -333,28 +333,11 @@ export default function BonosPage() {
                 return () => document.removeEventListener("mousedown", handleClickOutside);
         }, [searchContainerRef]);
 
-        // Sync moneda with monedaBono whenever monedaBono changes
-        // This is the PRIMARY mechanism that updates the currency dropdown
+        // Fetch tipo de cambio cuando se necesita (mostrarTipoCambio o isCCLPrice)
+        // IMPORTANTE: mostrarTipoCambio se setea SOLO cuando el usuario cambia manualmente
+        // la moneda en el dropdown, NO cuando se selecciona un nuevo bono.
         useEffect(() => {
-                if (monedaBonoCargada) {
-                        console.log("SYNC: monedaBono changed to", monedaBono, "- setting moneda to match");
-                        setMoneda(monedaBono);
-                }
-        }, [monedaBono, monedaBonoCargada]);
-
-        // Este useEffect ya NO se encarga de la moneda.
-        // La detección de moneda se hace directamente en handleSeleccionarTicker.
-        // Este effect solo se deja como fallback por si ticker cambia de otra forma.
-        useEffect(() => {
-                if (!ticker) return;
-                // No hacemos nada aquí para la moneda, se maneja en handleSeleccionarTicker
-        }, [ticker]);
-
-        useEffect(() => {
-                const necesitaTC = (moneda === 'ARS' && monedaBono === 'USD') || (moneda === 'USD' && monedaBono === 'ARS');
-                setMostrarTipoCambio(necesitaTC);
-
-                if (necesitaTC || isCCLPrice) {
+                if (mostrarTipoCambio || isCCLPrice) {
                         const fetchTipoDeCambio = async () => {
                                 const { data, error } = await supabase
                                         .from('tipodecambio')
@@ -365,29 +348,22 @@ export default function BonosPage() {
 
                                 if (!error && data && data.datos && typeof data.datos.valor_mep !== 'undefined') {
                                         setTipoDeCambio(data.datos);
-                                        // Update input only if it's empty or we are in the auto-fetch mode for display
-                                        if (necesitaTC && !tipoCambioInput) {
-                                                setTipoCambioInput(data.datos.valor_mep.toFixed(2)); // REDONDEADO A 2 DECIMALES
+                                        if (mostrarTipoCambio && !tipoCambioInput) {
+                                                setTipoCambioInput(data.datos.valor_mep.toFixed(2));
                                         }
-
-                                        // Calcular canje por defecto si tenemos ambos valores
                                         if (data.datos.valor_ccl && data.datos.valor_mep) {
                                                 const canjeCalculado = data.datos.valor_ccl / data.datos.valor_mep;
-                                                // Solo seteamos el canje si está vacío para no pisar edición del usuario,
-                                                // o si acaba de activar el check (podríamos refinar esto, pero por ahora init simple)
                                                 if (!canje) {
                                                         setCanje(canjeCalculado.toFixed(3).replace('.', ','));
                                                 }
                                         }
-
                                 } else {
                                         if (!tipoDeCambio) setTipoDeCambio(null);
-                                        // Don't clear input if user typed something
                                 }
                         };
                         fetchTipoDeCambio();
                 }
-        }, [moneda, monedaBono, isCCLPrice]);
+        }, [mostrarTipoCambio, isCCLPrice]);
 
         const calcular = async () => {
                 setIsLoading(true);
@@ -643,21 +619,14 @@ export default function BonosPage() {
                 // --- BUSCAR MONEDA DEL BONO DIRECTAMENTE ---
                 try {
                         const caracRes = await fetch(`/api/caracteristicas?ticker=${tickerSeleccionado.ticker}`);
-                        console.log("DEBUG: caracRes.ok =", caracRes.ok, "status =", caracRes.status);
                         if (caracRes.ok) {
                                 const caracteristicas = await caracRes.json();
-                                console.log("DEBUG: Full API response:", JSON.stringify(caracteristicas));
-                                console.log("DEBUG: caracteristicas.moneda =", caracteristicas?.moneda, "type:", typeof caracteristicas?.moneda);
                                 if (caracteristicas && caracteristicas.moneda) {
-                                        const monedaRaw = String(caracteristicas.moneda).trim().toUpperCase();
-                                        const monedaDetectada = monedaRaw === 'USD' ? 'USD' : 'ARS';
-                                        console.log("DEBUG: monedaRaw =", monedaRaw, "monedaDetectada =", monedaDetectada);
+                                        const monedaDetectada = caracteristicas.moneda === 'USD' ? 'USD' : 'ARS';
                                         setMonedaBono(monedaDetectada);
                                         setMoneda(monedaDetectada);
+                                        setMostrarTipoCambio(false); // Al seleccionar bono, moneda = monedaBono, no hay TC
                                         setMonedaBonoCargada(true);
-                                        console.log("DEBUG: Called setMonedaBono and setMoneda with:", monedaDetectada);
-                                } else {
-                                        console.log("DEBUG: No moneda field in response!");
                                 }
                         }
                 } catch (err) {
@@ -823,7 +792,12 @@ export default function BonosPage() {
                                                         <select
                                                                 id="moneda-input"
                                                                 value={moneda}
-                                                                onChange={e => setMoneda(e.target.value as 'ARS' | 'USD')}
+                                                                onChange={e => {
+                                                                        const nuevaMoneda = e.target.value as 'ARS' | 'USD';
+                                                                        setMoneda(nuevaMoneda);
+                                                                        // Solo mostrar tipo de cambio cuando el USUARIO cambia manualmente
+                                                                        setMostrarTipoCambio(nuevaMoneda !== monedaBono);
+                                                                }}
                                                                 className={styles.formInput}
                                                                 disabled={isLoading}
                                                         >
