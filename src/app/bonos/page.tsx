@@ -340,11 +340,14 @@ export default function BonosPage() {
                                 const res = await fetch(`/api/caracteristicas?ticker=${ticker}`);
                                 const caracteristicas = await res.json();
                                 if (caracteristicas && caracteristicas.moneda) {
-                                        setMonedaBono(caracteristicas.moneda === 'USD' ? 'USD' : 'ARS');
+                                        const m = caracteristicas.moneda === 'USD' ? 'USD' : 'ARS';
+                                        setMonedaBono(m);
+                                        setMoneda(m); // Actualizar también el dropdown para que coincida con el bono
                                 }
                                 setMonedaBonoCargada(true);
                         } catch (err) {
                                 setMonedaBono('ARS');
+                                setMoneda('ARS');
                                 setMonedaBonoCargada(true);
                         }
                 };
