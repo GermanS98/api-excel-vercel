@@ -334,26 +334,35 @@ export default function BonosPage() {
         }, [searchContainerRef]);
 
         useEffect(() => {
-                if (!ticker) return;
+                console.log("DEBUG: useEffect triggered. Ticker:", ticker);
+                if (!ticker) {
+                        console.log("DEBUG: Ticker is empty, returning.");
+                        return;
+                }
                 const fetchMonedaBono = async () => {
+                        console.log("DEBUG: Starting fetchMonedaBono for", ticker);
                         try {
                                 const res = await fetch(`/api/caracteristicas?ticker=${ticker}`);
+                                console.log("DEBUG: Fetch response status:", res.status);
+                                if (!res.ok) {
+                                        throw new Error(`HTTP error! status: ${res.status}`);
+                                }
                                 const caracteristicas = await res.json();
-                                console.log("DEBUG: Ticker:", ticker);
-                                console.log("DEBUG: Caracteristicas:", caracteristicas);
+                                console.log("DEBUG: Caracteristicas fetched:", caracteristicas);
 
                                 if (caracteristicas && caracteristicas.moneda) {
                                         const monedaDetectada = caracteristicas.moneda === 'USD' ? 'USD' : 'ARS';
                                         console.log("DEBUG: Moneda detectada:", monedaDetectada);
                                         setMonedaBono(monedaDetectada);
-                                        setMoneda(monedaDetectada);
+                                        setMoneda(monedaDetectada); // This line updates the main currency state
                                 } else {
                                         console.log("DEBUG: No se encontró moneda en caracteristicas");
                                 }
                                 setMonedaBonoCargada(true);
                         } catch (err) {
-                                setMonedaBono('ARS');
+                                console.error("DEBUG: Error fetching moneda bono:", err);
                                 setMoneda('ARS');
+                                setMonedaBono('ARS');
                                 setMonedaBonoCargada(true);
                         }
                 };
@@ -645,6 +654,7 @@ export default function BonosPage() {
         );
 
         const handleSeleccionarTicker = async (tickerSeleccionado: TickerItem) => {
+                console.log("DEBUG: handleSeleccionarTicker called with:", tickerSeleccionado);
                 setTicker(tickerSeleccionado.ticker);
                 setFiltroTicker(tickerSeleccionado.ticker);
                 setMostrarLista(false);
