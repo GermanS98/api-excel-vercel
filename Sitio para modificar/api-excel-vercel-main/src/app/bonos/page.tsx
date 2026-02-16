@@ -339,10 +339,16 @@ export default function BonosPage() {
                         try {
                                 const res = await fetch(`/api/caracteristicas?ticker=${ticker}`);
                                 const caracteristicas = await res.json();
+                                console.log("DEBUG: Ticker:", ticker);
+                                console.log("DEBUG: Caracteristicas:", caracteristicas);
+
                                 if (caracteristicas && caracteristicas.moneda) {
                                         const monedaDetectada = caracteristicas.moneda === 'USD' ? 'USD' : 'ARS';
+                                        console.log("DEBUG: Moneda detectada:", monedaDetectada);
                                         setMonedaBono(monedaDetectada);
                                         setMoneda(monedaDetectada);
+                                } else {
+                                        console.log("DEBUG: No se encontró moneda en caracteristicas");
                                 }
                                 setMonedaBonoCargada(true);
                         } catch (err) {
