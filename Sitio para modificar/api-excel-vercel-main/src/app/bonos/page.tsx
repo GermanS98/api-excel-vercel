@@ -333,40 +333,12 @@ export default function BonosPage() {
                 return () => document.removeEventListener("mousedown", handleClickOutside);
         }, [searchContainerRef]);
 
+        // Este useEffect ya NO se encarga de la moneda.
+        // La detección de moneda se hace directamente en handleSeleccionarTicker.
+        // Este effect solo se deja como fallback por si ticker cambia de otra forma.
         useEffect(() => {
-                console.log("DEBUG: useEffect triggered. Ticker:", ticker);
-                if (!ticker) {
-                        console.log("DEBUG: Ticker is empty, returning.");
-                        return;
-                }
-                const fetchMonedaBono = async () => {
-                        console.log("DEBUG: Starting fetchMonedaBono for", ticker);
-                        try {
-                                const res = await fetch(`/api/caracteristicas?ticker=${ticker}`);
-                                console.log("DEBUG: Fetch response status:", res.status);
-                                if (!res.ok) {
-                                        throw new Error(`HTTP error! status: ${res.status}`);
-                                }
-                                const caracteristicas = await res.json();
-                                console.log("DEBUG: Caracteristicas fetched:", caracteristicas);
-
-                                if (caracteristicas && caracteristicas.moneda) {
-                                        const monedaDetectada = caracteristicas.moneda === 'USD' ? 'USD' : 'ARS';
-                                        console.log("DEBUG: Moneda detectada:", monedaDetectada);
-                                        setMonedaBono(monedaDetectada);
-                                        setMoneda(monedaDetectada); // This line updates the main currency state
-                                } else {
-                                        console.log("DEBUG: No se encontró moneda en caracteristicas");
-                                }
-                                setMonedaBonoCargada(true);
-                        } catch (err) {
-                                console.error("DEBUG: Error fetching moneda bono:", err);
-                                setMoneda('ARS');
-                                setMonedaBono('ARS');
-                                setMonedaBonoCargada(true);
-                        }
-                };
-                fetchMonedaBono();
+                if (!ticker) return;
+                // No hacemos nada aquí para la moneda, se maneja en handleSeleccionarTicker
         }, [ticker]);
 
         useEffect(() => {
@@ -659,7 +631,27 @@ export default function BonosPage() {
                 setFiltroTicker(tickerSeleccionado.ticker);
                 setMostrarLista(false);
 
-                // --- NUEVO: BUSCAR PRECIO EL TICKER EN DATOSBONOS ---
+                // --- BUSCAR MONEDA DEL BONO DIRECTAMENTE ---
+                try {
+                        const caracRes = await fetch(`/api/caracteristicas?ticker=${tickerSeleccionado.ticker}`);
+                        if (caracRes.ok) {
+                                const caracteristicas = await caracRes.json();
+                                if (caracteristicas && caracteristicas.moneda) {
+                                        const monedaDetectada = caracteristicas.moneda === 'USD' ? 'USD' : 'ARS';
+                                        console.log("DEBUG: Moneda detectada para", tickerSeleccionado.ticker, ":", monedaDetectada);
+                                        setMonedaBono(monedaDetectada);
+                                        setMoneda(monedaDetectada);
+                                        setMonedaBonoCargada(true);
+                                }
+                        }
+                } catch (err) {
+                        console.error("Error fetching moneda del bono:", err);
+                        setMonedaBono('ARS');
+                        setMoneda('ARS');
+                        setMonedaBonoCargada(true);
+                }
+
+                // --- BUSCAR PRECIO DEL TICKER EN DATOSBONOS ---
                 try {
                         const { data, error } = await supabase
                                 .from('datosbonos')
@@ -668,29 +660,16 @@ export default function BonosPage() {
                                 .single();
 
                         if (!error && data && data.p) {
-                                // LÓGICA DE VALIDACIÓN DE FECHA Y CIERRE
-                                // "si ua es menor al dia en que se está usando la calculadora y pc es FALSE,
-                                // entonces no me muestre ese precio"
-
-                                const uaDate = new Date(data.ua); // Asumiendo que ua viene en formato ISO o compatible
+                                const uaDate = new Date(data.ua);
                                 const now = new Date();
-
-                                // Normalizamos fechas a medianoche para comparar solo el día
                                 const uaMidnight = new Date(uaDate.getFullYear(), uaDate.getMonth(), uaDate.getDate());
                                 const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-                                // Si la fecha de actualización es anterior a hoy
                                 if (uaMidnight < todayMidnight) {
-                                        // Y NO es precio de cierre (pc es false o null)
                                         if (!data.pc) {
-                                                // No mostramos el precio (podríamos limpiar el campo o dejar lo que estaba, 
-                                                // pero el requerimiento es "no muestre ese precio", asumimos no llenar el input)
-                                                // setPrecio(''); // Opcional: limpiar si había algo
                                                 return;
                                         }
                                 }
-
-                                // Si pasa la validación (es de hoy O es precio de cierre), seteamos.
                                 setPrecio(data.p.toString().replace('.', ','));
                         }
                 } catch (err) {
