@@ -333,6 +333,15 @@ export default function BonosPage() {
                 return () => document.removeEventListener("mousedown", handleClickOutside);
         }, [searchContainerRef]);
 
+        // Sync moneda with monedaBono whenever monedaBono changes
+        // This is the PRIMARY mechanism that updates the currency dropdown
+        useEffect(() => {
+                if (monedaBonoCargada) {
+                        console.log("SYNC: monedaBono changed to", monedaBono, "- setting moneda to match");
+                        setMoneda(monedaBono);
+                }
+        }, [monedaBono, monedaBonoCargada]);
+
         // Este useEffect ya NO se encarga de la moneda.
         // La detección de moneda se hace directamente en handleSeleccionarTicker.
         // Este effect solo se deja como fallback por si ticker cambia de otra forma.
@@ -634,14 +643,21 @@ export default function BonosPage() {
                 // --- BUSCAR MONEDA DEL BONO DIRECTAMENTE ---
                 try {
                         const caracRes = await fetch(`/api/caracteristicas?ticker=${tickerSeleccionado.ticker}`);
+                        console.log("DEBUG: caracRes.ok =", caracRes.ok, "status =", caracRes.status);
                         if (caracRes.ok) {
                                 const caracteristicas = await caracRes.json();
+                                console.log("DEBUG: Full API response:", JSON.stringify(caracteristicas));
+                                console.log("DEBUG: caracteristicas.moneda =", caracteristicas?.moneda, "type:", typeof caracteristicas?.moneda);
                                 if (caracteristicas && caracteristicas.moneda) {
-                                        const monedaDetectada = caracteristicas.moneda === 'USD' ? 'USD' : 'ARS';
-                                        console.log("DEBUG: Moneda detectada para", tickerSeleccionado.ticker, ":", monedaDetectada);
+                                        const monedaRaw = String(caracteristicas.moneda).trim().toUpperCase();
+                                        const monedaDetectada = monedaRaw === 'USD' ? 'USD' : 'ARS';
+                                        console.log("DEBUG: monedaRaw =", monedaRaw, "monedaDetectada =", monedaDetectada);
                                         setMonedaBono(monedaDetectada);
                                         setMoneda(monedaDetectada);
                                         setMonedaBonoCargada(true);
+                                        console.log("DEBUG: Called setMonedaBono and setMoneda with:", monedaDetectada);
+                                } else {
+                                        console.log("DEBUG: No moneda field in response!");
                                 }
                         }
                 } catch (err) {
