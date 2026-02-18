@@ -150,8 +150,10 @@ export default function Home() {
   const formatPercentage = (value: string) => {
     if (!value) return '-';
     if (value.includes('%')) return value;
-    // Si es un número (o string numérico), le agregamos %
-    return `${value}%`;
+    const num = parseFloat(value);
+    if (isNaN(num)) return value;
+    const percentage = num * 100;
+    return `${percentage.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
   };
 
 
