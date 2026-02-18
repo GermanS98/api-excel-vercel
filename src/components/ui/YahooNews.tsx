@@ -26,7 +26,13 @@ export default function YahooNews() {
                 setLoading(false);
             }
         };
+
         fetchNews();
+
+        // Auto-refresh every 60 seconds
+        const intervalId = setInterval(fetchNews, 60000);
+
+        return () => clearInterval(intervalId);
     }, []);
 
     return (

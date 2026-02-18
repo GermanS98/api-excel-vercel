@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-    // URL provided by the user with auth token
-    const FINVIZ_URL = "https://elite.finviz.com/export.ashx?v=111&f=fa_div_pos,sec_technology&auth=2081aeb1-af08-4c05-aac1-e101d2d536f6";
+    // URL provided by the user with auth token (News Export)
+    const FINVIZ_URL = "https://elite.finviz.com/news_export.ashx?v=1&auth=2081aeb1-af08-4c05-aac1-e101d2d536f6";
 
     try {
         const response = await fetch(FINVIZ_URL);

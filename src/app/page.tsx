@@ -166,28 +166,12 @@ export default function Home() {
           Dashboard Financiero
         </h1>
 
-        {/* --- GRID DE WIDGETS --- */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px', marginBottom: '2rem' }}>
-          <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
-            <TradingViewCalendar />
-          </div>
-          <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
-            <TradingViewNews />
-          </div>
-          <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
-            <YahooNews />
-          </div>
-        </div>
-
-        {/* --- FINVIZ TABLE --- */}
-        <FinvizTable />
-
         {/* --- DATOS SUPABASE (LOCAL) --- */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginBottom: '2rem' }}>
 
           {/* --- SECTION: CALENDARIO --- */}
           <div>
-            <SectionHeader title="Calendario Económico (Local)" />
+            <SectionHeader title="Principales Eventos" />
             <TableContainer>
               <TableHeader headers={['Fecha', 'País', 'Evento']} />
               <tbody>
@@ -237,6 +221,22 @@ export default function Home() {
           </div>
 
         </div>
+
+        {/* --- GRID DE WIDGETS --- */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px', marginBottom: '2rem' }}>
+          <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
+            <TradingViewCalendar />
+          </div>
+          <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
+            <TradingViewNews />
+          </div>
+          <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
+            <YahooNews />
+          </div>
+        </div>
+
+        {/* --- FINVIZ TABLE --- */}
+        <FinvizTable />
 
       </div>
     </Layout>
