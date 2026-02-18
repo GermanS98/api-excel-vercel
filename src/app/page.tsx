@@ -61,7 +61,7 @@ const TableHeader = ({ headers }: { headers: string[] }) => (
   <thead style={{ background: '#021751', color: 'white' }}>
     <tr>
       {headers.map((h, i) => (
-        <th key={i} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600 }}>
+        <th key={i} style={{ padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600 }}>
           {h}
         </th>
       ))}
@@ -69,7 +69,7 @@ const TableHeader = ({ headers }: { headers: string[] }) => (
   </thead>
 );
 
-const TableCell = ({ children, align = 'left' }: { children: React.ReactNode, align?: 'left' | 'center' | 'right' }) => (
+const TableCell = ({ children, align = 'center' }: { children: React.ReactNode, align?: 'left' | 'center' | 'right' }) => (
   <td style={{ padding: '0.75rem 1rem', color: '#4b5563', borderTop: '1px solid #e5e7eb', textAlign: align }}>
     {children}
   </td>
@@ -157,7 +157,7 @@ export default function Home() {
         </h1>
 
         {/* --- SECTION: CALENDARIO --- */}
-        <SectionHeader title="Calendario Económico (Esta Semana)" />
+        <SectionHeader title="Calendario Económico" />
         <TableContainer>
           <TableHeader headers={['Fecha', 'País', 'Evento']} />
           <tbody>
@@ -178,7 +178,7 @@ export default function Home() {
         </TableContainer>
 
         {/* --- SECTION: RENTAS Y AMORTIZACIONES --- */}
-        <SectionHeader title="Pagos de Rentas y Amortizaciones (Esta Semana)" />
+        <SectionHeader title="Pagos de Rentas y Amortizaciones" />
         <TableContainer>
           {/* Ajustamos headers según la imagen: Fecha, Ticker, Emisor, Tipo, Frecuencia, Vencimiento, Renta, Amortizacion */}
           <TableHeader headers={['Fecha Pago', 'Ticker', 'Emisor', 'Tipo', 'Frecuencia', 'Vencimiento', 'Renta', 'Amortización']} />
