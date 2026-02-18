@@ -18,16 +18,43 @@ export async function GET() {
         // Vamos a intentar parsearlo a JSON básico para facilitar consumo.
 
         const rows = csvText.split('\n').filter(row => row.trim() !== '');
-        const headers = rows[0].split(',').map(h => h.replace(/"/g, '').trim());
+        // Helper to parse CSV line respecting quotes
+        const parseCSVLine = (line: string) => {
+            const values = [];
+            let currentValue = '';
+            let insideQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    if (insideQuotes && line[i + 1] === '"') {
+                        // Handle escaped quote ""
+                        currentValue += '"';
+                        i++; // Skip next quote
+                    } else {
+                        insideQuotes = !insideQuotes;
+                    }
+                } else if (char === ',' && !insideQuotes) {
+                    values.push(currentValue.trim());
+                    currentValue = '';
+                } else {
+                    currentValue += char;
+                }
+            }
+            values.push(currentValue.trim());
+            return values;
+        };
+
+        const headers = parseCSVLine(rows[0]);
 
         const data = rows.slice(1).map(row => {
-            // Manejo básico de CSV (no perfecto para commas dentro de quotes, pero funcional para datos simples)
-            // Para mayor robustez en producción usar librería 'csv-parse' o similar.
-            // Aquí asumimos formato estándar simple por ahora.
-            const values = row.split(',').map(v => v.replace(/"/g, '').trim());
+            const values = parseCSVLine(row);
             const obj: Record<string, string> = {};
             headers.forEach((header, index) => {
-                obj[header] = values[index] ?? '';
+                // If header or value is missing, handle gracefully
+                if (header) {
+                    obj[header] = values[index] ?? '';
+                }
             });
             return obj;
         });

@@ -166,60 +166,27 @@ export default function Home() {
           Dashboard Financiero
         </h1>
 
-        {/* --- DATOS SUPABASE (LOCAL) --- */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px', marginBottom: '2rem' }}>
-
-          {/* --- SECTION: CALENDARIO --- */}
-          <div>
-            <SectionHeader title="Principales Eventos" />
-            <TableContainer>
-              <TableHeader headers={['Fecha', 'País', 'Evento']} />
-              <tbody>
-                {loading ? (
-                  <EmptyState message="Cargando calendario..." />
-                ) : events.length > 0 ? (
-                  events.map((evt) => (
-                    <tr key={evt.id}>
-                      <TableCell>{formatDate(evt.fecha)}</TableCell>
-                      <TableCell>{evt.pais}</TableCell>
-                      <TableCell>{evt.evento}</TableCell>
-                    </tr>
-                  ))
-                ) : (
-                  <EmptyState message="No hay eventos programados para esta semana." />
-                )}
-              </tbody>
-            </TableContainer>
-          </div>
-
-          {/* --- SECTION: RENTAS Y AMORTIZACIONES --- */}
-          <div>
-            <SectionHeader title="Pagos de Rentas y Amortizaciones" />
-            <TableContainer>
-              <TableHeader headers={['Fecha', 'Ticker', 'Emisor', 'Tipo', 'Frec', 'Vto', 'Renta', 'Amort']} />
-              <tbody>
-                {loading ? (
-                  <EmptyState message="Cargando pagos..." />
-                ) : amortizations.length > 0 ? (
-                  amortizations.map((item) => (
-                    <tr key={item.id}>
-                      <TableCell>{formatDate(item.fecha)}</TableCell>
-                      <TableCell><strong>{item.ticker}</strong></TableCell>
-                      <TableCell>{item.emisor}</TableCell>
-                      <TableCell>{item.tipo}</TableCell>
-                      <TableCell>{item.frecuencia}</TableCell>
-                      <TableCell>{item.vencimiento}</TableCell>
-                      <TableCell align="center">{formatPercentage(item.renta)}</TableCell>
-                      <TableCell align="center">{formatPercentage(item.amortizacion)}</TableCell>
-                    </tr>
-                  ))
-                ) : (
-                  <EmptyState message="No hay pagos programados para esta semana." />
-                )}
-              </tbody>
-            </TableContainer>
-          </div>
-
+        {/* --- DATOS SUPABASE (LOCAL) - CALENDARIO --- */}
+        <div style={{ marginBottom: '2rem' }}>
+          <SectionHeader title="Principales Eventos" />
+          <TableContainer>
+            <TableHeader headers={['Fecha', 'País', 'Evento']} />
+            <tbody>
+              {loading ? (
+                <EmptyState message="Cargando calendario..." />
+              ) : events.length > 0 ? (
+                events.map((evt) => (
+                  <tr key={evt.id}>
+                    <TableCell>{formatDate(evt.fecha)}</TableCell>
+                    <TableCell>{evt.pais}</TableCell>
+                    <TableCell>{evt.evento}</TableCell>
+                  </tr>
+                ))
+              ) : (
+                <EmptyState message="No hay eventos programados para esta semana." />
+              )}
+            </tbody>
+          </TableContainer>
         </div>
 
         {/* --- GRID DE WIDGETS --- */}
@@ -237,6 +204,34 @@ export default function Home() {
 
         {/* --- FINVIZ TABLE --- */}
         <FinvizTable />
+
+        {/* --- SECTION: RENTAS Y AMORTIZACIONES (MOVED TO BOTTOM) --- */}
+        <div style={{ marginTop: '2rem' }}>
+          <SectionHeader title="Pagos de Rentas y Amortizaciones" />
+          <TableContainer>
+            <TableHeader headers={['Fecha', 'Ticker', 'Emisor', 'Tipo', 'Frec', 'Vto', 'Renta', 'Amort']} />
+            <tbody>
+              {loading ? (
+                <EmptyState message="Cargando pagos..." />
+              ) : amortizations.length > 0 ? (
+                amortizations.map((item) => (
+                  <tr key={item.id}>
+                    <TableCell>{formatDate(item.fecha)}</TableCell>
+                    <TableCell><strong>{item.ticker}</strong></TableCell>
+                    <TableCell>{item.emisor}</TableCell>
+                    <TableCell>{item.tipo}</TableCell>
+                    <TableCell>{item.frecuencia}</TableCell>
+                    <TableCell>{item.vencimiento}</TableCell>
+                    <TableCell align="center">{formatPercentage(item.renta)}</TableCell>
+                    <TableCell align="center">{formatPercentage(item.amortizacion)}</TableCell>
+                  </tr>
+                ))
+              ) : (
+                <EmptyState message="No hay pagos programados para esta semana." />
+              )}
+            </tbody>
+          </TableContainer>
+        </div>
 
       </div>
     </Layout>

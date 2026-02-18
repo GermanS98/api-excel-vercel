@@ -43,7 +43,8 @@ export default function FinvizTable() {
             borderRadius: '8px',
             boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
             overflow: 'hidden',
-            marginBottom: '2rem'
+            marginBottom: '2rem',
+            border: '1px solid #e5e7eb'
         }}>
             <h2 style={{
                 fontSize: '1.25rem',
@@ -51,27 +52,35 @@ export default function FinvizTable() {
                 color: '#111827',
                 padding: '1rem',
                 borderBottom: '1px solid #e5e7eb',
-                background: '#f9fafb'
+                background: '#f9fafb',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
             }}>
-                Finviz Data
+                <span>Finviz News</span>
+                <span style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 400 }}>Últimas 20</span>
             </h2>
-            <div style={{ overflowX: 'auto' }}>
+            <div style={{ overflowX: 'auto', maxHeight: '500px', overflowY: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                    <thead style={{ background: '#021751', color: 'white' }}>
+                    <thead style={{ background: '#f3f4f6', color: '#374151', position: 'sticky', top: 0, zIndex: 10 }}>
                         <tr>
                             {headers.map((h) => (
-                                <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, whiteSpace: 'nowrap', borderBottom: '2px solid #e5e7eb' }}>
                                     {h}
                                 </th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map((row, i) => (
-                            <tr key={i} style={{ borderTop: '1px solid #e5e7eb' }}>
+                        {data.slice(0, 20).map((row, i) => (
+                            <tr key={i} style={{ borderBottom: '1px solid #f3f4f6', transition: 'background 0.2s' }} className="hover:bg-gray-50">
                                 {headers.map((h) => (
-                                    <td key={`${i}-${h}`} style={{ padding: '0.75rem 1rem', color: '#4b5563', whiteSpace: 'nowrap' }}>
-                                        {row[h]}
+                                    <td key={`${i}-${h}`} style={{ padding: '0.75rem 1rem', color: '#4b5563', verticalAlign: 'top' }}>
+                                        {h === 'Title' || h === 'title' ? (
+                                            <span style={{ fontWeight: 500, color: '#111827' }}>{row[h]}</span>
+                                        ) : (
+                                            row[h]
+                                        )}
                                     </td>
                                 ))}
                             </tr>
