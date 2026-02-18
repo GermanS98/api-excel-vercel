@@ -36,6 +36,8 @@ class handler(BaseHTTPRequestHandler):
 
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
+            # Cache for 15 minutes (900 seconds) to avoid hitting Yahoo/Vercel limits too often
+            self.send_header('Cache-Control', 's-maxage=900, stale-while-revalidate=30')
             self.end_headers()
             self.wfile.write(json.dumps({"data": items}).encode('utf-8'))
 
