@@ -147,6 +147,13 @@ export default function Home() {
     }
   };
 
+  const formatPercentage = (value: string) => {
+    if (!value) return '-';
+    if (value.includes('%')) return value;
+    // Si es un número (o string numérico), le agregamos %
+    return `${value}%`;
+  };
+
 
   return (
     <Layout>
@@ -194,8 +201,8 @@ export default function Home() {
                   <TableCell>{item.tipo}</TableCell>
                   <TableCell>{item.frecuencia}</TableCell>
                   <TableCell>{item.vencimiento}</TableCell>
-                  <TableCell align="right">{item.renta}</TableCell>
-                  <TableCell align="right">{item.amortizacion}</TableCell>
+                  <TableCell align="center">{formatPercentage(item.renta)}</TableCell>
+                  <TableCell align="center">{formatPercentage(item.amortizacion)}</TableCell>
                 </tr>
               ))
             ) : (
