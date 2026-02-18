@@ -6,6 +6,12 @@ import { supabase } from '@/supabaseClient';
 import { startOfWeek, endOfWeek, format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 
+// New Components
+import TradingViewCalendar from '@/components/ui/TradingViewCalendar';
+import TradingViewNews from '@/components/ui/TradingViewNews';
+import FinvizTable from '@/components/ui/FinvizTable';
+import YahooNews from '@/components/ui/YahooNews';
+
 // --- TYPES ---
 type CalendarioEvent = {
   id: number;
@@ -18,11 +24,11 @@ type RentaAmortizacion = {
   id: number;
   fecha: string;
   ticker: string;
-  emisor: string; // Puede ser null si no está en la db, pero asumimos string por la imagen
+  emisor: string;
   tipo: string;
   frecuencia: string;
-  vencimiento: string; // Es texto en la imagen ("2026-02-18")
-  renta: string; // Es texto en la imagen ("3.5%") o similar format
+  vencimiento: string;
+  renta: string;
   amortizacion: string;
 };
 
@@ -95,14 +101,11 @@ export default function Home() {
       setLoading(true);
       try {
         const today = new Date();
-        // Obtener inicio y fin de la semana actual (Lunes a Domingo)
         const start = startOfWeek(today, { weekStartsOn: 1 });
         const end = endOfWeek(today, { weekStartsOn: 1 });
 
         const startStr = format(start, 'yyyy-MM-dd');
         const endStr = format(end, 'yyyy-MM-dd');
-
-        console.log(`Fetching data from ${startStr} to ${endStr}`);
 
         // 1. Fetch Calendario
         const { data: calendarData, error: calendarError } = await supabase
@@ -136,10 +139,8 @@ export default function Home() {
     fetchData();
   }, []);
 
-  // Formateador de fecha simple
   const formatDate = (dateStr: string) => {
     try {
-      // Asumiendo formato YYYY-MM-DD que viene de la DB
       const date = parseISO(dateStr);
       return format(date, 'EEEE dd/MM', { locale: es });
     } catch (e) {
@@ -159,59 +160,83 @@ export default function Home() {
 
   return (
     <Layout>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1rem' }}>
+      <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '1rem' }}>
 
         <h1 style={{ fontSize: '1.8rem', fontWeight: 700, color: '#021751', marginBottom: '1.5rem' }}>
-          Resumen Semanal
+          Dashboard Financiero
         </h1>
 
-        {/* --- SECTION: CALENDARIO --- */}
-        <SectionHeader title="Calendario Económico" />
-        <TableContainer>
-          <TableHeader headers={['Fecha', 'País', 'Evento']} />
-          <tbody>
-            {loading ? (
-              <EmptyState message="Cargando calendario..." />
-            ) : events.length > 0 ? (
-              events.map((evt) => (
-                <tr key={evt.id}>
-                  <TableCell>{formatDate(evt.fecha)}</TableCell>
-                  <TableCell>{evt.pais}</TableCell>
-                  <TableCell>{evt.evento}</TableCell>
-                </tr>
-              ))
-            ) : (
-              <EmptyState message="No hay eventos programados para esta semana." />
-            )}
-          </tbody>
-        </TableContainer>
+        {/* --- GRID DE WIDGETS --- */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px', marginBottom: '2rem' }}>
+          <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
+            <TradingViewCalendar />
+          </div>
+          <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
+            <TradingViewNews />
+          </div>
+          <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
+            <YahooNews />
+          </div>
+        </div>
 
-        {/* --- SECTION: RENTAS Y AMORTIZACIONES --- */}
-        <SectionHeader title="Pagos de Rentas y Amortizaciones" />
-        <TableContainer>
-          {/* Ajustamos headers según la imagen: Fecha, Ticker, Emisor, Tipo, Frecuencia, Vencimiento, Renta, Amortizacion */}
-          <TableHeader headers={['Fecha Pago', 'Ticker', 'Emisor', 'Tipo', 'Frecuencia', 'Vencimiento', 'Renta', 'Amortización']} />
-          <tbody>
-            {loading ? (
-              <EmptyState message="Cargando pagos..." />
-            ) : amortizations.length > 0 ? (
-              amortizations.map((item) => (
-                <tr key={item.id}>
-                  <TableCell>{formatDate(item.fecha)}</TableCell>
-                  <TableCell><strong>{item.ticker}</strong></TableCell>
-                  <TableCell>{item.emisor}</TableCell>
-                  <TableCell>{item.tipo}</TableCell>
-                  <TableCell>{item.frecuencia}</TableCell>
-                  <TableCell>{item.vencimiento}</TableCell>
-                  <TableCell align="center">{formatPercentage(item.renta)}</TableCell>
-                  <TableCell align="center">{formatPercentage(item.amortizacion)}</TableCell>
-                </tr>
-              ))
-            ) : (
-              <EmptyState message="No hay pagos programados para esta semana." />
-            )}
-          </tbody>
-        </TableContainer>
+        {/* --- FINVIZ TABLE --- */}
+        <FinvizTable />
+
+        {/* --- DATOS SUPABASE (LOCAL) --- */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '20px' }}>
+
+          {/* --- SECTION: CALENDARIO --- */}
+          <div>
+            <SectionHeader title="Calendario Económico (Local)" />
+            <TableContainer>
+              <TableHeader headers={['Fecha', 'País', 'Evento']} />
+              <tbody>
+                {loading ? (
+                  <EmptyState message="Cargando calendario..." />
+                ) : events.length > 0 ? (
+                  events.map((evt) => (
+                    <tr key={evt.id}>
+                      <TableCell>{formatDate(evt.fecha)}</TableCell>
+                      <TableCell>{evt.pais}</TableCell>
+                      <TableCell>{evt.evento}</TableCell>
+                    </tr>
+                  ))
+                ) : (
+                  <EmptyState message="No hay eventos programados para esta semana." />
+                )}
+              </tbody>
+            </TableContainer>
+          </div>
+
+          {/* --- SECTION: RENTAS Y AMORTIZACIONES --- */}
+          <div>
+            <SectionHeader title="Pagos de Rentas y Amortizaciones" />
+            <TableContainer>
+              <TableHeader headers={['Fecha', 'Ticker', 'Emisor', 'Tipo', 'Frec', 'Vto', 'Renta', 'Amort']} />
+              <tbody>
+                {loading ? (
+                  <EmptyState message="Cargando pagos..." />
+                ) : amortizations.length > 0 ? (
+                  amortizations.map((item) => (
+                    <tr key={item.id}>
+                      <TableCell>{formatDate(item.fecha)}</TableCell>
+                      <TableCell><strong>{item.ticker}</strong></TableCell>
+                      <TableCell>{item.emisor}</TableCell>
+                      <TableCell>{item.tipo}</TableCell>
+                      <TableCell>{item.frecuencia}</TableCell>
+                      <TableCell>{item.vencimiento}</TableCell>
+                      <TableCell align="center">{formatPercentage(item.renta)}</TableCell>
+                      <TableCell align="center">{formatPercentage(item.amortizacion)}</TableCell>
+                    </tr>
+                  ))
+                ) : (
+                  <EmptyState message="No hay pagos programados para esta semana." />
+                )}
+              </tbody>
+            </TableContainer>
+          </div>
+
+        </div>
 
       </div>
     </Layout>

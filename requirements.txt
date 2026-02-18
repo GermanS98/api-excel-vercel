@@ -1,0 +1,2 @@
+# No external dependencies needed for the simple implementation using standard library.
+# If we switched to yfinance later, we would add: yfinance
