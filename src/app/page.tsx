@@ -189,7 +189,7 @@ export default function Home() {
           </TableContainer>
         </div>
 
-        {/* --- GRID DE WIDGETS (TradingView) --- */}
+        {/* --- GRID DE WIDGETS --- */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px', marginBottom: '2rem' }}>
           <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
             <TradingViewCalendar />
@@ -197,12 +197,12 @@ export default function Home() {
           <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
             <TradingViewNews />
           </div>
+          <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
+            <YahooNews />
+          </div>
         </div>
 
-        {/* --- YAHOO FINANCE NEWS (tabla completa) --- */}
-        <YahooNews />
-
-        {/* --- FINVIZ NEWS (tabla completa) --- */}
+        {/* --- FINVIZ NEWS --- */}
         <FinvizTable />
 
         {/* --- SECTION: RENTAS Y AMORTIZACIONES (MOVED TO BOTTOM) --- */}
