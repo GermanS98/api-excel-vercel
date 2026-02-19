@@ -163,7 +163,7 @@ export default function Home() {
       <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '1rem' }}>
 
         <h1 style={{ fontSize: '1.8rem', fontWeight: 700, color: '#021751', marginBottom: '1.5rem' }}>
-          Dashboard Financiero
+          Principales Eventos
         </h1>
 
         {/* --- DATOS SUPABASE (LOCAL) - CALENDARIO --- */}
@@ -189,7 +189,7 @@ export default function Home() {
           </TableContainer>
         </div>
 
-        {/* --- GRID DE WIDGETS --- */}
+        {/* --- GRID DE WIDGETS (TradingView) --- */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px', marginBottom: '2rem' }}>
           <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
             <TradingViewCalendar />
@@ -197,12 +197,12 @@ export default function Home() {
           <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
             <TradingViewNews />
           </div>
-          <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden' }}>
-            <YahooNews />
-          </div>
         </div>
 
-        {/* --- FINVIZ TABLE --- */}
+        {/* --- YAHOO FINANCE NEWS (tabla completa) --- */}
+        <YahooNews />
+
+        {/* --- FINVIZ NEWS (tabla completa) --- */}
         <FinvizTable />
 
         {/* --- SECTION: RENTAS Y AMORTIZACIONES (MOVED TO BOTTOM) --- */}
